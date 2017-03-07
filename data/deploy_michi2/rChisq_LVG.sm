@@ -1,0 +1,373 @@
+rChisq
+	#  
+	# echo "macro read rChisq_LVG.sm rChisq" | sm
+	# 
+    calc_uncertainty_and_plot_T_kin_1
+    calc_uncertainty_and_plot_T_kin_2
+    calc_uncertainty_and_plot_n_H_2_1
+    calc_uncertainty_and_plot_n_H_2_2
+
+
+
+read_chi2_data
+    # 
+    data "fit_double.out" read {chi2 2 a1 4 a2 6 T_kin_1 7 n_H_2_1 8 T_kin_2 9 n_H_2_2 10}
+    echo "Number of all chi2 solution is "$(dimen(chi2))
+    set chisq = chi2
+    set coo = (a1>0 && a2>0 && n_H_2_2>n_H_2_1)
+    foreach var {chisq chi2 a1 a2 T_kin_1 n_H_2_1 T_kin_2 n_H_2_2} {
+    	set $var = $var if(coo)
+    }
+    echo "Number of good chi2 solution is "$(dimen(chi2))
+
+
+
+
+
+
+
+calc_uncertainty_of_T_kin
+    calc_uncertainty_and_plot_T_kin_1
+    calc_uncertainty_and_plot_T_kin_2
+
+calc_uncertainty_and_plot_T_kin_1
+    # 
+    read_chi2_data
+    get_chi2_probability chisq T_kin_1 10 600 10
+    set T_kin_1 = got_par_array
+    set chisq = got_chi_array set revchisq = 1.0/got_chi_array #<TODO># reduced chi square needs to be divided by N_data
+    calc_uncertainty_of T_kin_1
+    #<fixed># calc_uncertainty_ after get_chi2_probability -- so that the xvar-chi2 distribution is a smooth curve
+    load crabPlotHistogram.sm
+    set crabPlotHistogram_KeepDevice = 1
+    set crabPlotHistogram_ticksize = '0 0 0 0'
+    set crabPlotHistogram_xlimit = <10 600>
+    set crabPlotHistogram_xlabel = 'T_{kin,1}'
+    set crabPlotHistogram_ylabel = '1/\\chi^2'
+    crabPlotHistogram_xy "plot_chi2_probability_against_T_kin_1.pdf" T_kin_1 revchisq
+    ctype magenta ltype 1 rel $fx1 $(1.0/($chisqMIN+$chisqDELTA)) 
+                         draw $fx2 $(1.0/($chisqMIN+$chisqDELTA))
+    ctype default ltype 0 device nodevice
+    print "plot_chi2_probability_against_T_kin_1.txt" {T_kin_1 chisq revchisq}
+
+calc_uncertainty_and_plot_T_kin_2
+    # 
+    read_chi2_data
+    get_chi2_probability chisq T_kin_2 10 600 10
+    set T_kin_2 = got_par_array
+    set chisq = got_chi_array set revchisq = 1.0/got_chi_array #<TODO># reduced chi square needs to be divided by N_data
+    calc_uncertainty_of T_kin_2
+    #<fixed># calc_uncertainty_ after get_chi2_probability -- so that the xvar-chi2 distribution is a smooth curve
+    load crabPlotHistogram.sm
+    set crabPlotHistogram_KeepDevice = 1
+    set crabPlotHistogram_ticksize = '0 0 0 0'
+    set crabPlotHistogram_xlimit = <10 600>
+    set crabPlotHistogram_xlabel = 'T_{kin,2}'
+    set crabPlotHistogram_ylabel = '1/\\chi^2'
+    crabPlotHistogram_xy "plot_chi2_probability_against_T_kin_2.pdf" T_kin_2 revchisq
+    ctype magenta ltype 1 rel $fx1 $(1.0/($chisqMIN+$chisqDELTA)) 
+                         draw $fx2 $(1.0/($chisqMIN+$chisqDELTA))
+    ctype default ltype 0 device nodevice
+    print "plot_chi2_probability_against_T_kin_2.txt" {T_kin_2 chisq revchisq}
+
+calc_uncertainty_and_plot_n_H_2_1
+    # 
+    read_chi2_data
+    get_chi2_probability chisq (lg(n_H_2_1)) 2.0 6.0 0.2
+    set lg_n_H_2_1 = got_par_array set n_H_2_1 = 10**got_par_array
+    set chisq = got_chi_array set revchisq = 1.0/got_chi_array #<TODO># reduced chi square needs to be divided by N_data
+    calc_uncertainty_of n_H_2_1
+    #<fixed># calc_uncertainty_ after get_chi2_probability -- so that the xvar-chi2 distribution is a smooth curve
+    load crabPlotHistogram.sm
+    set crabPlotHistogram_KeepDevice = 1
+    set crabPlotHistogram_ticksize = '-1 10 0 0'
+    set crabPlotHistogram_xlimit = <2.0 6.0>
+    set crabPlotHistogram_xlabel = 'lg n_{H_2,1}'
+    set crabPlotHistogram_ylabel = '1/\\chi^2'
+    crabPlotHistogram_xy "plot_chi2_probability_against_n_H_2_1.pdf" lg_n_H_2_1 revchisq
+    ctype magenta ltype 1 rel $fx1 $(1.0/($chisqMIN+$chisqDELTA)) 
+                         draw $fx2 $(1.0/($chisqMIN+$chisqDELTA))
+    ctype default ltype 0 device nodevice
+    print "plot_chi2_probability_against_n_H_2_1.txt" {n_H_2_1 chisq revchisq}
+
+calc_uncertainty_and_plot_n_H_2_2
+    # 
+    read_chi2_data
+    get_chi2_probability chisq (lg(n_H_2_2)) 2.0 6.0 0.2
+    set lg_n_H_2_2 = got_par_array set n_H_2_2 = 10**got_par_array
+    set chisq = got_chi_array set revchisq = 1.0/got_chi_array #<TODO># reduced chi square needs to be divided by N_data
+    calc_uncertainty_of n_H_2_2
+    #<fixed># calc_uncertainty_ after get_chi2_probability -- so that the xvar-chi2 distribution is a smooth curve
+    load crabPlotHistogram.sm
+    set crabPlotHistogram_KeepDevice = 1
+    set crabPlotHistogram_ticksize = '-1 10 0 0'
+    set crabPlotHistogram_xlimit = <2.0 6.0>
+    set crabPlotHistogram_xlabel = 'lg n_{H_2,2}'
+    set crabPlotHistogram_ylabel = '1/\\chi^2'
+    crabPlotHistogram_xy "plot_chi2_probability_against_n_H_2_2.pdf" lg_n_H_2_2 revchisq
+    ctype magenta ltype 1 rel $fx1 $(1.0/($chisqMIN+$chisqDELTA)) 
+                         draw $fx2 $(1.0/($chisqMIN+$chisqDELTA))
+    ctype default ltype 0 device nodevice
+    print "plot_chi2_probability_against_n_H_2_2.txt" {n_H_2_2 chisq revchisq}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+calc_uncertainty_of 01
+    # 
+    # Usage: 
+    #  macro read rChisq.sm calc_uncertainty_of Umean
+    #  
+    if($?1==0) {return}
+    # 
+    # Select the range of chi2 solutions corresponding to a probability of 68%
+    # 
+    define chisqDELTA 2.3 #<TODO># http://www.astro.sunysb.edu/metchev/PHY515/astrostatistics.html
+    vecminmax chisq chisqMIN chisqMAX
+    set xcoo = (chisq<=($chisqMIN+$chisqDELTA))
+    if(sum(xcoo)>0) {
+        set xvar = $1 if(xcoo)
+        set xchisq = chisq if(xcoo)
+        sort {xvar xchisq}
+        vecminmax xvar xvarMIN xvarMAX
+        #set sp_xvar = $xvarMIN,$xvarMAX,$(($xvarMAX-$xvarMIN)/20.0)
+        #spline xvar xchisq sp_xvar sp_xchisq
+        #vecminmax sp_xchisq xvarMIN xvarMAX
+        set xvarMIN = float($xvarMIN)
+        set xvarMAX = float($xvarMAX)
+        set xvarDEV = float($xvarMAX-$xvarMIN)/2.0
+        set xvarCEN = float($xvarMAX+$xvarMIN)/2.0
+        set xvarMIN_log10 = lg(xvarMIN)
+        set xvarMAX_log10 = lg(xvarMAX)
+        set xvarDEV_log10 = (xvarMAX_log10-xvarMIN_log10)/2.0 # (xvarDEV/xvarCEN)
+        set xvarCEN_log10 = (xvarMAX_log10+xvarMIN_log10)/2.0
+    } else { # no good chisq solution
+        set xvarMIN = float(-99)
+        set xvarMAX = float(-99)
+        set xvarDEV = float(-99)
+        set xvarCEN = float(-99)
+        set xvarMIN_log10 = float(-99)
+        set xvarMAX_log10 = float(-99)
+        set xvarDEV_log10 = float(-99)
+        set xvarCEN_log10 = float(-99)
+    }
+    if(abs(xvarMAX)>1e5 || abs(xvarMAX)<1e-5) {
+        define xvarFMT "%13.6e"
+        define xvarFMT_log10 "%10.3f"
+    } else {
+        define xvarFMT "%13.6f"
+        define xvarFMT_log10 "%10.3f"
+    }
+    # 
+    echo "Writing to bestfit_"$1"_range.txt"
+    if(0==$?print_noheader) {define print_noheader 0}
+    define rChisq_PrePrintNoHeader $print_noheader define print_noheader 1
+    print "bestfit_"$1"_range.txt" '\n' {}
+    print +"bestfit_"$1"_range.txt" 'Lower $1 = $xvarFMT\n' {xvarMIN}
+    print +"bestfit_"$1"_range.txt" 'Upper $1 = $xvarFMT\n' {xvarMAX}
+    print +"bestfit_"$1"_range.txt" 'Error $1 = $xvarFMT\n' {xvarDEV}
+    print +"bestfit_"$1"_range.txt" 'Value $1 = $xvarFMT\n' {xvarCEN}
+    print +"bestfit_"$1"_range.txt" '\n' {}
+    # <added> log10
+    print "bestfit_"$1"_range_log10.txt" '\n' {}
+    print +"bestfit_"$1"_range_log10.txt" 'Lower $1 = $xvarFMT_log10\n' {xvarMIN_log10}
+    print +"bestfit_"$1"_range_log10.txt" 'Upper $1 = $xvarFMT_log10\n' {xvarMAX_log10}
+    print +"bestfit_"$1"_range_log10.txt" 'Error $1 = $xvarFMT_log10\n' {xvarDEV_log10}
+    print +"bestfit_"$1"_range_log10.txt" 'Value $1 = $xvarFMT_log10\n' {xvarCEN_log10}
+    print +"bestfit_"$1"_range_log10.txt" '\n' {}
+    define print_noheader $rChisq_PrePrintNoHeader
+
+get_chi2_probability 05
+    # 
+    set chi_arr = $1
+    set par_arr = $2
+    get_hist par_arr par_base par_hist $3 $4 $5
+    set par_interval = $5
+    declare got_par_array 0
+    declare got_chi_array 0
+    do i=0,dimen(par_base)-1 {
+        set bin_coo = (par_arr>=(par_base[$i]-par_interval/2) && \
+                       par_arr<(par_base[$i]+par_interval/2))
+        if(sum(bin_coo)>0) {
+            set bin_arr = chi_arr if(bin_coo)
+            vecminmax bin_arr bin_min bin_max
+            set got_chi_array = got_chi_array concat $bin_min
+            set got_par_array = got_par_array concat $(par_base[$i])
+            # echo $(par_base[$i]-par_interval/2) -- $(par_base[$i]+par_interval/2) -- $bin_min
+        }
+    }
+
+plot_chi2_probability_of
+    # 
+    # Usage:
+    #  macro read  rChisq.sm plot_chi2_probability_of Mdust
+    # 
+    return
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+plot_chi2_probability_against_flux 01
+    # 
+    #  macro read "p2chi2_probability.sm" plot_chi2_probability_against_flux
+    # 
+    if($?1==0) {print 'Usage: plot_chi2_probability_against_flux 1000.0 \# --> SED flux at 1000.0um.\n' {} return}
+    data "fit_double.out" read {i0 1 chisq 2 i1 3 a1 4 i2 5 a2 6 Umin1 7 Umin2 9}
+    data "recomputed_chi2.dat" read {chisq 1} #<added><20151012><dzliu># also consider radio data point
+    set coo = (a1>0 && a2>0 && Umin1==Umin2)
+    foreach var {chisq i1 a1 i2 a2 Umin1 Umin2} {set $var = $var if(coo)}
+    define wave <"$1"> #<TODO># 
+    declare flux 0
+    if(is_file("input_redshift.sm")) {
+        input "input_redshift.sm"
+    } else {
+        print 'Error! Could not find input_redshift.sm!\n' {}
+        return
+    }
+    if(is_file("p2chi2.sm")) {
+        macro read "p2chi2.sm"
+    } else {
+        if(is_file("../p2chi2.sm")) {
+            macro read "../p2chi2.sm"
+        } else {
+            if(is_file("../../../p2chi2.sm")) {
+                macro read "../../../p2chi2.sm"
+            } else {
+                print 'Error! Could not find p2chi2.sm!\n' {}
+                return
+            }
+        }
+    }
+    load astroSfig.sm
+    if(is_file("flux_obsframe.dat"))            {set FileObs = {"flux_obsframe.dat"}}
+    if(is_file("../../../DL07.HiExCom.lib.SED")){set FileLi1 = {"../../../DL07.HiExCom.lib.SED"}}
+    if(is_file("../../../DL07.LoExCom.lib.SED")){set FileLi2 = {"../../../DL07.LoExCom.lib.SED"}}
+    if(is_file("../DL07.HiExCom.lib.SED"))      {set FileLi1 = {"../DL07.HiExCom.lib.SED"}}
+    if(is_file("../DL07.LoExCom.lib.SED"))      {set FileLi2 = {"../DL07.LoExCom.lib.SED"}}
+    if(is_file("DL07.HiExCom.lib.SED"))         {set FileLi1 = {"DL07.HiExCom.lib.SED"}}
+    if(is_file("DL07.LoExCom.lib.SED"))         {set FileLi2 = {"DL07.LoExCom.lib.SED"}}
+    set FileOut = {"fit_double.out"}
+    set FileEps = {"fit_double.eps"}
+    do i=0,dimen(a1)-1 {
+        # 
+        set SPIwc = -2,5.5,0.01
+        # 
+        readLibSED $(FileLi1) $(i1[$i])
+        set w1 = lg(SEDwave * opz)
+        set f1 = lg(SEDflux * a1[$i])
+        set SPIw1 = SPIwc
+        vecminmax w1 SPLw1 SPUw1
+        spline w1 f1 SPIw1 SPIf1
+        set SPIf1 = (SPIw1<$SPLw1) ? -99 : SPIf1
+        set SPIf1 = (SPIw1>$SPUw1) ? -99 : SPIf1
+        set wave1 = lg(float($wave))
+        spline SPIw1 SPIf1 wave1 flux1
+        set flux1 = 10**flux1
+        # 
+        readLibSED $(FileLi2) $(i2[$i])
+        set w2 = lg(SEDwave * opz)
+        set f2 = lg(SEDflux * a2[$i])
+        set SPIw2 = SPIwc
+        vecminmax w2 SPLw2 SPUw2
+        spline w2 f2 SPIw2 SPIf2
+        set SPIf2 = (SPIw2<$SPLw2) ? -99 : SPIf2
+        set SPIf2 = (SPIw2>$SPUw2) ? -99 : SPIf2
+        set wave2 = lg(float($wave))
+        spline SPIw2 SPIf2 wave2 flux2
+        set flux2 = 10**flux2
+        # 
+        set flux = flux concat $(flux1+flux2)
+        # 
+        set _i0 = i0[$i] set _chisq = chisq[$i] set _flux = flux[$i]
+        if($i==0) { define print_noheader 0 
+            print "fit_double_computed_flux_"$wave".out" '%15.0f%15g%15g%15g%15g\n' {_i0 _chisq _flux flux1 flux2}
+        } else { define print_noheader 1 
+            print +"fit_double_computed_flux_"$wave".out" '%15.0f%15g%15g%15g%15g\n' {_i0 _chisq _flux flux1 flux2}
+        } define print_noheader 0
+    }
+    
+    # compute eLtir
+    define chisqDELTA 2.3
+    vecminmax chisq chisqMIN chisqMAX
+    set cooflux = (chisq<=($chisqMIN+$chisqDELTA))
+    if(sum(cooflux)>0) {
+        set goodflux = flux if(cooflux)
+        vecminmax goodflux goodfluxMIN goodfluxMAX
+        set goodfluxMIN = $goodfluxMIN
+        set goodfluxMAX = $goodfluxMAX
+        set goodfluxDELTA = ($goodfluxMAX-$goodfluxMIN)/2.0
+    } else { # no good chisq solution
+        define goodfluxMIN -99
+        define goodfluxMAX 99
+        set goodfluxMIN = $goodfluxMIN
+        set goodfluxMAX = $goodfluxMAX
+        set goodfluxDELTA = ($goodfluxMAX-$goodfluxMIN)/2.0
+    }
+    define print_noheader 1
+    echo "Writing to bestfit_flux_"$wave"_range.txt"
+    print "bestfit_flux_"$wave"_range.txt" '\n' {}
+    print +"bestfit_flux_"$wave"_range.txt" 'Lower flux $wave = %g\n' {goodfluxMIN}
+    print +"bestfit_flux_"$wave"_range.txt" 'Upper flux $wave = %g\n' {goodfluxMAX}
+    print +"bestfit_flux_"$wave"_range.txt" 'Error flux $wave = %g\n' {goodfluxDELTA}
+    print +"bestfit_flux_"$wave"_range.txt" '\n' {}
+    define print_noheader 0
+    
+    set lgflux = lg(flux)
+    get_chi2_probability chisq lgflux -2.0 2.0 0.025
+    set lgLbase = got_par_array
+    set flux = 10**lgLbase
+    set chisq = got_chi_array
+    set revchisq = 1.0/got_chi_array
+    load crabPlotHistogram.sm
+    set crabPlotHistogram_ticksize = '-1 10 0 0'
+    set crabPlotHistogram_xlabel = 'f_{$wave{\\mu}m}'
+    set crabPlotHistogram_ylabel = '1/\\chi^2'
+    set crabPlotHistogram_xlimit = {-2.0 2.0}
+    crabPlotHistogram_xy "plot_chi2_probability_against_flux_"$wave".pdf" lgLbase revchisq
+    #!open "plot_chi2_probability_against_flux.pdf"
+    print "plot_chi2_probability_against_flux_"$wave".txt" {flux chisq revchisq}
+
+
+
+
+
+

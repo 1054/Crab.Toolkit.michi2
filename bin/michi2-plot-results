@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+
+# 
+# readlink for Mac (because Mac readlink does not accept "-f" option)
+# 
+if [[ $(uname) == *"Darwin"* ]]; then
+    function readlink() {
+        if [[ $# -gt 1 ]]; then if [[ "$1" == "-f" ]]; then shift; fi; fi
+        DIR="$1"; if [[ "$DIR" != *"/"* ]]; then DIR="./$DIR"; fi # 20170228: fixed bug: path without "/"
+        DIR=$(echo "${DIR%/*}") # 20160410: fixed bug: source SETUP just under the Softwares dir
+        if [[ -d "$DIR" ]]; then cd "$DIR" && echo "$(pwd -P)/$(basename ${1})"; 
+        else echo "$(pwd -P)/$(basename ${1})"; fi
+    }
+fi
+
+
+# 
+# Get directory paths
+# 
+deploy_current_dir=$(pwd -P)
+deploy_script_dir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+deploy_upper_dir=$(readlink -f $(dirname "${deploy_script_dir}"))
+
+echo "Welcome"
+echo "Plotting michi2 results under ${deploy_current_dir} ..."
+sleep 1.0
+
+
+# 
+# Check IDL
+# 
+if [[ $(type idl 2>/dev/null | wc -l) -eq 0 ]]; then
+    echo "Error! IDL was not installed?! Exit!"
+    exit
+fi
+if [[ x"$IDL_DIR" == x ]]; then
+    echo "Error! IDL system variable \$IDL_DIR is not defined?! Exit!"
+    exit
+fi
+if [[ x"$IDL_PATH" == x ]]; then
+    echo "Error! IDL system variable \$IDL_PATH is not defined?! Exit!"
+    exit
+fi
+export IDL_PATH=$(echo "+${deploy_upper_dir}/lib/idl:$IDL_PATH" | sed -e 's/::/:/g')
+#echo $IDL_PATH
+
+
+
+# 
+# Run IDL code pdchi2_v01.pro
+# 
+idl -quiet << EOF
+pdchi2_v01, InputDAT, InputLIB, InputFIT
+exit
+EOF
+
+

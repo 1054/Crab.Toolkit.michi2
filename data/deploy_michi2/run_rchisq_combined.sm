@@ -1,0 +1,24 @@
+
+macro read "rChisq.sm"
+calc_chisq_probability
+calc_uncertainty_of_U
+calc_uncertainty_of_Mdust
+calc_uncertainty_of_Mstar
+calc_uncertainty_of_LIR
+
+data "fit_rchisq.dat"
+read {chi2 3}
+set id = 0,dimen(chi2)-1
+sort {chi2 id}
+set cidTMP = 0,4
+set cid = id[cidTMP]
+
+input "run_plotting.sm"
+
+#macro read "pChisq.sm"
+#plotChisq "flux_obsframe.dat" \
+#"FSPS.Padova.BaSeL.Z0.0190.EBV.lib.SED" \
+#"MullaneyAGN.lib.SED" \
+#"DL07.HiExCom.lib.SED" "DL07.LoExCom.lib.SED" \
+#"fit_quadruple.out"
+

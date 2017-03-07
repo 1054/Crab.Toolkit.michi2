@@ -1,0 +1,603 @@
+plotChisq 07
+    # 
+    # Usage: 
+    #    echo "macro read pChisq_LVG.sm plotChisq flux_co.dat lib.lvg lib.lvg fit_double.out" | sm
+    # 
+    # Link:
+    #    ln -s 
+    # 
+    # Last update:
+    #    20151101
+    #    20160502 when a1/2/3<0, set to 0 and recompute chi2. 
+    #    20170213 LVG
+    # 
+    # 
+    # Check Input
+    # 
+    do i=1,1 {if(is_vector(FileObs)) {unset FileObs}}
+    do i=1,4 {if(is_vector(FileLi$i)) {unset FileLi$i}}
+    if($?1==0) {print 'Usage: plotChisq \"flux_co.dat\" \"lib1.LVG\" [\"lib2.LVG\" [\"lib3.LVG\"]] \"fit.out\"\n\n' {} return}
+    if($?2==0) {print 'Usage: plotChisq \"flux_co.dat\" \"lib1.LVG\" [\"lib2.LVG\" [\"lib3.LVG\"]] \"fit.out\"\n\n' {} return}
+    if($?3==0) {print 'Usage: plotChisq \"flux_co.dat\" \"lib1.LVG\" [\"lib2.LVG\" [\"lib3.LVG\"]] \"fit.out\"\n\n' {} return}
+    if($?3==1) {set FileLi1 = <"$2"> set NumbLib = 1}
+    if($?4==1) {set FileLi1 = <"$2"> set FileLi2 = <"$3"> set NumbLib = 2}
+    if($?5==1) {set FileLi1 = <"$2"> set FileLi2 = <"$3"> set FileLi3 = <"$4"> set NumbLib = 3}
+    if($?6==1) {set FileLi1 = <"$2"> set FileLi2 = <"$3"> set FileLi3 = <"$4"> set FileLi4 = <"$5"> set NumbLib = 4}
+                set FileObs = <"$1"> set FileOut = <"$$(NumbLib+2)"> set FileOK = 0
+    if(FileOK==0 && $verbose>0) {print 'Welcome!\nReading input files ... \n' {}}
+    !rm .FileObs .FileLi? .FileOut 2>/dev/null
+    do i=1,1       {define pChisq_PreVerbose $verbose verbose 0} # begin to convert file path strings
+    do i=1,1       {!echo \\\\"$(FileObs)\\\\" > .FileObs}
+    do i=1,NumbLib {!echo \\\\"$(FileLi$i)\\\\" > .FileLi$i}
+    do i=1,1       {!echo \\\\"$(FileOut)\\\\" > .FileOut}
+    do i=1,1       {!echo \\\\"$(FileOut)\\\\" | sed -e 's%\.[^.\\\\"]*%.eps%g' > .FileEps}
+    do i=1,1       {data .FileObs  read row FileObs 1.s}
+    do i=1,NumbLib {data .FileLi$i read row FileLi$i 1.s}
+    do i=1,1       {data .FileOut  read row FileOut 1.s}
+    do i=1,1       {data .FileEps  read row FileEps 1.s}
+    do i=1,1       {verbose $pChisq_PreVerbose}
+    if($verbose>0) {
+    do i=1,1       {set FileST = is_file($(FileObs)) ?'"FILE OK"':'"NOT FOUND!"' echo FileObs = $(FileObs) ... $(FileST)}
+    do i=1,NumbLib {set FileST = is_file($(FileLi$i))?'"FILE OK"':'"NOT FOUND!"' echo FileLi$i = $(FileLi$i) ... $(FileST)}
+    do i=1,1       {set FileST = is_file($(FileOut)) ?'"FILE OK"':'"NOT FOUND!"' echo FileOut = $(FileOut) ... $(FileST)}
+    }              # begin to check file existence
+    do i=1,1       {set FileOK = FileOK + (is_file($(FileObs))==0)}
+    do i=1,NumbLib {set FileOK = FileOK + (is_file($(FileLi$i))==0)}
+    do i=1,1       {set FileOK = FileOK + (is_file($(FileOut))==0)}
+    if(FileEps==FileOut) {define pChisq_PreVerbose $verbose verbose 0} # <added> recheck FileEps
+    if(FileEps==FileOut) {!echo \\\\"$(FileOut)\\\\" | sed -e 's%\$%.eps%g' > .FileEps}
+    if(FileEps==FileOut) {data .FileEps  read row FileEps 1.s}
+    if(FileEps==FileOut) {verbose $pChisq_PreVerbose}   # begin to check input_redshift.sm
+    if(FileOK==0 && $verbose>0) {print 'Loading redshift information from \"input_redshift.sm\" ... ' {} 
+                   if(is_file("input_redshift.sm")) {print 'FILE OK\n' {}} else {print 'NOT FOUND!\n' {} FileOK=9}}
+    if(FileOK>0) {print '\nError! Some input files are not found! Please check the information above and have a retry!\n\n' {} return}
+    #FileFitNoOutput
+    #FileEpsNoOutput
+    if($?SetNoFile) { if($SetNoFile>0) {define FileFitNoOutput 1}} # if define SetNoFile 1 then do not output best fit files
+    if($?SetNoPlot) { if($SetNoPlot>0) {define FileEpsNoOutput 1}} # if define SetNoPlot 1 then do not output Plot.eps
+    if($?FileEpsNoOutput) {unset FileEps}
+    if($verbose>0) {
+      if(is_vector(FileEps)) {print 'Setting output to eps format file \"$(FileEps)\" ... FILE READY\n' {}}
+      if(!is_vector(FileEps)) {print 'Setting no output figure!\n' {}}
+    }
+    # 
+    # <added><20150629><dzliu> 
+    # 
+    if(!is_file("input_redshift.sm")) {
+        print 'Error! File input_redshift.sm not found! Please run redShift.sm first!\n' {} return
+    } else { 
+        input "input_redshift.sm" 
+        if(1) {
+            if(!is_vector(z)) {print 'z was not set in input_redshift.sm!\n' {} return}
+            if(!is_vector(dA)) {print 'dA was not set in input_redshift.sm!\n' {} return}
+            if(!is_vector(dVDoW)) {print 'dVDoW was not set in input_redshift.sm!\n' {} return}
+            if(!is_vector(dvddr)) {print 'dvddr was not set in input_redshift.sm!\n' {} return}
+            set opz = 1.0 + z
+        }
+    }
+    # 
+    # 
+    # 
+    # 
+    # Define Paramters
+    # 
+    if($?NumberOfSolution) {define ns $NumberOfSolution} else {define ns 9} # number of best fit solutions to show
+    # 
+    # 
+    # 
+    # 
+    # Add Colors
+    # 
+    if(is_vector(FileEps)) {
+        add_ctype star 051 204 051 # seagreen
+        add_ctype nuck 255 215  0 # darkorange
+    }
+    # 
+    # 
+    # 
+    # 
+    # Read FileObs
+    # 
+    define pChisq_PreVerbose $verbose verbose 0
+    data $(FileObs) read {w0 1 f0 2 df 3}
+    verbose $pChisq_PreVerbose
+    set w1 = (w0)
+    set coo = (f0>0.0 && df>0.0)
+    set w0 = w0 if(coo) set df = df if(coo) set f0 = f0 if(coo)
+    set f1 = f0 if((df/f0)<(1/2.5)) # select only good S.N data for limits
+    if(!is_vector(w0)||!is_vector(f0)||!is_vector(df)) {
+        print '\nError! Failed to read w0 f0 df from \"$(FileObs)\"! Wrong format?\n\n' {}
+        return
+    }
+    # 
+    # 
+    # 
+    # 
+    # Read FileOut
+    # 
+    define pChisq_PreVerbose $verbose verbose 0
+    set iCol = 0 
+    set iCol = iCol+1 data $(FileOut) read i0 $(iCol)
+    set iCol = iCol+1 data $(FileOut) read chi2 $(iCol)
+    set gCoo = chi2>0 # goodSolutionMark
+    verbose $pChisq_PreVerbose
+    if(!is_vector(i0)||!is_vector(chi2)) {
+        print '\nError! Failed to read the LVG fitting output file \"$(FileOut)\"! Wrong format?\n\n' {}
+        return
+    }
+    do iLib=1,NumbLib {
+        set NPARLib$iLib = 0  # the number of Parameters in Lib$iLib, e.g. DL07 LoEx has 2 Paramters: Umin, qPAH
+        if(index(FileLi$iLib,'FSPS.')>=0) {set NPARLib$iLib = 4} # BC03 stellar -- Metal, Age, Mass, EBV
+        if(index(FileLi$iLib,'AGN.')>=0)  {set NPARLib$iLib = 1} # Mullaney AGN -- Type
+        if(index(FileLi$iLib,'DL07.')>=0) {set NPARLib$iLib = 2} # DL07 dust -- Umin, qPAH
+        if(index(FileLi$iLib,'.lvg')>=0)  {set NPARLib$iLib = 2} # LVG -- T_kin, n_H_2
+        if(NPARLib$iLib==0) {print 'Error! Could not recognize \"$(FileLi$iLib)\"! Please contact dzliu to modify the code!\n' {}}
+        define pChisq_PreVerbose $verbose verbose 0
+        set iCol = iCol+1 data $(FileOut) read i$iLib $(iCol)
+        set iCol = iCol+1 data $(FileOut) read a$iLib $(iCol)
+        verbose $pChisq_PreVerbose
+        if(!is_vector(i$iLib)||!is_vector(a$iLib)) {
+            print '\nError! Failed to read i$iLib and a$iLib from column $(iCol) of \"$(FileOut)\"! Please have a check!\n\n' {}
+            return
+        }
+    }
+    do iLib=1,NumbLib {
+        if(NPARLib$iLib==0) {print 'Error! Some library files could not be recognized in current version of the code! Please contact dzliu to modify the code!\n' {} return}
+        do iPar=1,NPARLib$iLib {
+            define pChisq_PreVerbose $verbose verbose 0
+            set iCol = iCol+1 data $(FileOut) read t$iLib""par$iPar $(iCol)
+            verbose $pChisq_PreVerbose
+            if(!is_vector(t$iLib""par$iPar)) {
+                print '\nError! Failed to read t$iLib""par$iPar from column $(iCol) of \"$(FileOut)\"! Please have a check!\n\n' {}
+                return
+            }
+        }
+        #[20170213] if fit LVG 2 components
+        if(NumbLib==2 && $iLib==NumbLib) {
+            set gCoo = (gCoo && t2par2>t1par2) # component 2 must be denser
+        }
+    }
+    # 
+    # 
+    # 
+    # 
+    # Choose Best Fit Solutions to Show 
+    # <TODO><BUG> i0 has problem, do not use i0
+    # 
+    if(sum(gCoo)==0) {
+        print 'Error! No good solution?!\n' {}
+        return
+    }
+    if(!is_vector(cid)) {
+        set srchi2 = chi2 set sruuid = 0,dimen(chi2)-1 
+        set srgcoo = gCoo
+        sort {srchi2 sruuid srgcoo}
+        set cid = sruuid if(srgcoo) # <fixed><bug><20150414> # <TODO> choose only goodSolution (a1>0 && a2>0)
+        set cidTMP = 0,$($ns-1) # choose the nth best fit chi2 solutions
+        set cid = cid[cidTMP]
+        if(dimen(cid)==0) {return}
+        if(is_vector(cid)==0) {return}
+    } # else {
+    #     set cid = cid if(gCoo[cid])
+    #     if(dimen(cid)==0) {return}
+    #     if(is_vector(cid)==0) {return}
+    # }
+    # 
+    # Calc the plot range
+    # 
+    vecminmax f1 fMIN fMAX
+    define fMAX $(($fMAX)+($fMAX-$fMIN)*0.35)
+    define fMIN $(($fMIN)-($fMAX-$fMIN)*0.10)
+    vecminmax w1 wMIN wMAX
+    define wMAX $(int($wMAX/0.25)*0.25+0.50)
+    define wMIN $(int($wMIN/0.25)*0.25-0.75)
+    if(z>=1) {
+        define wMIN -0.5
+        define wMAX 5.5
+        define fMIN -4.0
+        define fMAX 3.0
+    }
+    ##echo $wMIN $wMAX $fMIN $fMAX
+    # 
+    # Prepare the plot parameters
+    # 
+    if(is_vector(FileEps)) { 
+        device postencap $(FileEps)
+        # xtcolours # do not use xtcolours
+        define TeX_strings 1
+        #ticksize 0 0 0 0
+        limits $wMIN $wMAX $fMIN $fMAX
+        #notation 0 0 -0.5 0.5
+        #limits -0.5 5.5 -3.0 3.0 #[20160512] $fMIN $fMAX #[20160502] -1.5 5.5 $fMIN $fMAX
+        erase expand 1.25 lweight 3.0 
+        location 4500 31500 08000 18000
+        box
+        xlabel Upper-level Rotational Quantum Number J_{upper}
+        ylabel Line Flux [Jy km s^{-1}]
+    }
+    # 
+    # plot each model
+    # <NOTE><20160502><dzliu> separated this from "plotChisq", for speed up the "rChisq.sm". This must be run after "plotChisq"
+    # 
+    plotChisqInnerRoutine
+    
+    
+    
+plotChisqInnerRoutine
+    # 
+    # plot each model
+    # <NOTE><20160502><dzliu> separated this from "plotChisq", for speed up the "rChisq.sm". This must be run after "plotChisq"
+    # 
+    define i 0
+    define c 0
+    if(is_vector(gCoo)) {
+        set cid = cid if(gCoo[cid])
+        if(dimen(cid)==0) {return}
+        if(is_vector(cid)==0) {return}
+    } else {
+        print 'Error! Please do not run plotChisqInnerRoutine alone!\n' {}
+        return
+    }
+    foreach i cid {
+        # 
+        # 
+        # check whether this is a good solution
+        # 
+        # if(!gCoo[$i]) {continue}
+        if($verbose>0) {echo Loading chi2 solution $i ... }
+        # 
+        # 
+        # set common x
+        set SPIwc = 1,15,0.1
+        set wc = SPIwc # the combined LVG wave in log
+        set fc = wc*.0-99 # the combined LVG flux in log
+        # 
+        # 
+        # unset values
+        if(is_vector(massH2))          {unset massH2}
+        if(is_vector(T_kin_S1))        {unset T_kin_S1}
+        if(is_vector(n_H_2_S1))        {unset n_H_2_S1}
+        if(is_vector(massH2_S1))       {unset massH2_S1}
+        if(is_vector(T_kin_S2))        {unset T_kin_S2}
+        if(is_vector(n_H_2_S2))        {unset n_H_2_S2}
+        if(is_vector(massH2_S2))       {unset massH2_S2}
+        # 
+        # 
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # loop FileLib
+        # 
+        do iLib=1,NumbLib {
+            # 
+            # load model wave flux
+            # 
+            set XiLib = i$iLib[$i]
+            set XaLib = a$iLib[$i]
+            readLibLVG $(FileLi$iLib) $(XiLib)
+            # 
+            # fix a1/2/3<0 problem [20160502]
+            # 
+            if(XaLib>0) {
+                set w$iLib = ModJ1
+                set f$iLib = ModS1 * XaLib
+            } else {
+                set w$iLib = ModJ1
+                set f$iLib = w$iLib*0.0+1e-30
+            }
+            # 
+            # spline wave flux
+            # 
+            set SPIw$iLib = SPIwc
+            vecminmax w$iLib SPLw$iLib SPUw$iLib
+            if(XaLib>0) {
+                spline w$iLib f$iLib SPIw$iLib SPIf$iLib
+                set SPIf$iLib = (SPIw$iLib<$SPLw$iLib) ? 1e-30 : SPIf$iLib
+                set SPIf$iLib = (SPIw$iLib>$SPUw$iLib) ? 1e-30 : SPIf$iLib
+            } else {
+                set SPIf$iLib = SPIw$iLib*0.0+1e-30
+            }
+            # 
+            # calc gas mass
+            # 
+            if(index(FileLi$iLib,'lvg')>=0) {
+                # 
+                # calc gas mass
+                # 
+                set T_kin_S = t$iLib""par1[$i]
+                set n_H_2_S = t$iLib""par2[$i]
+                set rdisk_S = sqrt( XaLib * opz**3 * dA**2 / pi ) * 1e6 # emitting source radius in pc, assuming round disk
+                set hdisk_S = float(dVDoW)/dvddr # emitting source scale height in pc, assuming lvg
+                set columnNH2 = float(dVDoW)/dvddr*n_H_2_S*3.086e18 # / 1e21 # column density of H_2 gas in # 1e21 cm-2. 
+                set massH2_S = pi*rdisk_S**2 * hdisk_S * n_H_2_S * 0.04980769993 # 0.04980769993 = 3.085677e18**3*3.3718047e-24/1.98892e33
+                set massDyn_S = rdisk_S * (float(dVDoW)/2.35482)**2 / 4.302e-3 # the dynamical mass from virial theory: M = R sigma**2 / G = R (dVDoW/2.35482)**2 / G
+                define print_noheader 1
+                print '\n' {}
+                print 'Best-fit H2 column density for Component $iLib = %.6e solar mass per square cm\n' {columnNH2}
+                print 'Best-fit H2 mass for Component $iLib = %.6e solar mass\n' {massH2_S}
+                print 'Best-fit dynamical mass for Component $iLib = %.6e solar mass\n' {massDyn_S}
+                print 'Best-fit n_{H_2} for Component $iLib = %.6e [cm-3]\n' {n_H_2_S}
+                print 'Best-fit T_{kin} for Component $iLib = %.6e [K]\n' {T_kin_S}
+                # print '\n' {}
+                define print_noheader 0
+                # 
+                if(!is_vector(T_kin_S1)) {
+                    set T_kin_S1 = T_kin_S
+                } else {
+                    if(!is_vector(T_kin_S2)) {
+                        set T_kin_S2 = T_kin_S
+                    }
+                }
+                # 
+                if(!is_vector(n_H_2_S1)) {
+                    set n_H_2_S1 = n_H_2_S
+                } else {
+                    if(!is_vector(n_H_2_S2)) {
+                        set n_H_2_S2 = n_H_2_S
+                    }
+                }
+                # 
+                if(!is_vector(massH2_S1)) {
+                    set massH2_S1 = massH2_S
+                } else {
+                    if(!is_vector(massH2_S2)) {
+                        set massH2_S2 = massH2_S
+                    }
+                }
+                # 
+                if(is_vector(massH2)) {
+                    set massH2 = massH2 + massH2_S
+                } else {
+                    set massH2 = massH2_S
+                }
+            }
+            # 
+            # add model to combined LVG
+            # 
+            set fc = (fc + SPIf$iLib)
+            # 
+            # print debug message
+            # 
+            ##echo Loaded model $iLib
+        }
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # 
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # output best fit results
+        # 
+        if(0==$c) {
+            # 
+            # output best fit wave flux
+            # 
+            if(0==$?FileFitNoOutput) {
+                set FileFit = {"bestfit_j_flux.dat"}
+                set bestfit_w = wc
+                set bestfit_f = fc
+                if(is_vector(SPIw2) && is_vector(SPIf2)) {
+                    print $(FileFit) '%15g%15g%15g%15g%15g%15g%15g%15g\n' {bestfit_w bestfit_f wc fc SPIw1 SPIf1 SPIw2 SPIf2}
+                } else {
+                    print $(FileFit) '%15g%15g%15g%15g%15g%15g\n' {bestfit_w bestfit_f wc fc SPIw1 SPIf1}
+                }
+            }
+            # 
+            # output best fit gas mass
+            # 
+            if(is_vector(massH2) ) {
+                ### 
+                ### print 
+                ### 
+                if(0==$?FileFitNoOutput) {
+                    define print_noheader 1
+                    print  "bestfit_Mgas.txt" '\n' {}
+                    print +"bestfit_Mgas.txt" 'Best-fit Mgas = %0.6e\n' {massH2}
+                    print +"bestfit_Mgas.txt" 'Not including Helium.\n' {}
+                    print +"bestfit_Mgas.txt" '\n' {}
+                    define print_noheader 0
+                }
+            }
+        }
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # 
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        if(is_vector(FileEps)) {
+            # 
+            # choose color
+            # 
+            set jColor = (155+55*$c)+256*(188-22*$c)+256*256*(22+44*$c)
+            if(jColor>255+256*255+256*256*255) {set jColor=jColor-255+256*255+256*256*255}
+            set dColor = CTYPE() # print '%.0f\n' {dColor}
+            set eColor = dColor concat jColor # now append user-defined color 10 to ctype
+            ctype = eColor
+            ptype 4 1 ctype $(dimen(eColor)-1) expand 1.1 lweight 1.75
+            # 
+            # plot best fit combined LVG
+            # 
+            connect wc fc
+            # 
+            # plot best fit model parameters
+            # 
+            relocate (01350 $(28500-1000*$c)) expand $(1.1/(1+0.16*NumbLib)) lweight 3.0 label (\chi^2=$(sprintf('%.2f',chi2[$i])))"        "
+            ctype = dColor
+            ctype 0
+            if(is_vector(T_kin_S1)){                 ctype star label " T_{kin}="$(sprintf('%6.1f',((T_kin_S1)))) }
+            if(is_vector(n_H_2_S1)){                 ctype star label " lgn_{H_2}="$(sprintf('%4.1f',(lg(n_H_2_S1)))) }
+            if(is_vector(massH2_S1)){                ctype star label " lgM_{H_2}="$(sprintf('%4.1f',(lg(massH2_S1)))) }
+            if(is_vector(T_kin_S2)){                 ctype red  label " T_{kin}="$(sprintf('%6.1f',((T_kin_S2)))) }
+            if(is_vector(n_H_2_S2)){                 ctype red  label " lgn_{H_2}="$(sprintf('%4.1f',(lg(n_H_2_S2)))) }
+            if(is_vector(massH2_S2)){                ctype red  label " lgM_{H_2}="$(sprintf('%4.1f',(lg(massH2_S2)))) }
+            # 
+            # plot best fit model component types
+            # 
+            if(0==$c) {
+                # 
+                #do iLib=1,NumbLib {
+                #    relocate ($(01350+27000/NumbLib*$iLib) $(28500+1200*01)) 
+                #    if(index(FileLi$iLib,'FSPS.')>=0)     { ctype star expand 1.25 putlabel 5 Stellar }
+                #    if(index(FileLi$iLib,'AGN.')>=0)      { ctype nuck expand 1.25 putlabel 5 AGN }
+                #    if(index(FileLi$iLib,'DL07.HiEx')>=0) { ctype red  expand 1.25 putlabel 5 Warm Dust }
+                #    if(index(FileLi$iLib,'DL07.LoEx')>=0) { ctype blue expand 1.25 putlabel 5 Cold Dust }
+                #}
+                # 
+                relocate $($fx1+($fx2-$fx1)*0.030) $($fy2-($fy2-$fy1)*0.1) 
+                ctype 0 expand 0.95 
+                puts z = $(sprintf('%0.3f',float(z)))
+                puts dL = $(sprintf('%0.0f',float(dL))) Mpc
+                puts dA = $(sprintf('%0.0f',float(dA))) Mpc
+                puts "{\Delta}V" = $(sprintf('%0.0f',float(dVDoW))) km/s
+                puts "dv/dr" = $(sprintf('%0.0f',float(dvddr))) km/s/pc
+            }
+            # 
+            # plot dashed line curve for each model
+            # 
+            do iLib=1,NumbLib {
+                relocate ($(17000+1100*$iLib-1100) $(28500+1200*01)) ltype 1 
+                if($iLib==1) { ptype 4 1 expand 0.5 lweight 1.0 ctype star connect w$iLib f$iLib }
+                if($iLib==2) { ptype 4 1 expand 0.5 lweight 1.0 ctype red  connect w$iLib f$iLib }
+                if($iLib>=3) { ptype 4 1 expand 0.5 lweight 1.0 ctype magenta connect w$iLib f$iLib }
+                ltype 0
+            }
+        }
+        # 
+        # 
+        # 
+        # go to next solution
+        # 
+        ptype 4 1 ctype 0 expand 1.25 lweight 3.0 # this is default
+        define c $($c+1)
+    }
+    # 
+    # 
+    # 
+    # 
+    # 
+    # 
+    if(is_vector(FileEps)) {
+        # 
+        # plot obs datapoints
+        # 
+        ptype 4 0 ctype 0 expand 2.5 lweight 3.5
+       #points w0 f0
+        # 
+        # plot errorbars for detected datapoints
+        # 
+        data $(FileObs) read {w0 1 f0 2 df 3}
+       #macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+        set df_x = (df>0) ? df : 1e+30
+        set snr = f0/df_x
+        set coo = (f0>0.0 && df>0.0 && snr>=2.0) #<TODO># snr limit 2-sigma
+        if(sum(coo)>0) {
+            foreach var {w0 f0 df} {set _$var=$var if(coo)}
+            set _w0 = (_w0)
+            set _df = _df
+            set _f0 = (_f0)
+            points _w0 _f0
+            error_y _w0 _f0 _df
+        }
+        # 
+        # plot downarrow for low S/N datapoints 
+        # 
+        data $(FileObs) read {w0 1 f0 2 df 3}
+       #macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+        set df_x = (df>0) ? df : 1e+30
+        set snr = f0/df_x
+        set coo = (f0>0.0 && df>0.0 && snr<2.0) #<TODO># snr limit 2-sigma
+        if(sum(coo)>0) {
+            foreach var {w0 f0 df} {set __$var=$var if(coo)}
+            set __w0 = (__w0)
+            set __df = (__f0+__df*3.0)
+            upper ptype $upper
+            points __w0 __df
+        }
+        # 
+        # plot downarrow for non-detected up-limits
+        # 
+        data $(FileObs) read {w0 1 f0 2 df 3}
+       #macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+        set coo = (f0<=0.0 && df>0.0)
+        if(sum(coo)>0) {
+            foreach var {w0 f0 df} {set ___$var=$var if(coo)}
+            set ___w0 = (___w0)
+            set ___df = (___df*3.0)
+            upper ptype $upper
+            points ___w0 ___df
+        }
+        # 
+        ptype 4 1 ctype 0 expand 1.25 lweight 3.0 # this is default
+        # 
+        if($?FileEpsDoNotClose) {if(!$FileEpsDoNotClose) {device nodevice}} else {device nodevice}
+        !ps2pdf -dEPSCrop $(FileEps)
+       #!open $(FileEps)
+        !echo Final eps format figure has been output to $(FileEps)
+        !echo Final pdf format figure has been output to $(FileEps) | sed -e 's%\.eps%.pdf%g'
+    }
+    if($verbose>0) {!echo Done!}
+    # 
+    # end
+    # 
+
+
+
+readLibLVG 02
+    # aim: 
+    #     read only data line and skip all comment line starting with #
+    # usage:
+    #     readLibLVG "DataFile" StartLineNumber NumberofLinesToRead
+    # output:
+    #     ModJ1 and ModS1
+    # 
+    define _readLibLVG_preverb $verbose verbose 0
+    !rm ".readLibLVG."* 2>/dev/null
+    !cat $1 | grep '\# NVAR1 = ' | perl -p -e 's/\# NVAR1 = ([0-9]+).*/\1/g' > ".readLibLVG.num"
+    !cat $1 | grep '\# TPAR1 = ' | perl -p -e 's/\# TPAR1 = ([^ ]*).*/\1/g' > ".readLibLVG.tpar1"
+    !cat $1 | grep '\# TPAR2 = ' | perl -p -e 's/\# TPAR2 = ([^ ]*).*/\1/g' > ".readLibLVG.tpar2"
+    !cat $1 | grep '\# TPAR3 = ' | perl -p -e 's/\# TPAR3 = ([^ ]*).*/\1/g' > ".readLibLVG.tpar3"
+    !cat $1 | grep '\# TPAR4 = ' | perl -p -e 's/\# TPAR4 = ([^ ]*).*/\1/g' > ".readLibLVG.tpar4"
+    data ".readLibLVG.num" read {LVGunit 1}
+    if(is_vector(LVGTPAR1)) {unset LVGTPAR1}
+    if(is_vector(LVGTPAR2)) {unset LVGTPAR2}
+    if(is_vector(LVGTPAR3)) {unset LVGTPAR3}
+    if(is_vector(LVGTPAR4)) {unset LVGTPAR4}
+    ![ -s ".readLibLVG.tpar1" ] || rm ".readLibLVG.tpar1"
+    ![ -s ".readLibLVG.tpar2" ] || rm ".readLibLVG.tpar2"
+    ![ -s ".readLibLVG.tpar3" ] || rm ".readLibLVG.tpar3"
+    ![ -s ".readLibLVG.tpar4" ] || rm ".readLibLVG.tpar4"
+    if(is_file(".readLibLVG.tpar1")) {data ".readLibLVG.tpar1" read {LVGTPAR1 1.s}}
+    if(is_file(".readLibLVG.tpar2")) {data ".readLibLVG.tpar2" read {LVGTPAR2 1.s}}
+    if(is_file(".readLibLVG.tpar3")) {data ".readLibLVG.tpar3" read {LVGTPAR3 1.s}}
+    if(is_file(".readLibLVG.tpar4")) {data ".readLibLVG.tpar4" read {LVGTPAR4 1.s}}
+    !cat $1 | grep -n -m $($2+$(LVGunit)) '^[^\#]' | tail -n $(LVGunit) > ".readLibLVG.tmp"
+    data ".readLibLVG.tmp" read {ModJ1 2 ModS1 12} # ModJ1 2 ModS1 12
+    #if(is_vector(LVGTPAR1)) {read <$(LVGTPAR1) 4>}
+    #if(is_vector(LVGTPAR2)) {read <$(LVGTPAR1) 5>}
+    #if(is_vector(LVGTPAR3)) {read <$(LVGTPAR1) 6>}
+    #if(is_vector(LVGTPAR4)) {read <$(LVGTPAR1) 7>}
+    verbose $_readLibLVG_preverb undef _readLibLVG_preverb
+
+
+
+strStandardVector 01
+        # <TODO> copied from astroGalfit.sm
+        # <TODO> situations: "abc 123" 'abc 123' abc123 abc/123 abc.123 123
+        # convert anything to a standard str vector {"XXX XXX"}
+        if(!$?1) { return } # AND the input should be in quotes!
+        !echo -n $1 | grep -v '__strStandardVector_arg1' > /dev/null
+        if($exit_status!=0) { set strstdvec1 = __strStandardVector_arg1
+                     } else { set strstdvec1 = <'$1'>    
+                        if(whatis(strstdvec1)==137) {set strstdvec1 = string($1)}
+                     }
+        set strstdvec2 = {"} + strstdvec1[0]
+        do  strstdveci=1,dimen(strstdvec1)-1 {set strstdvec2 = strstdvec2 + ' ' + strstdvec1[$strstdveci]}
+        set strstdvec2 = strstdvec2 + {"}
+        set $0 = strstdvec2 
+        return
+
+
+

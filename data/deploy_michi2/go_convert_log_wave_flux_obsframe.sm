@@ -1,0 +1,23 @@
+data "fit_sed_data_detected_GALAXY_ID.txt"
+read {wave 1 flux 2 ferr 3}
+set wave = 10**wave
+set flux = 10**flux
+set ferr = ferr*flux
+print "flux_obsframe.dat" '%15g%15g%15g\n' {wave flux ferr}
+unset wave
+unset flux
+unset ferr
+#
+data "fit_sed_data_undetect_GALAXY_ID.txt"
+read {wave 1 ferr 2}
+if(is_vector(wave) && is_vector(ferr)){
+set wave = 10**wave
+set flux = 10**ferr*0.0
+set ferr = 10**ferr/3.0
+define print_noheader 1
+print +"flux_obsframe.dat" '%15g%15g%15g\n' {wave flux ferr}
+define print_noheader 0
+unset wave
+unset flux
+unset ferr
+}

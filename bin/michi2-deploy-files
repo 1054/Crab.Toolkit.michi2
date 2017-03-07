@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+
+# 
+# readlink for Mac (because Mac readlink does not accept "-f" option)
+# 
+if [[ $(uname) == *"Darwin"* ]]; then
+    function readlink() {
+        if [[ $# -gt 1 ]]; then if [[ "$1" == "-f" ]]; then shift; fi; fi
+        DIR="$1"; if [[ "$DIR" != *"/"* ]]; then DIR="./$DIR"; fi # 20170228: fixed bug: path without "/"
+        DIR=$(echo "${DIR%/*}") # 20160410: fixed bug: source SETUP just under the Softwares dir
+        if [[ -d "$DIR" ]]; then cd "$DIR" && echo "$(pwd -P)/$(basename ${1})"; 
+        else echo "$(pwd -P)/$(basename ${1})"; fi
+    }
+fi
+
+
+
+# 
+# Main program
+# 
+deploy_current_dir=$(pwd -P)
+deploy_script_dir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+deploy_upper_dir=$(readlink -f $(dirname "${deploy_script_dir}"))
+
+echo "Welcome"
+echo "Deploying michi2 into ${deploy_current_dir} ..."
+sleep 1.0
+
+# 
+# Type of fitting
+# 
+deploy_type="SED"
+if [[ $# -ge 1 ]]; then
+    deploy_type="$1"
+fi
+
+# 
+# Copy files
+# 
+if echo "$deploy_type" | grep -q -i "SED"; then
+    cp "${deploy_upper_dir}/data/deploy_michi2"/*.sm "${deploy_upper_dir}/data/deploy_michi2"/run*.sh .
+    unzip "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
+    unzip "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
+    unzip "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.Single.lib.SED.zip"
+    unzip "${deploy_upper_dir}/data/lib_SED/RadioPowerlaw.Single.lib.SED.zip"
+elif echo "$deploy_type" | grep -q -i "LVG"; then
+    cp "${deploy_upper_dir}/data/deploy_michi2"/*.sm "${deploy_upper_dir}/data/deploy_michi2"/run*.sh .
+    cp "${deploy_upper_dir}/data/lib_LVG/"lib_*.lvg .
+fi
+if [[ $(uname) == "Darwin" ]]; then
+    echo "Mac!"; sleep 1.0
+    cp "${deploy_upper_dir}/bin/michi2_v03_20160727mac" .
+    ln -fs "michi2_v03_20160727mac" michi2_v03
+    chmod +x michi2_v03
+else
+    cp "${deploy_upper_dir}/bin/michi2_v03_20160829_Linux_x86_64" .
+    ln -fs "michi2_v03_20160829_Linux_x86_64" michi2_v03
+    chmod +x michi2_v03
+fi
+
+ln -fs "run_plotting_quintuple.sm" "run_plotting.sm"
+
+

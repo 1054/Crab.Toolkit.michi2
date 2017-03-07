@@ -1,0 +1,201 @@
+;
+; Updated: 2013-03-27
+; Updated: 2013-04-06
+; Updated: 2013-06-06 : the first character of ColumnHeader is a greek letter
+;          
+; 
+FUNCTION CrabTableReadColumn, FilePath, ColumnHeader, ColumnHeaderBefore = ColumnHeaderBefore, $
+                                                      ColumnPositionFound = ColumnPositionFound, $
+                                                      ColumnPositionBefore = ColumnPositionBefore, $
+                                                      Splitter = Splitter, $
+                                                      Commente = Commente, $
+                                                      SkipLine = SkipLine, $
+                                                      SkipValue = SkipValue, $
+                                                      IncludeHeader = IncludeHeader, $
+                                                      Verbose = Verbose
+; Read a column from a well formatted text table contents.
+; e.g.            # some comments
+;                 # some comments
+;                 Source      RA     DEC     Flux     Luminosity
+;                 NGC6946   123123  123123  123123    123123123123
+;                 NGC1234   12312   1231       123          123123
+; This program can read a whole column like Column "Flux" = ['123123','123'].
+;  
+;    ;;;<TEST>
+;    FilePath = 'E:\Working\SpireLines\ListBySource2\Arp220\sfit\Arp220_FromHIPE_SLWC3.CSV'
+;    ColumnHeader = 'LineName'
+;
+; 2013-10-28 added keyword Splitter
+; 
+    
+    ;;; Check input
+    IF N_ELEMENTS(FilePath) EQ 0 THEN RETURN,[]
+    
+    ;;; Exam whether file exists or not
+    IF FILE_TEST(FilePath,/Read) LE 0 THEN BEGIN
+        IF KEYWORD_SET(Verbose) THEN PRINT, 'CrabTableReadColumn: '+FilePath+' not found! Exit!'
+        RETURN,[]
+    ENDIF
+    OPENR, FileUnit, FilePath, /GET_LUN
+    
+    ;;; Exam input
+    IF SIZE(ColumnHeader,/TNAME) EQ 'STRING' THEN BEGIN
+        IF STRLEN(STRTRIM(ColumnHeader,2)) LE 0 THEN BEGIN
+            IF KEYWORD_SET(Verbose) THEN PRINT, 'CrabTableReadColumn: Column Header is empty! Exit!'
+            CLOSE, FileUnit, /FORCE
+            FREE_LUN, FileUnit   ;;; <Corrected> 2013-06-08 FREE_LUN !
+            RETURN,[]
+        ENDIF
+    ENDIF ELSE BEGIN
+        ; ColumnHeader is actually ColumnIndex, starting from 1. 
+        ColumnIndex = FIX(ColumnHeader)
+    ENDELSE
+    
+    ;;; Define Commente
+    IF NOT KEYWORD_SET(Commente) THEN BEGIN
+        Commente = '#'
+    ENDIF ELSE BEGIN
+        IF STRPOS(Commente,'*') GT -1 AND STRMATCH(Commente,'\*') EQ -1 THEN BEGIN
+            Commente = CrabStringReplace(Commente,'*','\*')
+        ENDIF
+    ENDELSE
+    
+    ;;; Read each line, read leading comment lines starting with '#' as TableHeaders
+    TableHeaders  = ''
+    TableContents = []
+    TableLineId   = 0
+    WHILE (~EOF(FileUnit)) DO BEGIN
+        TempLine = ''
+        ReadF,FileUnit,TempLine
+        IsValidContent = 1
+        IF IsValidContent EQ 1 AND STRLEN(STRTRIM(TempLine,2))                EQ 0 THEN IsValidContent=0
+        IF IsValidContent EQ 1 AND STRMATCH(TempLine,Commente+'*')            EQ 1 THEN IsValidContent=0
+        IF IsValidContent EQ 1 AND STRMATCH(TempLine,'======*')               EQ 1 THEN IsValidContent=0
+        IF IsValidContent EQ 1 AND STRMATCH(TempLine,'------*')               EQ 1 THEN IsValidContent=0
+        IF IsValidContent EQ 1 AND STRMATCH(STRTRIM(TempLine,2),Commente+'*') EQ 1 THEN IsValidContent=0
+        IF IsValidContent EQ 1 AND KEYWORD_SET(SkipLine) THEN BEGIN
+            IF SIZE(SkipLine,/TNAME) EQ 'STRING' THEN BEGIN
+                FOREACH SkipLinePattern,SkipLine DO BEGIN
+                    IF STRMATCH(TempLine,SkipLinePattern) EQ 1 THEN IsValidContent=0
+                ENDFOREACH
+            ENDIF ELSE IF SIZE(SkipLine,/TNAME) EQ 'INT' THEN BEGIN
+                FOREACH SkipLineIndex,SkipLine DO BEGIN ; <TODO> SkipLineIndex starts from 0.
+                    IF TableLineId EQ SkipLineIndex THEN IsValidContent=0
+                ENDFOREACH
+            ENDIF
+        ENDIF
+        ; The first line we meet is the TableHeader!!! <TODO><20131201><DzLiu> this may have some confusions though~~
+        IF IsValidContent EQ 1 AND STRLEN(TableHeaders) EQ 0 THEN BEGIN
+            TableHeaders = TempLine
+        ENDIF
+        ; Then we take all valid contents as TableContens, and prepend the header line
+        IF IsValidContent EQ 1 THEN BEGIN
+            TableContents = [TableContents,TempLine]
+        ENDIF
+        TableLineId = TableLineId + 1
+
+    ENDWHILE
+    
+    ;;; Correct Greek Letters In TableHeaders
+    GreekPos = 0
+    TestTabHeader = STRMID(TableHeaders,69,8)
+    WHILE GreekPos NE -1 DO BEGIN
+        GreekPos = STRPOS(TableHeaders,'σ') ; <Corrected><2013-03-21> One greek letter has a strlen of 2. 
+        IF GreekPos GE 1 THEN $
+            TableHeaders = STRMID(TableHeaders,0,GreekPos)+'s'+STRMID(TableHeaders,GreekPos+2,STRLEN(TableHeaders)-GreekPos-1)
+        IF GreekPos EQ 0 THEN $ ; if the first character is a greek letter
+            TableHeaders = 's'+STRMID(TableHeaders,GreekPos+2,STRLEN(TableHeaders)-GreekPos-1)
+    ENDWHILE
+    GreekPos = 0
+    WHILE GreekPos NE -1 DO BEGIN
+        GreekPos = STRPOS(ColumnHeader,'σ') ; <Corrected><2013-03-21> One greek letter has a strlen of 2. 
+        IF GreekPos GE 1 THEN $
+            ColumnHeader = STRMID(ColumnHeader,0,GreekPos)+'s'+STRMID(ColumnHeader,GreekPos+2,STRLEN(ColumnHeader)-GreekPos-1)
+        IF GreekPos EQ 0 THEN $ ; if the first character is a greek letter
+            ColumnHeader = 's'+STRMID(ColumnHeader,GreekPos+2,STRLEN(ColumnHeader)-GreekPos-1)
+    ENDWHILE
+    
+    ;;; 在TableHeaders行中找到ColumnHeader字符.注意TableContents第一行就是TableHeaders.
+    ColumnFound = CrabStringFindWholeWord(TableHeaders, ColumnHeader) ; Match the whole word
+    IF N_ELEMENTS(ColumnFound) EQ 0 THEN BEGIN
+        IF KEYWORD_SET(Verbose) THEN PRINT, 'CrabTableReadColumn: Column Header '+ColumnHeader+' not found! Exit!'
+        CLOSE, FileUnit, /FORCE ; column header not found!
+        FREE_LUN, FileUnit ; column header not found!
+        RETURN, [] ; column header not found!
+    ENDIF
+    HPosL = -1
+    IF N_ELEMENTS(ColumnHeaderBefore) EQ 1 AND SIZE(ColumnHeaderBefore,/TYPE) EQ 7 THEN $
+        ColumnBefore = CrabStringFindWholeWord(TableHeaders, ColumnHeaderBefore)
+    IF N_ELEMENTS(ColumnPositionBefore) GE 1 THEN $
+        ColumnBefore = LONG(ColumnPositionBefore[0])
+    IF N_ELEMENTS(ColumnBefore) GE 1 THEN BEGIN
+        ; find the ColumnFound right after the ColumnBefore
+        HPosL = ColumnFound[WHERE(ColumnFound-ColumnBefore[0] GE 0)] 
+        HPosL = HPosL[0]
+    ENDIF ELSE BEGIN
+        ; just take the first found position
+        HPosL = ColumnFound[0]
+    ENDELSE
+    HPosR = HPosL + STRLEN(ColumnHeader)-1
+    ColumnPositionFound = [HPosL,HPosR] ; output the found position
+    
+    ;;; Splitter
+    IF N_ELEMENTS(Splitter) EQ 0 THEN Splitter = ' ' ; default Splitter is one single space
+    IF N_ELEMENTS(Splitter) GT 1 THEN Splitter = Splitter[0]
+    IF SIZE(Splitter,/TNAME) NE 'STRING' THEN Splitter = STRING(Splitter)
+    
+    
+    
+    ;;; 循环TableContents. 注意跳掉第一行标题行.
+    ColumnContents = []
+    FOR i=0,N_ELEMENTS(TableContents)-1 DO BEGIN
+        
+        TempLine = TableContents[i]
+        
+;       IF STRLEN(TempLine) LT HPosL THEN CONTINUE ; <Corrected><20131125><DzLiu>
+        IF i EQ 0 AND NOT KEYWORD_SET(IncludeHeader) THEN CONTINUE ; <Update><20131201><DzLiu>
+        IF STRLEN(TempLine) LT HPosL THEN BEGIN    ; <Corrected><20131201><DzLiu>
+            ColumnContents = [ColumnContents,'']   ; <Corrected><20131201><DzLiu>
+            CONTINUE
+        ENDIF
+        
+        NewHPosL = STRPOS(TempLine,Splitter,HPosL,/REVERSE_SEARCH)
+        IF NewHPosL EQ -1 THEN NewHPosL=0
+        NewHPosR = STRPOS(TempLine,Splitter,HPosR)
+        IF NewHPosR EQ -1 THEN NewHPosR=STRLEN(TempLine)-1
+        TempStr  = STRMID(TempLine,NewHPosL,(NewHPosR-NewHPosL+1))
+        TempStr  = STRTRIM(TempStr,2)
+        
+        IsValidValue = 1
+        IF KEYWORD_SET(SkipValue) THEN BEGIN
+            IF SIZE(SkipValue,/TNAME) EQ 'STRING' THEN BEGIN
+                FOREACH SkipValuePattern, SkipValue DO BEGIN
+                    IF STRMATCH(TempStr,SkipValuePattern) THEN IsValidValue=0
+                ENDFOREACH
+            ENDIF
+        ENDIF
+        
+        IF IsValidValue EQ 1 THEN BEGIN
+            ColumnContents = [ColumnContents,TempStr]
+        ENDIF
+        
+    ENDFOR
+    
+    
+    
+;    Print,'TableHeaders = ',TableHeaders
+;    Print,' '
+;    Print,'ColumnHeader = ',ColumnHeader
+;    Print,' '
+;    Print,'ColumnContents = ',ColumnContents
+    
+    ;;; Close
+    CLOSE, FileUnit
+    CLOSE, FileUnit, /FORCE
+    FREE_LUN, FileUnit
+    FREE_LUN, FileUnit, /FORCE
+    
+    ;;; Return
+    Return,ColumnContents
+    
+END

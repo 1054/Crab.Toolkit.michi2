@@ -1,0 +1,113 @@
+;
+; Updated: 2013-03-27
+; 
+FUNCTION CrabTableReadColumn, FilePath, ColumnHeader
+; Read a column from a well formatted text table contents.
+; e.g.            # some comments
+;                 # some comments
+;                 Source      RA     DEC     Flux     Luminosity
+;                 NGC6946   123123  123123  123123    123123123123
+;                 NGC1234   12312   1231       123          123123
+; This program can read a whole column like Column "Flux" = ['123123','123'].
+;  
+;    ;;;<TEST>
+;    FilePath = 'E:\Working\SpireLines\ListBySource2\Arp220\sfit\Arp220_FromHIPE_SLWC3.CSV'
+;    ColumnHeader = 'LineName'
+;
+    
+    ;;;Exam whether file exists or not
+    IF FILE_TEST(FilePath,/Read) LE 0 THEN RETURN,[]
+    OPENR, FileUnit, FilePath, /GET_LUN
+    
+    ;;;Exam input
+    IF STRLEN(STRTRIM(ColumnHeader,2)) LE 0 THEN BEGIN
+        CLOSE, FileUnit, /FORCE
+        RETURN,[]
+    ENDIF
+    
+    ;;;Read each line, skip comment lines starting with '#'
+    TableHeaders  = ''
+    TableContents = []
+    WHILE (~EOF(FileUnit)) DO BEGIN
+        TempLine = ''
+        ReadF,FileUnit,TempLine
+        IF STRLEN(STRTRIM(TempLine,2)) EQ 0 THEN CONTINUE
+        IF STRMATCH(TempLine,'#*') EQ 1 THEN CONTINUE
+        IF STRMATCH(TempLine,'======*') EQ 1 THEN CONTINUE
+        IF STRMATCH(TempLine,'------*') EQ 1 THEN CONTINUE
+        IF STRMATCH(STRTRIM(TempLine,2),'#*') EQ 1 THEN CONTINUE
+        IF STRLEN(TableHeaders) EQ 0 THEN TableHeaders=TempLine
+        TableContents = [TableContents,TempLine]
+    ENDWHILE
+    
+    ;;;Correct Greek Letters In TableHeaders
+    GreekPos = 0
+    WHILE GreekPos NE -1 DO BEGIN
+        GreekPos = STRPOS(TableHeaders,'σ') ; <Corrected><2013-03-21> One greek letter has a strlen of 2. 
+        IF GreekPos NE -1 THEN BEGIN
+            TableHeaders = STRMID(TableHeaders,0,GreekPos)+'s'+STRMID(TableHeaders,GreekPos+2,STRLEN(TableHeaders)-GreekPos-1)
+        ENDIF
+    ENDWHILE
+    GreekPos = 0
+    WHILE GreekPos NE -1 DO BEGIN
+        GreekPos = STRPOS(ColumnHeader,'σ') ; <Corrected><2013-03-21> One greek letter has a strlen of 2. 
+        IF GreekPos NE -1 THEN BEGIN
+            ColumnHeader = STRMID(ColumnHeader,0,GreekPos)+'s'+STRMID(ColumnHeader,GreekPos+2,STRLEN(ColumnHeader)-GreekPos-1)
+        ENDIF
+    ENDWHILE
+    
+    ;;;在TableHeaders行中找到ColumnHeader字符.注意TableContents第一行就是TableHeaders.
+;    HPosL = STRPOS(TableHeaders,ColumnHeader)
+    ;;;;;; REGEX
+    ColumnHeaderReg = ColumnHeader
+    ColumnHeaderReg = STRJOIN(STRSPLIT(ColumnHeaderReg,'(',/EXTRACT,/PRESERVE_NULL),'\(',/SINGLE)
+    ColumnHeaderReg = STRJOIN(STRSPLIT(ColumnHeaderReg,')',/EXTRACT,/PRESERVE_NULL),'\)',/SINGLE)
+    ColumnHeaderReg = STRJOIN(STRSPLIT(ColumnHeaderReg,'{',/EXTRACT,/PRESERVE_NULL),'\{',/SINGLE)
+    ColumnHeaderReg = STRJOIN(STRSPLIT(ColumnHeaderReg,'}',/EXTRACT,/PRESERVE_NULL),'\}',/SINGLE)
+    ColumnHeaderReg = STRJOIN(STRSPLIT(ColumnHeaderReg,'_',/EXTRACT,/PRESERVE_NULL),'\_',/SINGLE)
+    ;;;;;; Match the whole word
+    HPosL = -1
+    IF HPosL EQ -1 THEN BEGIN ;先匹配两边都是空白的
+        TempPos = STREGEX(TableHeaders,'[ ]+('+ColumnHeaderReg+'[ ]+)',/SUBEXPR)
+        IF N_ELEMENTS(TempPos) GE 2 THEN HPosL = TempPos[1] ; TempPos[0] is the greedy matched position, skip this
+    ENDIF
+    IF HPosL EQ -1 THEN BEGIN ;再匹配左端为换行符的
+        TempPos = STREGEX(TableHeaders,'('+ColumnHeaderReg+'[ ]+)',/SUBEXPR)
+        IF N_ELEMENTS(TempPos) GE 2 THEN HPosL = TempPos[1] ; TempPos[0] is the greedy matched position, skip this
+    ENDIF
+    IF HPosL EQ -1 THEN BEGIN ;再匹配右端为换行符的
+        TempPos = STREGEX(TableHeaders,'[ ]+('+ColumnHeaderReg+')',/SUBEXPR)
+        IF N_ELEMENTS(TempPos) GE 2 THEN HPosL = TempPos[1] ; TempPos[0] is the greedy matched position, skip this
+    ENDIF
+    HPosR = HPosL + STRLEN(ColumnHeader)-1
+    ;;;;;; check matching the whole word
+    IPosL = BYTE(STRMID(TableHeaders,HPosL-1,1))
+    IPosR = BYTE(STRMID(TableHeaders,HPosR+1,1))
+    
+    ;;;循环TableContents.注意跳掉第一行标题行.
+    ColumnContents = []
+    FOR i=1,N_ELEMENTS(TableContents)-1 DO BEGIN
+        TempLine = TableContents[i]
+        NewHPosL = STRPOS(TempLine,' ',HPosL,/REVERSE_SEARCH)
+        IF NewHPosL EQ -1 THEN NewHPosL=0
+        NewHPosR = STRPOS(TempLine,' ',HPosR)
+        IF NewHPosR EQ -1 THEN NewHPosR=STRLEN(TempLine)-1
+        TempStr  = STRMID(TempLine,NewHPosL,(NewHPosR-NewHPosL+1))
+        TempStr  = STRTRIM(TempStr,2)
+        ColumnContents = [ColumnContents,TempStr]
+    ENDFOR
+    
+;    Print,'TableHeaders = ',TableHeaders
+;    Print,' '
+;    Print,'ColumnHeader = ',ColumnHeader
+;    Print,' '
+;    Print,'ColumnContents = ',ColumnContents
+    
+    ;;;Close
+    CLOSE, FileUnit, /FORCE
+    FREE_LUN, FileUnit
+    
+    ;;;Return
+    Return,ColumnContents
+    
+END
