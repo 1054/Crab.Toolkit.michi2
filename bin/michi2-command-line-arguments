@@ -1,0 +1,285 @@
+#!/bin/bash
+#
+
+
+
+# 
+# Prepare necessary functions
+# 
+# readlink for Mac (because Mac readlink does not accept "-f" option)
+# 
+if [[ $(uname) == *"Darwin"* ]]; then
+    function readlink() {
+        if [[ $# -gt 1 ]]; then if [[ "$1" == "-f" ]]; then shift; fi; fi
+        DIR="$1"; if [[ "$DIR" != *"/"* ]]; then DIR="./$DIR"; fi # 20170228: fixed bug: path without "/"
+        DIR=$(echo "${DIR%/*}") # 20160410: fixed bug: source SETUP just under the Softwares dir
+        if [[ -d "$DIR" ]]; then cd "$DIR" && echo "$(pwd -P)/$(basename ${1})"; 
+        else echo "$(pwd -P)/$(basename ${1})"; fi
+    }
+fi
+# 
+# backupmark
+# 
+function backupmark() {
+    echo "backup.$(date +%Y%m%d.%Hh%Mm%Ss.%Z)" # date +%Y%m%d.%H%M%S.%N.%Z
+}
+# 
+# backupfile
+# 
+function backupfile() {
+    # input arguments: 
+    # $1 -- file to be backed up
+    # $2 -- backup time mark (optional)
+    if [[ $# -eq 1 ]]; then
+        m_Backup_File="$1"
+        m_Backup_Mark=$(backupmark)
+    else
+        m_Backup_File="$1"
+        m_Backup_Mark="$2"
+    fi
+    if [[ -f "$m_Backup_File" ]]; then
+        mv "$m_Backup_File" "$m_Backup_File.$m_Backup_Mark"
+        echo "Backing up existing \"$m_Backup_File\" as \"$m_Backup_File.$m_Backup_Mark\"!"
+    fi
+}
+# 
+# print_michi2_libs
+# 
+function print_michi2_libs_as_string() {
+    if [[ ${#michi2_lib[@]} -gt 0 ]]; then
+        echo -n "['${michi2_lib[0]}'"
+        for (( j=1; j<${#michi2_lib[@]}; j++ )); do 
+        echo -n ",'${michi2_lib[j]}'"
+        done
+        echo "]"
+    fi
+}
+
+
+
+
+
+
+
+
+
+
+
+
+# 
+# Check directories and data files
+# 
+michi2_scripts_dir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
+michi2_toolkit_dir=$(readlink -f $(dirname "$michi2_scripts_dir"))
+michi2_current_dir=$(pwd -P)
+
+
+
+# 
+# Check user input WaveData and FluxData
+# 
+export michi2_obj=""
+export michi2_obs="flux_obsframe.dat"
+export michi2_lib=()
+export michi2_out="fit"
+export michi2_fit="fit"
+export michi2_z=""
+export michi2_arg="N/A"
+export michi2_cmd=""
+
+while [[ $# -gt 0 ]]; do
+    
+    michi2_str=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+    
+    case "$michi2_str" in
+                    
+         "-OBJECT") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-obj"
+                    ;;
+                    
+         "-SOURCE") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-obj"
+                    ;;
+                    
+           "-NAME") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-obj"
+                    ;;
+                    
+             "-ID") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-obj"
+                    ;;
+                    
+           "-OBS"*) michi2_cmd="$1"; shift
+                    michi2_arg="michi2-obs"
+                    ;;
+                    
+           "-FLUX") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-obs"
+                    ;;
+                    
+           "-LIB"*) michi2_cmd="$1"; shift
+                    michi2_arg="michi2-lib"
+                    ;;
+                    
+       "-REDSHIFT") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-z"
+                    ;;
+                    
+              "-Z") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-z"
+                    ;;
+                    
+            "-OUT") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-out"
+                    ;;
+                    
+         "-OUTPUT") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-out"
+                    ;;
+                    
+            "-FIT") michi2_cmd="$1"; shift
+                    michi2_arg="michi2-fit"
+                    ;;
+                    
+                 *) #echo "$1"
+                    #shift
+                    
+    esac
+    
+    case "$michi2_arg" in
+                                        
+         "michi2-obj")
+                          # check followed argument
+                          if [[ $# -ge 1 ]]; then
+                              michi2_obj="$1"
+                          else
+                              echo ""
+                              echo "Error! Input argument $michi2_cmd should be followed with at least 1 argument!"
+                              echo ""
+                              exit 1
+                          fi
+                          shift
+                          ;;
+                          
+         "michi2-obs")
+                          # check followed argument
+                          if [[ $# -ge 1 ]]; then
+                              michi2_obs="$1"
+                          else
+                              echo ""
+                              echo "Error! Input argument $michi2_cmd should be followed with at least 1 argument!"
+                              echo ""
+                              exit 1
+                          fi
+                          shift
+                          ;;
+                          
+         "michi2-lib")
+                          # check followed argument
+                          if [[ $# -ge 1 ]]; then
+                              michi2_lib+=("$1")
+                          else
+                              echo ""
+                              echo "Error! Input argument $michi2_cmd should be followed with at least 1 argument!"
+                              echo ""
+                              exit 1
+                          fi
+                          shift
+                          ;;
+                          
+         "michi2-out")
+                          # check followed argument
+                          if [[ $# -ge 1 ]]; then
+                              michi2_out="$1"
+                          else
+                              echo ""
+                              echo "Error! Input argument $michi2_cmd should be followed with at least 1 argument!"
+                              echo ""
+                              exit 1
+                          fi
+                          shift
+                          ;;
+                          
+         "michi2-fit")
+                          # check followed argument
+                          if [[ $# -ge 1 ]]; then
+                              michi2_fit="$1"
+                          else
+                              echo ""
+                              echo "Error! Input argument $michi2_cmd should be followed with at least 1 argument!"
+                              echo ""
+                              exit 1
+                          fi
+                          shift
+                          ;;
+                          
+           "michi2-z")
+                          # check followed argument
+                          if [[ $# -ge 1 ]]; then
+                              michi2_z="$1"
+                          else
+                              echo ""
+                              echo "Error! Input argument $michi2_cmd should be followed with 1 argument!"
+                              echo ""
+                              exit 1
+                          fi
+                          shift
+                          ;;
+                          
+                    *)    #echo "$1"
+                          shift
+                                        
+    esac
+    
+done
+
+
+
+# 
+# Check input observation flux file
+# 
+if [[ ! -f "$michi2_obs" ]]; then
+    echo "Error! The input observation flux file \"$michi2_obs\" was not found! Exit!"
+    exit
+fi
+
+
+
+# 
+# Check input fit library files
+# 
+if [[ ${#michi2_lib[@]} -eq 0 ]]; then
+    michi2_lib=( "FSPS.Padova.BaSeL.Z0.0190.EBV.lib.SED" \
+                      "MullaneyAGN.Single.lib.SED" \
+                      "DL07.HiExCom.SPAH.lib.SED" \
+                      "DL07.LoExCom.SPAH.lib.SED" \
+                      "RadioPowerlaw.Single.lib.SED" )
+    echo "Using default fitting libraries: ${michi2_lib[@]}"
+else
+    echo "Using the input fitting libraries: ${michi2_lib[@]}"
+fi
+
+
+
+# 
+# Try to read redshift value from the observation flux file
+# 
+if [[ x"$michi2_z" == x ]]; then
+    michi2_z=$(cat "$michi2_obs" | sed -e 's/^ *//g' | tr -s ' ' | grep "^# z " | sed -e 's/^# z //g')
+    echo "Found redshift $michi2_z in the input observation flux file \"$michi2_obs\"!"
+fi
+
+
+
+# 
+# Check redshift
+# 
+if [[ x"$michi2_z" == x ]]; then
+    echo "Error! Could not found redshift in the input observation flux file \"$michi2_obs\", or not given by the user! Exit!"
+    exit
+fi
+
+
+
+
+

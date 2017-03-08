@@ -1,0 +1,58 @@
+Plot_z_PDF 01
+	# 
+	if($?1) {
+		echo "Reading datatable_z_chi2_ID"$1".txt"
+		data "datatable_chi2_z_ID"$1".txt" read {chi2 1 z 2}
+		set Source = <$1>
+		set Output = <"Plot_z_PDF_ID"$1>
+		#data "fit_1_with_fluxes_"$1"/magphys_input_filters.dat" read {fit 4}
+		#set chi2 = chi2 * float(sum(fit))
+	} else {
+		data "datatable_chi2_z.txt" read {chi2 1 z 2}
+		set Output = <"Plot_z_PDF_v1">
+	}
+	# 
+	set revchi2 = 1/chi2
+	set revchi2_limit = revchi2 concat (revchi2*1.05)
+	vecminmax chi2 chi2_MIN chi2_MAX
+	echo "chi2 min max" $chi2_MIN $chi2_MAX
+	# 
+	set revchi2_line = 1.0/($chi2_MIN+2.3)
+	echo "1/(chi2+2.3) line at "$(revchi2_line)
+	# 
+	load crabPlot.sm
+	crabPlotOpenPS $(Output)".eps"
+	location 10000 30000 10000 25000
+	limits 0 8 revchi2_limit
+	ticksize 1 1 0 0
+	crabPlotDefaultPenForBox
+	expand 1.75 lweight 4.5
+	box
+	crabPlotDefaultPenForTitle
+	expand 2.25 lweight 4.5
+	xlabel z
+	ylabel 1/\chi^2
+	crabPlotDefaultPenForConnect
+	lweight 4.5
+	connect z revchi2
+	# 
+	ctype black ltype 1
+	rel $fx1 $(revchi2_line) draw $fx2 $(revchi2_line)
+	# shade
+	set z_spline = $fx1,$fx2,$(($fx2-$fx1)/500.0)
+	interp2 z revchi2 z_spline revchi2_spline
+	set revchi2_shade = revchi2_spline if(revchi2_spline>=revchi2_line)
+	set z_shade = z_spline if(revchi2_spline>=revchi2_line)
+	set revchi2_shade = revchi2_shade concat $(revchi2_shade[0])
+	set z_shade = z_shade concat $(z_shade[0])
+	angle 45 shade 350 z_shade revchi2_shade
+	angle 0 ltype 0
+	# 
+	relocate $($fx1+0.08*$($fx2-$fx1)) $($fy1+0.84*$($fy2-$fy1))
+	expand 2.25 ctype blue lweight 4.5
+	if(is_vector(Source)) {
+		puts $(Source)
+	}
+	#puts "MAGPHYS (high-z)"
+	# 
+	crabPlotClosePS

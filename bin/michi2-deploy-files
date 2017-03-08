@@ -25,7 +25,7 @@ deploy_upper_dir=$(readlink -f $(dirname "${deploy_script_dir}"))
 
 echo "Welcome"
 echo "Deploying michi2 into ${deploy_current_dir} ..."
-sleep 1.0
+#sleep 0.25
 
 # 
 # Type of fitting

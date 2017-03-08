@@ -1,0 +1,392 @@
+#!/bin/bash
+# 
+# Aim: 
+#      Easily extract flux from big catalog
+#      Needs python
+# 
+# Usage:
+#        /home/dzliu/Softwares/magphys/catalog_flux_go
+# 
+
+
+
+# 
+# Prepare necessary functions
+# 
+# usage
+# 
+usage() {
+    echo "Usage: "
+    echo "  michi2-extract-flux -catalog aaa.fits -id 222"
+    echo ""
+}
+# 
+# readlink for Mac (because Mac readlink does not accept "-f" option)
+# 
+if [[ $(uname) == *"Darwin"* ]]; then
+    function readlink() {
+        if [[ $# -gt 1 ]]; then if [[ "$1" == "-f" ]]; then shift; fi; fi
+        DIR="$1"; if [[ "$DIR" != *"/"* ]]; then DIR="./$DIR"; fi # 20170228: fixed bug: path without "/"
+        DIR=$(echo "${DIR%/*}") # 20160410: fixed bug: source SETUP just under the Softwares dir
+        if [[ -d "$DIR" ]]; then cd "$DIR" && echo "$(pwd -P)/$(basename ${1})"; 
+        else echo "$(pwd -P)/$(basename ${1})"; fi
+    }
+fi
+# 
+# recognize wavelength
+# 
+function recognize_wavelength() {
+    if [[ $# -ge 1 ]]; then
+        m_band="$1"
+        m_wave="-99"
+        if   echo "$m_band" | grep -q -i "^K$"  ; then  m_wave="2.15"
+        elif echo "$m_band" | grep -q -i "irac1"; then  m_wave="3.6"
+        elif echo "$m_band" | grep -q -i "irac2"; then  m_wave="4.5"
+        elif echo "$m_band" | grep -q -i "irac3"; then  m_wave="5.8"
+        elif echo "$m_band" | grep -q -i "irac4"; then  m_wave="8.0"
+        elif echo "$m_band" | grep -q -i "^24$" ; then  m_wave="24"
+        elif echo "$m_band" | grep -q -i "^16$" ; then  m_wave="16"
+        elif echo "$m_band" | grep -q -i "^100$"; then  m_wave="100"
+        elif echo "$m_band" | grep -q -i "^160$"; then  m_wave="160"
+        elif echo "$m_band" | grep -q -i "^250$"; then  m_wave="250"
+        elif echo "$m_band" | grep -q -i "^350$"; then  m_wave="350"
+        elif echo "$m_band" | grep -q -i "^500$"; then  m_wave="500"
+        elif echo "$m_band" | grep -q -i "^850$"; then  m_wave="850"
+        elif echo "$m_band" | grep -q -i "^1160$"; then  m_wave="1160"
+        elif echo "$m_band" | grep -q -i "^2050$"; then  m_wave="2050"
+        elif echo "$m_band" | grep -q -i "^20cm$"; then  m_wave="2e5"
+        fi
+        echo "$m_wave"
+    fi
+}
+# 
+# append SED data structure
+# 
+function append_sed_data() {
+    # we define the sed data as a 4xN array in bash, in orders of band, wave, flux, error.
+    # this function add/append an sed data to the input array. 
+    # so $1 is an input array
+    # $2, $3 and $4 are band, type and value. Type should be either "flux" or "error"
+    if [[ $# -ge 4 ]]; then
+        declare -a m_SED=("${!1}")
+        m_band="$2"
+        m_type="$3"
+        m_value="$4"
+        m_wave=$(recognize_wavelength "$m_band")
+        m_append=0
+        for (( m_loop=0; m_loop<${#m_SED[@]}; m_loop+=4 )); do
+            if [[ "${m_SED[m_loop]}" == "$m_band" ]]; then
+                m_append=1
+                if echo "$m_type" | grep -q -i "flux"; then
+                    m_SED[$(($m_loop+2))]="$m_value"
+                elif echo "$m_type" | grep -q -i "err"; then
+                    m_SED[$(($m_loop+3))]="$m_value"
+                fi
+            fi
+        done
+        if [[ $m_append -eq 0 ]]; then
+            if echo "$m_type" | grep -q -i "flux"; then
+                m_SED=("${m_SED[@]}" "$m_band" "$m_wave" "$m_value" "1e+99")
+            elif echo "$m_type" | grep -q -i "err"; then
+                m_SED=("${m_SED[@]}" "$m_band" "$m_wave" "1e-99" "$m_value")
+            fi
+        fi
+        echo "${m_SED[@]}"
+    fi
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################
+#              MAIN PROGRAM              #
+##########################################
+
+
+
+# 
+# Check directories and data files
+# 
+m_ScriptDir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
+
+
+
+# 
+# Check user input WaveData and FluxData
+# 
+m_Catalogue=""
+m_SourceIDs=()
+m_Input_ArgType="N/A"
+
+while [[ $# -gt 0 ]]; do
+    
+    TempStr=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+    TempCmd=""
+    
+    case "$TempStr" in
+                    
+             "-ID") TempCmd="$1"; shift
+                    m_Input_ArgType="SourceIDs"
+                    ;;
+                    
+           "-CAT"*) TempCmd="$1"; shift
+                    m_Input_ArgType="Catalogue"
+                    ;;
+                    
+                 *) #echo "$1"
+                    #shift
+                    
+    esac
+    
+    case "$m_Input_ArgType" in
+                                        
+                           "SourceIDs") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_SourceIDs+=("$1")
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with at least 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                           "Catalogue") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_Catalogue="$1"
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                                 "N/A") 
+                                        # check followed argument
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                     *) #echo "$1"
+                                        shift
+                                        
+    esac
+    
+done
+
+if [[ x"$m_Catalogue" == x || ${#m_SourceIDs[@]} -eq 0 ]]; then
+    usage
+    exit
+fi
+
+
+
+
+
+
+# 
+# Prepare outdir
+# 
+m_OutputDir="$(pwd -P)/catalog_flux"
+
+# 
+# Backup outdir
+# 
+if [[ -d "$m_OutputDir" ]]; then
+    if [[ -d "$m_OutputDir.backup" ]]; then
+        if [[ -d "$m_OutputDir.backup.backup" ]]; then
+            rm -rf "$m_OutputDir.backup.backup"
+        fi
+        mv "$m_OutputDir.backup" "$m_OutputDir.backup.backup"
+    fi
+    mv "$m_OutputDir" "$m_OutputDir.backup"
+fi
+
+# 
+# Make outdir
+# 
+if [[ ! -d "$m_OutputDir" ]]; then
+    mkdir -p "$m_OutputDir"
+fi
+
+
+
+
+
+
+# 
+# Prepare python code
+# 
+# use different methods for different types of catalog
+# 
+if [[ $(echo "$m_Catalogue" | tr '[:lower:]' '[:upper:]') == *".FITS" ]]; then
+    # 
+    # if the input catalog is in fits table format
+    # 
+    if [[ -f "$m_ScriptDir/michi2_extract_flux_from_fits_table.py" ]]; then
+        chmod +x "$m_ScriptDir/michi2_extract_flux_from_fits_table.py"
+        echo "$m_ScriptDir/michi2_extract_flux_from_fits_table.py" "$m_Catalogue" "${m_SourceIDs[@]}"
+        "$m_ScriptDir/michi2_extract_flux_from_fits_table.py" "$m_Catalogue" "${m_SourceIDs[@]}"
+    else
+        echo "Error! Failed to call \"$m_ScriptDir/michi2_extract_flux_from_fits_table.py\", which should be distributed along with this code!"
+        exit 1
+    fi
+else
+    # 
+    # if the input catalog is in ascii text format
+    # 
+    m_Cat_Head=()
+    m_Cat_Data=()
+    m_Str_Head=""
+    m_Str_Data=""
+    m_Col_ID=-1
+    m_Col_z=-1
+    m_Found_Source=0
+    m_Found_SED=()
+    # 
+    # print catalog file name
+    echo "# Reading catalog \"$m_Catalogue\""
+    # 
+    # read catalog file
+    while read -r m_str
+    do
+        if [[ ${#m_Cat_Data[@]} -eq 0  &&  $(echo "$m_str" | sed -e 's/ *//g' | grep "^#[a-z0-9_]" | wc -l) -eq 1 ]]; then
+            m_Str_Head="$m_str"
+            m_Cat_Head=($(echo "$m_str" | sed -e 's/^ *# *//g' | tr -s ' '))
+            echo "# Got column head count: ${#m_Cat_Head[@]}"
+            echo "# Got column head list: ${m_Cat_Head[@]}"
+            for (( i=0; i<${#m_Cat_Head[@]}; i++ )); do
+                if [[ $m_Col_ID -lt 0 ]]; then 
+                    if echo "${m_Cat_Head[i]}" | grep -q -i "^id$"; then m_Col_ID=$i;
+                    elif echo "${m_Cat_Head[i]}" | grep -q -i "^id_"; then m_Col_ID=$i; fi
+                fi
+                if [[ $m_Col_z -lt 0 ]]; then 
+                    if echo "${m_Cat_Head[i]}" | grep -q -i "^z$"; then m_Col_z=$i;
+                    elif echo "${m_Cat_Head[i]}" | grep -q -i "^z"; then m_Col_z=$i; fi
+                fi
+            done
+            echo "# Got column ID: $m_Col_ID"
+            echo "# Got column z: $m_Col_z"
+        fi
+        if [[ ${#m_Cat_Head[@]} -gt 0  &&  $(echo "$m_str" | sed -e 's/ *//g' | grep -v "^#" | grep -v "^$" | wc -l) -gt 0 ]]; then 
+            m_Str_Data="$m_str"
+            m_Cat_Data=($(echo "$m_str" | sed -e 's/^ *//g' | tr -s ' '))
+            for (( i=0; i<${#m_SourceIDs[@]}; i++ )); do
+                if [[ "${m_Cat_Data[m_Col_ID]}" == "${m_SourceIDs[i]}" ]]; then
+                    m_Found_Source=1
+                    printf "# %15s %15s\n" "Found source id" "${m_Cat_Data[m_Col_ID]}"
+                    printf "# %15s %15s\n" "z" "${m_Cat_Data[m_Col_z]}"
+                    # 
+                    # loop data columns to find flux
+                    for (( j=0; j<${#m_Cat_Head[@]}; j++ )); do
+                        m_Str_Head="${m_Cat_Head[j]}"
+                        if echo "$m_Str_Head" | grep -q -i "^f[0-9]"; then 
+                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^f(.*)/\1/g")
+                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"))
+                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"
+                        elif echo "$m_Str_Head" | grep -q -i "^fK$"; then 
+                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^f(.*)/\1/g")
+                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"))
+                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"
+                        elif echo "$m_Str_Head" | grep -q -i "^fch[0-9]$"; then 
+                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^fch(.*)/irac\1/g")
+                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"))
+                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"
+                        elif echo "$m_Str_Head" | grep -q -i "^df[0-9]"; then 
+                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^df(.*)/\1/g")
+                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"))
+                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"
+                        elif echo "$m_Str_Head" | grep -q -i "^dfK"; then 
+                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^df(.*)/\1/g")
+                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"))
+                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"
+                        elif echo "$m_Str_Head" | grep -q -i "^dfch[0-9]"; then 
+                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^dfch(.*)/irac\1/g")
+                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"))
+                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"
+                        fi
+                    done
+                    # 
+                    # print the found SED
+                    for (( j=0; j<${#m_Found_SED[@]}; j+=4 )); do
+                        if [[ $j -eq 0 ]]; then
+                            printf "# \n"
+                            printf "# %15s %15s %15s %15s\n" "wave_um" "flux_mJy" "error_mJy" "band"
+                        fi
+                        printf "%17g %15g %15g %15s\n" "${m_Found_SED[j+1]}" "${m_Found_SED[j+2]}" "${m_Found_SED[j+3]}" "${m_Found_SED[j+0]}"
+                        if [[ $j -eq $((${#m_Found_SED[@]}-1)) ]]; then
+                            printf "\n"
+                        fi
+                    done
+                fi
+            done
+        fi
+        if [[ $m_Found_Source -eq 1 ]]; then
+            break
+        fi
+    done < "$m_Catalogue"
+
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

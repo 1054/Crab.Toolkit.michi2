@@ -226,7 +226,9 @@ FUNCTION CrabTableReadColumn, FilePath, ColumnHeader, ColumnHeaderBefore = Colum
     ColumnContents = []
     TepmValidLineId = 0L ; SkipValidLines
     TempValidLineCount = 0L ; ReadValidLines
-    WHILE (~EOF(FileUnit)) DO BEGIN
+    ;WHILE (~EOF(FileUnit)) --> OR (STRLEN(TableDataLine) GT 0)  <Bug><Fixed><20161128><dzliu>
+    ;WHILE (~EOF(FileUnit) OR (STRLEN(TableDataLine) GT 0)) --> OR (STRLEN(TableHeadLine) GT 0)) <Bug><Fixed><20161128><dzliu>
+    WHILE (~EOF(FileUnit) OR (STRLEN(TableDataLine) GT 0) OR (STRLEN(TableHeadLine) GT 0)) DO BEGIN
         IF NOT KEYWORD_SET(FastReadDataBlock) THEN BEGIN
             IF TableHeadLine NE '' THEN BEGIN ; if there are some undealed data line in memory
                 TempLine = TableHeadLine
@@ -264,9 +266,13 @@ FUNCTION CrabTableReadColumn, FilePath, ColumnHeader, ColumnHeaderBefore = Colum
         ENDIF ELSE BEGIN
             ; Read all rest lines as data block
             TempFileLineNumb = FILE_LINES(FilePath) - TableLineId - 1L
-            TempLine = MAKE_ARRAY(TempFileLineNumb,/STRING)
-            ReadF,FileUnit,TempLine
-            TableLineId = TableLineId + TempFileLineNumb
+            IF TempFileLineNumb GT 0 THEN BEGIN
+                TempLine = MAKE_ARRAY(TempFileLineNumb,/STRING)
+                ReadF,FileUnit,TempLine
+                TableLineId = TableLineId + TempFileLineNumb
+            ENDIF ELSE BEGIN
+                TempLine = []
+            ENDELSE
             IF TableDataLine NE '' THEN BEGIN ; if there are some undealed data line in memory
                 TempLine = [TableDataLine, TempLine]
                 IF KEYWORD_SET(Verbose) THEN PRINT, "TableDataLine = ", TableDataLine
@@ -319,7 +325,12 @@ FUNCTION CrabTableReadColumn, FilePath, ColumnHeader, ColumnHeaderBefore = Colum
                 IF ColumnIndex-1 LE N_ELEMENTS(TempStrList)-1 THEN TempStr=TempStrList[ColumnIndex-1] ELSE TempStr=""
                 ColumnContents = [ColumnContents,TempStr]
             ENDIF ELSE BEGIN
-                TempStr = ((STRSPLIT(TempLine,/EXTRACT)).ToArray())[*,ColumnIndex-1] ; LIST 1st dimension is list item, so 2nd dimension is list item subscript. 
+                TempArr = STRSPLIT(TempLine,/EXTRACT)
+                IF SIZE(TempArr,/N_DIM) GE 2 THEN BEGIN
+                    TempStr = (TempArr.ToArray())[*,ColumnIndex-1] ; LIST 1st dimension is list item, so 2nd dimension is list item subscript. 
+                ENDIF ELSE BEGIN
+                    TempStr = TempArr[ColumnIndex-1] ; <20170307> if one line 
+                ENDELSE
                 ColumnContents = [ColumnContents,TempStr]
             ENDELSE
             IF KEYWORD_SET(Verbose) THEN PRINT, "CrabTableReadColumn: Read up to the number "+STRING(FORMAT='(I0)',TableLineId)+" line."

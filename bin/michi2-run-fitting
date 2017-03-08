@@ -1,0 +1,109 @@
+#!/bin/bash
+#
+
+
+
+#############################
+#           USAGE           #
+#############################
+
+usage() {
+    echo "Usage: "
+    echo "  michi2-run-fitting -catalog aaa.fits -id 222"
+    echo ""
+}
+
+
+
+##########################################
+#              MAIN PROGRAM              #
+##########################################
+
+# 
+# Pharse input arguments
+# 
+. $(dirname "${BASH_SOURCE[0]}")/michi2-command-line-arguments "$@"
+
+
+
+# 
+# Print welcome message
+# 
+echo "Welcome!"
+echo "Running michi2 results under \"$michi2_current_dir\""
+#sleep 0.25
+
+
+
+# 
+# Get a date-time mark for backup files
+# 
+m_Backup_Mark=$(backupmark)
+
+
+
+# 
+# Copy obsflux file
+# 
+if [[ "$michi2_obs" != "flux_obsframe.dat" ]]; then
+    echo "Copying input observation flux file to \"flux_obsframe.dat\""
+    backupfile "flux_obsframe.dat" "$m_Backup_Mark"
+    cp "$michi2_obs" "flux_obsframe.dat"
+else
+    echo "Using the input observation flux file \"flux_obsframe.dat\""
+fi
+
+
+
+# 
+# Backup more files
+# 
+for m_Backup_File in "$michi2_out.out" "$michi2_out.eps"; do
+    backupfile "$m_Backup_File" "$m_Backup_Mark"
+done
+
+
+
+# 
+# Do redshfit from obs-frame to rest-frame
+# 
+echo "Redshifting obs-frame flux, masking out low S/N data, writing to \"flux_restframe.dat\""
+
+echo "macro read rShift.sm redShift_maskout_LowSNR_25 $michi2_z"
+
+echo "macro read rShift.sm redShift_maskout_LowSNR_25 $michi2_z" | sm
+
+
+
+# 
+# Print source name
+# 
+if [[ x"$michi2_obj" != x ]]; then
+    cat "input_redshift.sm" > "input_redshift.tmp"
+    echo "set Source = '$michi2_obj'" > "input_redshift.sm"
+    cat  "input_redshift.tmp" >> "input_redshift.sm"
+    cat "input_redshift.sm"
+fi
+#exit
+
+
+
+# 
+#./michi2_v03 -obs flux_restframe.dat \
+#             -lib "${michi2_lib[@]}" \
+#             -out fit.out \
+#             -constraint LIB3 INDEX EQ LIB4 INDEX
+# 
+echo ""
+echo "./michi2_v03 -obs flux_restframe.dat \\"
+echo "       -lib \"${michi2_lib[@]}\" \\"
+echo "       -out \"$michi2_out.out\""
+echo ""
+./michi2_v03 -obs flux_restframe.dat \
+             -lib "${michi2_lib[@]}" \
+             -out "$michi2_out.out"
+
+
+
+
+

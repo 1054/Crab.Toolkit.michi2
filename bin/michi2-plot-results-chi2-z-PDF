@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+
+
+
+# 
+# Pharse input arguments
+# 
+. $(dirname "${BASH_SOURCE[0]}")/michi2-command-line-arguments "$@"
+
+
+
+# 
+# Check input
+# 
+if [[ x"$michi2_obj" == x ]]; then
+    echo "Usage: michi2-plot-results-chi2-z-PDF -name 12646"
+    exit
+fi
+
+
+
+myid="$michi2_obj"
+
+
+
+# 
+# Plot chi2 z PDF (need DeepFields.SuperDeblending supermongo!)
+# 
+plot_z=($(cat fit_z*_CHI_MIN.txt | grep -v "^#" | grep -v "^$" | tr -s ' ' | grep "redshift = " | perl -p -e 's/.*= *([0-9.+-eE]*).*/\1/g'))
+plot_chi2=($(cat fit_z*_CHI_MIN.txt | grep -v "^#" | grep -v "^$" | tr -s ' ' | grep "chi2_min = " | perl -p -e 's/.*= *([0-9.+-eE]*).*/\1/g'))
+echo "plot_chi2 = "${plot_chi2[@]}
+echo "plot_z = "${plot_z[@]}
+if [[ ${#plot_chi2[@]} -gt 0 && ${#plot_chi2[@]} -eq ${#plot_z[@]} ]]; then
+    printf "# %13s %15s\n# \n" "chi2_min" "z" > "datatable_chi2_z_ID${myid}.txt"
+    for ((i=0; i<${#plot_chi2[@]}; i++)); do
+    printf '%15g %15g\n' "${plot_chi2[i]}" "${plot_z[i]}" >> "datatable_chi2_z_ID${myid}.txt"
+    done
+    cat "datatable_chi2_z_ID${myid}.txt"
+    cp "$michi2_toolkit_dir/data/deploy_michi2/go_plot_chi2_z_PDF.sm" .
+    echo "macro read go_plot_chi2_z_PDF.sm Plot_z_PDF ${myid}" | sm
+    open "Plot_z_PDF_ID${myid}.pdf"
+fi
+
+
+
+
+

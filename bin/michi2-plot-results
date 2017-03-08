@@ -1,30 +1,38 @@
 #!/bin/bash
 #
 
-# 
-# readlink for Mac (because Mac readlink does not accept "-f" option)
-# 
-if [[ $(uname) == *"Darwin"* ]]; then
-    function readlink() {
-        if [[ $# -gt 1 ]]; then if [[ "$1" == "-f" ]]; then shift; fi; fi
-        DIR="$1"; if [[ "$DIR" != *"/"* ]]; then DIR="./$DIR"; fi # 20170228: fixed bug: path without "/"
-        DIR=$(echo "${DIR%/*}") # 20160410: fixed bug: source SETUP just under the Softwares dir
-        if [[ -d "$DIR" ]]; then cd "$DIR" && echo "$(pwd -P)/$(basename ${1})"; 
-        else echo "$(pwd -P)/$(basename ${1})"; fi
-    }
-fi
 
 
-# 
-# Get directory paths
-# 
-deploy_current_dir=$(pwd -P)
-deploy_script_dir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
-deploy_upper_dir=$(readlink -f $(dirname "${deploy_script_dir}"))
+#############################
+#           USAGE           #
+#############################
 
-echo "Welcome"
-echo "Plotting michi2 results under ${deploy_current_dir} ..."
-sleep 1.0
+usage() {
+    echo "Usage: "
+    echo "  michi2-plot-results -lib lib.HFLS-3_SB.SED -fit fit_z\${myz} -name \${myid} -z \${myz}"
+    echo ""
+}
+
+
+
+##########################################
+#              MAIN PROGRAM              #
+##########################################
+
+# 
+# Pharse input arguments
+# 
+. $(dirname "${BASH_SOURCE[0]}")/michi2-command-line-arguments "$@"
+
+
+
+# 
+# Print welcome message
+# 
+echo "Welcome!"
+echo "Plotting michi2 results under \"$michi2_current_dir\""
+#sleep 0.25
+
 
 
 # 
@@ -42,17 +50,36 @@ if [[ x"$IDL_PATH" == x ]]; then
     echo "Error! IDL system variable \$IDL_PATH is not defined?! Exit!"
     exit
 fi
-export IDL_PATH=$(echo "+${deploy_upper_dir}/lib/idl:$IDL_PATH" | sed -e 's/::/:/g')
+export IDL_PATH=$(echo "+${michi2_toolkit_dir}/lib/idl:$IDL_PATH" | sed -e 's/::/:/g')
 #echo $IDL_PATH
 
 
 
 # 
+# Call IDL "pdchi2"
+# 
+InputDAT="'$michi2_obs'"
+InputLIB=$(print_michi2_libs_as_string)
+InputFIT="'$michi2_fit.out'"
+OutputName="'$michi2_fit'"
+
+echo "Running IDL code pdchi2_v01, $InputDAT, $InputLIB, $InputFIT"
+
+# 
 # Run IDL code pdchi2_v01.pro
 # 
 idl -quiet << EOF
-pdchi2_v01, InputDAT, InputLIB, InputFIT
+print, 'go'
+pdchi2_v01, $InputDAT, $InputLIB, $InputFIT, OutputName=$OutputName, SET_Colors='blue'
 exit
 EOF
+
+
+
+
+
+
+
+
 
 

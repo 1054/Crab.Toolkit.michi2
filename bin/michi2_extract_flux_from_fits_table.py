@@ -600,7 +600,7 @@ if len(sys.argv) > 1:
                                 print("                 %-20s Wave %-15.6e Flux %-15.6e FluxError %-15.6e FluxUnit %s"%(FilterBand, FilterWave, FilterFlux, FilterFErr, FilterFluxUnit))
             # 
             if len(SourceID_Match) == 0:
-                print("Could not find source accroding to SourceID %s!"%(SourceID))
+                print("Could not find source according to SourceID %s!"%(SourceID))
         
         
 

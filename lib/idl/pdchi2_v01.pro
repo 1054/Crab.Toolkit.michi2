@@ -15,18 +15,19 @@
 ; and one histogram.txt and one bestfit.txt file for each of them. 
 ; 
 ; 
-PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SET_FONT, SET_XRANGE=SET_XRANGE, SET_YRANGE=SET_YRANGE, $
-                                              Source=Source, Redshift=Redshift, Distance=Distance
+PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SET_FONT, SET_XRANGE=SET_XRANGE, SET_YRANGE=SET_YRANGE, SET_Colors=SET_Colors, $
+                                              SourceName=SourceName, Redshift=Redshift, Distance=Distance
     
     ; <TODO> 
-    ;;Source = "ID12646"
-    SET_FONT = 'NGC'
+    ;;SourceName = "ID12646"
+    ;SET_FONT = 'NGC'
+    SET_FONT = 'times'
     
     ; resolve_all
-    CD, C=CurrentPath
-    IF NOT STRMATCH(!PATH,CurrentPath+"/idlcrab/crabarray:"+CurrentPath+"/idlcrab/crabstring:"+CurrentPath+"/idlcrab/crabtable:") THEN BEGIN
-        !PATH = CurrentPath+"/idlcrab/crabarray:"+CurrentPath+"/idlcrab/crabstring:"+CurrentPath+"/idlcrab/crabtable:" + !PATH
-    ENDIF
+    ;CD, C=CurrentPath
+    ;IF NOT STRMATCH(!PATH,CurrentPath+"/idlcrab/crabarray:"+CurrentPath+"/idlcrab/crabstring:"+CurrentPath+"/idlcrab/crabtable:") THEN BEGIN
+    ;    !PATH = CurrentPath+"/idlcrab/crabarray:"+CurrentPath+"/idlcrab/crabstring:"+CurrentPath+"/idlcrab/crabtable:" + !PATH
+    ;ENDIF
     resolve_all
     
     ; Welcome
@@ -90,6 +91,11 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
     ; Reform InputFIT
     IF N_ELEMENTS(InputFIT) EQ 1 THEN PdChi2_FIT = InputFIT ELSE PdChi2_FIT = InputFIT[0]
     
+    ;<DEBUG>;PRINT, InputDAT
+    ;<DEBUG>;PRINT, InputLIB
+    ;<DEBUG>;PRINT, InputFIT
+    ;<DEBUG>;PRINT, !PATH
+    
     ; Check file existennce
     Check_OK = 1
     IF FILE_TEST(PdChi2_DAT) EQ 0 THEN BEGIN
@@ -109,9 +115,9 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
     IF Check_OK EQ 0 THEN MESSAGE, "Error! Please check the above error information! Exit!"
     
     ; Check input_redshift.sm
-    IF N_ELEMENTS(Source) EQ 0 THEN BEGIN
+    IF N_ELEMENTS(SourceName) EQ 0 THEN BEGIN
         IF NOT FILE_TEST("input_redshift.sm") THEN MESSAGE, 'Error! "input_redshift.sm" was not found! Please prepare this file or give Redshift from command line!'
-        Source = (CrabTableReadInfo("input_redshift.sm","set source"))
+        SourceName = (CrabTableReadInfo("input_redshift.sm","set source"))
     ENDIF
     IF N_ELEMENTS(Redshift) EQ 0 THEN BEGIN
         IF NOT FILE_TEST("input_redshift.sm") THEN MESSAGE, 'Error! "input_redshift.sm" was not found! Please prepare this file or give Redshift from command line!'
@@ -123,7 +129,12 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
     ENDIF
     
     ; Check OutputName
-    IF N_ELEMENTS(OutputName) EQ 0 THEN OutputName="Output_PDCHI2"
+    IF N_ELEMENTS(OutputName) EQ 0 THEN BEGIN
+        OutputName = "Output_PDCHI2"
+    ENDIF ELSE BEGIN
+        IF OutputName EQ '' THEN OutputName = "Output_PDCHI2"
+    ENDELSE
+    
     
     ; Read InputLIB, check how many parameters
     PdChi2_NPars = []
@@ -141,6 +152,7 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
     PdChi2_Col_chi2 = DOUBLE(CrabTableReadColumn(PdChi2_FIT,2,Verbose=Verbose,/FastReadDataBlock))
     ;;CrabTablePrintC, "example/temp_i0.txt", PdChi2_Col_i0 ;;<20160716> checked good no problem
     ;;CrabTablePrintC, "example/temp_chi2.txt", PdChi2_Col_chi2 ;;<20160716> checked good no problem
+    PRINT, "Number of CHI solutions = "+STRING(FORMAT='(I0)',N_ELEMENTS(PdChi2_Col_chi2))
     
     
     ; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
@@ -158,7 +170,7 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
                           wLib:PTRARR(/ALLOCATE,N_ELEMENTS(PdChi2_NPars)), fLib:PTRARR(/ALLOCATE,N_ELEMENTS(PdChi2_NPars)), $ ; We should not use REPLICATE to create PTR array! Use PTRARR!
                           Mstar:0D, Mdust:0D, Mdust_Cold:0D, Mdust_Warm:0D, LIR:0D, SFR:0D, U:0D, Tdust:0D, qIR:0D, LAGN:0D, fAGN:0D }
     PdChi2_SED_sorted_id = SORT(PdChi2_Col_chi2)
-    PdChi2_SED_selected_id = PdChi2_SED_sorted_id[0:6] ;<TODO> select and plot 7 SEDs with best chi2
+    PdChi2_SED_selected_id = PdChi2_SED_sorted_id[0:MIN([N_ELEMENTS(PdChi2_Col_chi2)-1,6])] ;<TODO> select and plot 7 SEDs with best chi2
     PdChi2_SED_colors = [ '1c1ae4'xL,$
                           'b87e37'xL,$
                           '4aaf4d'xL,$
@@ -185,10 +197,12 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
                 PdChi2_Col_aPar = DOUBLE(CrabTableReadColumn(PdChi2_FIT,2+2*N_ELEMENTS(PdChi2_NPars)+TOTAL(PdChi2_NPars[0:i-1])+j+1,Verbose=Verbose,/FastReadDataBlock))
             ENDELSE
             PRINT, "    Read "+STRING(FORMAT='(I0)',N_ELEMENTS(PdChi2_Col_aPar))+" lines"
+            IF N_ELEMENTS(PdChi2_Col_aPar) GE 5 THEN BEGIN
             PRINT, "    Read "+PdChi2_Col_tPar+" = [" + CrabStringPrintArray(PdChi2_Col_aPar[0:4],/NoBracket) + $
                    ",...," + CrabStringPrintArray(PdChi2_Col_aPar[N_ELEMENTS(PdChi2_Col_aPar)-5:N_ELEMENTS(PdChi2_Col_aPar)-1],/NoBracket) + "]"+" ("+STRING(FORMAT='(I0)',N_ELEMENTS(PdChi2_Col_aPar))+")"
             PRINT, "    Read "+      "chi2"   +" = [" + CrabStringPrintArray(PdChi2_Col_chi2[0:4],/NoBracket) + $
                    ",...," + CrabStringPrintArray(PdChi2_Col_chi2[N_ELEMENTS(PdChi2_Col_chi2)-5:N_ELEMENTS(PdChi2_Col_chi2)-1],/NoBracket) + "]"+" ("+STRING(FORMAT='(I0)',N_ELEMENTS(PdChi2_Col_chi2))+")"
+            ENDIF
             ; 
             ; Convert PAR value to log or linear
             PdChi2_Par_loga = 0
@@ -251,19 +265,21 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
                 PlotXRange = [ PdChi2_Chi_Grid[0]-1.0, PdChi2_Chi_Grid[0]+1.0 ]
                 PlotYRange = [ PdChi2_Chi_Hist[0]-1.0, PdChi2_Chi_Hist[0]+1.0 ]
                 PLOT, [PdChi2_Chi_Grid[0]-0.5,PdChi2_Chi_Grid[0]+0.5], [PdChi2_Chi_Hist[0],PdChi2_Chi_Hist[0]], /NODATA, XRANGE=PlotXRange, YRANGE=PlotYRange, $
-                      THICK=3, XTHICK=3, YTHICK=3, XCHARSIZE=0.8, YCHARSIZE=0.8, CHARTHICK=2, $
-                      XSTYLE=1, YSTYLE=1, FONT=1, POSITION=[0.13,0.18,0.95,0.95]
+                      THICK=3, XTHICK=3, YTHICK=3, XCHARSIZE=1.2, YCHARSIZE=1.05, CHARTHICK=3, $
+                      XSTYLE=1, YSTYLE=1, FONT=PlotFont, $
+                      POSITION=[0.17,0.20,0.95,0.95]
                 OPLOT, [PdChi2_Chi_Grid[0]-0.5,PdChi2_Chi_Grid[0]+0.5], [PdChi2_Chi_Hist[0],PdChi2_Chi_Hist[0]], PSYM=10, THICK=4, Color=cgColor("blue")
             ENDIF ELSE BEGIN
                 PlotXRange = [ 0.95*MIN(PdChi2_Chi_Grid), MAX(PdChi2_Chi_Grid)*1.05 ]
                 PlotYRange = [ 0.75*MIN(PdChi2_Chi_Hist), MAX(PdChi2_Chi_Hist)*1.25 ]
                 PLOT, PdChi2_Chi_Grid, PdChi2_Chi_Hist, /NODATA, XRANGE=PlotXRange, YRANGE=PlotYRange, $
-                      THICK=3, XTHICK=3, YTHICK=3, XCHARSIZE=0.8, YCHARSIZE=0.8, CHARTHICK=2, $
-                      XSTYLE=1, YSTYLE=1, FONT=1, POSITION=[0.13,0.18,0.95,0.95]
+                      THICK=3, XTHICK=3, YTHICK=3, XCHARSIZE=1.2, YCHARSIZE=1.05, CHARTHICK=3, $
+                      XSTYLE=1, YSTYLE=1, FONT=PlotFont, $
+                      POSITION=[0.17,0.20,0.95,0.95]
                 OPLOT, PdChi2_Chi_Grid, PdChi2_Chi_Hist, PSYM=10, THICK=4, Color=cgColor("blue")
             ENDELSE
-            XYOUTS, 0.55, 0.03, textoidl(PdChi2_Col_tPar), /NORMAL, ALIGNMENT=0.5, CHARTHICK=3, CHARSIZE=1.3
-            XYOUTS, 0.05, 0.55, textoidl("\chi^{2}"), /NORMAL, ALIGNMENT=0.5, ORIENT=90, CHARTHICK=3, CHARSIZE=1.3 ; \chi ; '!Z(03C7)'+'!E2!N'
+            XYOUTS, 0.55, 0.03, textoidl(PdChi2_Col_tPar), /NORMAL, FONT=PlotFont, ALIGNMENT=0.5, CHARTHICK=3, CHARSIZE=1.3
+            XYOUTS, 0.05, 0.55, textoidl("\chi^{2}"),      /NORMAL, FONT=PlotFont, ALIGNMENT=0.5, CHARTHICK=3, CHARSIZE=1.3, ORIENT=90 ; \chi ; '!Z(03C7)'+'!E2!N'
             ; 
             ; Overplot the minimum chi2 value
             PdChi2_Chi_Min = MIN(PdChi2_Col_chi2)
@@ -286,7 +302,7 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
                     "Error = "+STRTRIM(STRING((MAX(PdChi2_Chi_Confidence_Region)-MIN(PdChi2_Chi_Confidence_Region))/2.0),2), $
                     ALIGNMENT=1.0, CHARTHICK=2, CHARSIZE=0.8, Color=cgColor("blue"), FONT=PlotFont
             ; 
-            ; Write to histogram file
+            ; Write to histogram file (for each LIB PAR)
             OPENW, OutputLUN, OutputName+"_"+"LIB"+"_"+STRING(FORMAT='(I0)',i+1)+"_PAR_"+STRING(FORMAT='(I0)',j+1)+".histogram.txt", /GET_LUN
             PRINTF, OutputLUN, "# Current Time "+CrabStringCurrentTime()
             PRINTF, OutputLUN, "# "
@@ -298,7 +314,7 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
             CLOSE, OutputLUN
             FREE_LUN, OutputLUN
             ; 
-            ; Write to bestfit file
+            ; Write to bestfit file (for each LIB PAR)
             OPENW, OutputLUN, OutputName+"_"+"LIB"+"_"+STRING(FORMAT='(I0)',i+1)+"_PAR_"+STRING(FORMAT='(I0)',j+1)+".bestfit.txt", /GET_LUN
             PRINTF, OutputLUN, "# Current Time "+CrabStringCurrentTime()
             PRINTF, OutputLUN, "# "
@@ -382,34 +398,49 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
     
     
     
+    ; Store bestfit chi2 file
+    OPENW, OutputLUN, OutputName+"_"+"CHI_MIN.txt", /GET_LUN
+    PRINTF, OutputLUN, "# Current Time "+CrabStringCurrentTime()
+    PRINTF, OutputLUN, "# "
+    PRINTF, OutputLUN, "redshift = "+STRING(FORMAT='(G)',Redshift)
+    PRINTF, OutputLUN, "chi2_min = "+STRING(FORMAT='(G)',PdChi2_Chi_Min)
+    PRINTF, OutputLUN, ""
+    CLOSE, OutputLUN
+    FREE_LUN, OutputLUN
+    
+    
+    
     ; Plot the SEDs with best chi2
     SET_PLOT, 'PS' & XSizeInCM=10.5 & YSizeInCM=7 ; & SET_FONT="NGC"
     DEVICE, FILENAME=OutputName+"_"+"SED"+".eps", $
             /COLOR, BITS_PER_PIXEL=8, DECOMPOSED=1, /ENCAPSULATED, XSIZE=XSizeInCM, YSIZE=YSizeInCM
     IF N_ELEMENTS(SET_FONT) GT 0 THEN DEVICE, SET_FONT=SET_FONT, /TT_FONT
     IF N_ELEMENTS(SET_FONT) GT 0 THEN PlotFont=1
-    IF N_ELEMENTS(SET_XRange) EQ 1 THEN PlotXRange=SET_XRange ELSE PlotXRange=([0.2,3e5])
-    IF N_ELEMENTS(SET_YRange) EQ 1 THEN PlotYRange=SET_YRange ELSE PlotYRange=([1e-4,1e4])
-    IF N_ELEMENTS(SET_XTitle) EQ 1 THEN PlotXTitle=SET_XTitle ELSE PlotXTitle='Observed Wavelength ['+'!Z(03BC)'+'m]' ; \mu
+    IF N_ELEMENTS(SET_XRange) EQ 1 THEN PlotXRange=SET_XRange ELSE PlotXRange=([0.2,3e5]) ; um
+    IF N_ELEMENTS(SET_YRange) EQ 1 THEN PlotYRange=SET_YRange ELSE PlotYRange=([1e-4,1e4]) ; mJy
+    IF N_ELEMENTS(SET_XTitle) EQ 1 THEN PlotXTitle=SET_XTitle ELSE PlotXTitle='Observed Wavelength ['+'u'+'m]' ; \mu ; '!Z(03BC)'
     IF N_ELEMENTS(SET_YTitle) EQ 1 THEN PlotYTitle=SET_YTitle ELSE PlotYTitle='Flux Density [mJy]'
     IF N_ELEMENTS(SET_Colors) EQ 1 THEN PlotColors=SET_Colors ELSE PlotColors=['green','yellow','red','blue','cyan'] ;<TODO> plot color
-    PLOT, [0.0], [0.0], XRange=PlotXRange, YRange=PlotYRange, /NoData, XTitle=PlotXTitle, YTitle=PlotYTitle, FONT=PlotFont, $
-                        /XLOG, /YLOG, XStyle=1, YStyle=1, XThick=2, YThick=2, Thick=2, XMinor=9, YMinor=9, XTickInterval=1, YTickInterval=1
+    PLOT, [0.0], [0.0], XRange=PlotXRange, YRange=PlotYRange, /NoData, FONT=PlotFont, $
+                        POSITION=[0.17,0.20,0.95,0.95], $
+                        /XLOG, /YLOG, XStyle=1, YStyle=1, XThick=3, YThick=3, Thick=3, XMinor=9, YMinor=9, XTickInterval=1, YTickInterval=1
+                        ; XTitle=PlotXTitle, YTitle=PlotYTitle, 
+    XYOUTS, 0.55, 0.03, textoidl(PlotXTitle), /NORMAL, FONT=PlotFont, ALIGNMENT=0.5, CHARTHICK=3, CHARSIZE=1.3
+    XYOUTS, 0.05, 0.55, textoidl(PlotYTitle), /NORMAL, FONT=PlotFont, ALIGNMENT=0.5, CHARTHICK=3, CHARSIZE=1.3, ORIENT=90
+    
+    
     
     ; Plot each Library
     PRINT, ""
     PRINT, ""
     FOR sid=N_ELEMENTS(PdChi2_SED_selected_id)-1,0,-1 DO BEGIN
-        ;<DEBUG><20160731>
-        ;PRINT, PdChi2_SED_List[sid]
-        ;HELP, PdChi2_SED_List[sid]
         ; 
         ; Print info
         PRINT, "Computing total flux for SED "+STRING(FORMAT='(I0)',PdChi2_SED_List[sid].i0)+" with chi2 "+STRING(FORMAT='(G0)',PdChi2_SED_List[sid].chi2)
         ; 
         ; Prepare to compute total flux
-        Temp_wBin = 0.025D ;<TODO> interpolate interval
-        Temp_wTot = 10^(CrabArrayIndGen(ALOG10(PlotXRange[0]),ALOG10(PlotXRange[1]),Temp_wBin)) 
+        Temp_wBin = 0.0125D ; wavelength grid / common grid spacing for later interpolation
+        Temp_wTot = 10^(CrabArrayIndGen(ALOG10(PlotXRange[0]),ALOG10(PlotXRange[1]),Temp_wBin)) ; wavelength grid / common grid for later interpolation
         Temp_fTot = Temp_wTot * 0.0D
         ; 
         ; Loop each library and plot with different colors
@@ -424,10 +455,12 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
             IF Temp_aLib LT 0.0 THEN Temp_aLib = 0.0D
             
             ; redshift rest-frame library w, normalize library f
-            Temp_wLib = (Temp_wLib) * (1.0+Redshift)
-            Temp_fLib = (Temp_fLib * Temp_aLib)
+            Temp_wLib = Temp_wLib * (1.0+Redshift)
+            Temp_fLib = Temp_fLib * Temp_aLib
             
             ; interpolate to total flux wavelength grid
+            PRINT, 'DEBUG Temp_wLib MIN MAX ', STRING(FORMAT='(G)',MIN(Temp_wLib)), ' ', STRING(FORMAT='(G)',MAX(Temp_wLib))
+            PRINT, 'DEBUG Temp_wTot MIN MAX ', STRING(FORMAT='(G)',MIN(Temp_wTot)), ' ', STRING(FORMAT='(G)',MAX(Temp_wTot))
             Temp_iInterpol = WHERE((Temp_wTot GE MIN(Temp_wLib)) AND (Temp_wTot LE MAX(Temp_wLib)),/NULL)
             IF N_ELEMENTS(Temp_iInterpol) GT 0 AND TOTAL(Temp_fLib) GT 0 THEN BEGIN
                 Temp_fInterpol = 10^(Interpol(ALOG10(Temp_fLib), ALOG10(Temp_wLib), ALOG10(Temp_wTot)))
@@ -443,6 +476,7 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
                 IF j LT PdChi2_NPars[i]-1 THEN Temp_sPar = Temp_sPar + ", "
             ENDFOR
             
+            ; plot each component SED (dotted lines)
             OPLOT, Temp_wLib, Temp_fLib, Color=cgColor(PlotColors[i]), LINESTYLE=1
             
             ;<DEBUG><20160731>
@@ -499,13 +533,13 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
             Temp_iTot = WHERE((Temp_wTot GE 8.0*(1.0+Redshift)) AND (Temp_wTot LE 1000.0*(1.0+Redshift)),/NULL)
             ;Temp_fTIR = TOTAL(Temp_fTot[Temp_iTot] * (2.99792458e5/Temp_wTot[Temp_iTot]) * Temp_wBin / ALOG10(exp(1)) )           ; integrated flux in mJy GHz -- daddi method
             ;Temp_fTIR = TOTAL(Temp_fTot[Temp_iTot] * (2.99792458e5/Temp_wTot[Temp_iTot]) * (10^Temp_wBin-(1.0/10^Temp_wBin))/2.0 ) ; integrated flux in mJy GHz
-            Temp_freq = CrabArrayIndGen(MIN(2.99792458e5/Temp_wTot[Temp_iTot]),MAX(2.99792458e5/Temp_wTot[Temp_iTot]),1.0)
+            Temp_freq = CrabArrayIndGen(MIN(2.99792458e5/Temp_wTot[Temp_iTot]),MAX(2.99792458e5/Temp_wTot[Temp_iTot]),1.0) ; GHz
             Temp_flog = Interpol(ALOG10(Temp_fTot[Temp_iTot]),ALOG10(2.99792458e5/Temp_wTot[Temp_iTot]),ALOG10(Temp_freq))
             Temp_fTIR = TOTAL(10^(Temp_flog)) ; mJy GHz -- dzliu stupid method
             ;PRINT, Temp_fTIR
-            PdChi2_SED_List[sid].LIR = Temp_fTIR / 1D20 * 4*!PI*Distance^2 * 9.52140D44 / 3.839D26 ; 1D20 converts mJy GHz to W m-2, 9.52140D44 converts Mpc^2 to m^2. 
+            PdChi2_SED_List[sid].LIR = Temp_fTIR / 1D20 * 4*!PI*Distance^2 * 9.52140D44 / 3.839D26 ; 1D20 converts mJy GHz to W m-2, 9.52140D44 converts Mpc^2 to m^2, 3.839D26 is the solar luminosity in Watt. 
             PdChi2_SED_List[sid].SFR = PdChi2_SED_List[sid].LIR / 1D10 ; Chabrier (2003) IMF
-                PRINT, "Computing IR luminosity  "+STRING(FORMAT='(E0.6)', PdChi2_SED_List[sid].LIR)+" [Lsun] (z="+STRING(FORMAT='(F0.4)',Redshift)+")"
+            PRINT, "Computing IR luminosity  "+STRING(FORMAT='(E0.6)', PdChi2_SED_List[sid].LIR)+" [Lsun] (z="+STRING(FORMAT='(F0.4)',Redshift)+")"
         ENDIF
         ; 
         ; Compute Mdust
@@ -524,7 +558,7 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
         ENDIF
         ; 
         ; Add radio flux SED by computing L_IR_8_1000
-        IF 1 EQ 1 THEN BEGIN
+        IF 1 EQ 0 THEN BEGIN
             Temp_iTot = WHERE((Temp_wTot GE 8) AND (Temp_wTot LE 1000),/NULL)
             Temp_fTIR = TOTAL(Temp_fTot[Temp_iTot] * (2.99792458e5/Temp_wTot[Temp_iTot]) * Temp_wBin / ALOG10(exp(1)) ) ; integrated flux in mJy GHz
             Temp_wRadio = Temp_wTot
@@ -542,11 +576,11 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
             PdChi2_SED_List[sid].qIR = ALOG10(Temp_fTIR*1e9 / 3.75e12 / Temp_fRadio) ; # 3.75e12 is from arxiv.org/pdf/1005.1072
         ENDIF
         ; 
-        ; Plot total flux SED
+        ; Plot total flux SED (solid line)
         IF sid EQ 0 THEN BEGIN
-            OPLOT, Temp_wTot, Temp_fTot
+            OPLOT, Temp_wTot, Temp_fTot, Color=0, THICK=3
         ENDIF ELSE BEGIN
-            OPLOT, Temp_wTot, Temp_fTot, Color=PdChi2_SED_colors[sid]
+            OPLOT, Temp_wTot, Temp_fTot, Color=PdChi2_SED_colors[sid], THICK=2
         ENDELSE
         ; 
         ;<DEBUG><20160731> total flux
@@ -561,21 +595,22 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
         ; 
         ; Overplot Legend if sid EQ 0
         IF sid EQ 0 THEN BEGIN
-            PlotLegendX = 0.24
-            PlotLegendY = 0.84
-            PlotLegendDY = 0.045
-            PlotLegendSize = 0.65
-            PRINT, Source
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, Source                                                                        , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("z=",F0.4)',Redshift)                                         , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("dL=",I0," Mpc")',Distance)                                   , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("SFR=",F0.2," Msun/yr")',PdChi2_SED_List[sid].SFR)            , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("lgMstar=",F0.2," Msun")',ALOG10(PdChi2_SED_List[sid].Mstar)) , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("lgMdust=",F0.2," Msun")',ALOG10(PdChi2_SED_List[sid].Mdust)) , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("Umean=",F0.2)',PdChi2_SED_List[sid].U)                       , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("Tdust=",F0.2, " K")',PdChi2_SED_List[sid].Tdust)             , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("qIR=",F0.2)',PdChi2_SED_List[sid].qIR)                       , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
-            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("chi2=",F0.4)',PdChi2_SED_List[sid].chi2)                     , FONT=PlotFont, CharSize=PlotLegendSize & PlotLegendY=PlotLegendY-PlotLegendDY
+            PlotLegendX = 0.21
+            PlotLegendY = 0.89
+            PlotLegendDY = 0.044
+            PlotLegendSize = 0.69
+            PlotLegendThick = 3
+            PRINT, SourceName
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, SourceName                                                                    , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("z=",F0.4)',Redshift)                                         , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("dL=",I0," Mpc")',Distance)                                   , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("SFR=",F0.2," Msun/yr")',PdChi2_SED_List[sid].SFR)            , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("lgMstar=",F0.2," Msun")',ALOG10(PdChi2_SED_List[sid].Mstar)) , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("lgMdust=",F0.2," Msun")',ALOG10(PdChi2_SED_List[sid].Mdust)) , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("Umean=",F0.2)',PdChi2_SED_List[sid].U)                       , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("Tdust=",F0.2, " K")',PdChi2_SED_List[sid].Tdust)             , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("qIR=",F0.2)',PdChi2_SED_List[sid].qIR)                       , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
+            XYOUTS, PlotLegendX, PlotLegendY, /NORMAL, STRING(FORMAT='("chi2=",F0.4)',PdChi2_SED_List[sid].chi2)                     , FONT=PlotFont, CharSize=PlotLegendSize, CharThick=PlotLegendThick & PlotLegendY=PlotLegendY-PlotLegendDY
         ENDIF
         
         ;;BREAK
@@ -583,7 +618,7 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
     ; 
     ; Overplot the observed data points
     PlotSize = 0.45
-    PlotThick = 1.5
+    PlotThick = 2.0
     Obs_w  = DOUBLE(CrabTableReadColumn(PdChi2_DAT,1))
     Obs_f  = DOUBLE(CrabTableReadColumn(PdChi2_DAT,2))
     Obs_df = DOUBLE(CrabTableReadColumn(PdChi2_DAT,3))
@@ -653,6 +688,7 @@ PRO PdChi2_v01, InputDAT, InputLIB, InputFIT, OutputName=OutputName, SET_FONT=SE
     ; Close device
     DEVICE, /CLOSE
     SET_PLOT, "X"
+    ConvertPS2PDF, OutputName+"_"+"SED"+".eps"
     
     
     
