@@ -10,6 +10,7 @@ calc_chisq_probability
     # 
     # Last update:
     #    20151101
+    #    20170523 -- unset original_chi2, if(!is_vector(original_chi2))
     # 
     # 
     macro read pChisq.sm
@@ -30,21 +31,20 @@ calc_chisq_probability
         if(0==(cid%cccid_interval)) {
             !printf "%.0f%%%1s" $(float(cid)/dimen(ccchi2)*100.0) ""
         }
+        # unset original_chi2
+        if(is_vector(original_chi2)) {unset original_chi2}
         # run pChisq.sm routine to compute the chi2 with radio
         if($cccid==0 || ccchi2[cid]<0.75*$ccchi2MEDIAN) {
             define rChisq_PreVerbose $verbose verbose 0
             if($cccid==0) {
+                set gCoo[0] = 1 #<20170523># 
                 input run_plotting.sm
-                #plotChisq "flux_obsframe.dat" \
-                #          "FSPS.Padova.BaSeL.Z0.0190.EBV.lib.SED" \
-                #          "DL07.HiExCom.lib.SED" \
-                #          "DL07.LoExCom.lib.SED" \
-                #          "fit_triple.out"
             } else {
                 plotChisqInnerRoutine
             }
             verbose $rChisq_PreVerbose
-        } else {
+        }
+        if(!is_vector(original_chi2)) {
             set original_chi2 = 1e10
             set recomputed_chi2 = 1e10
             set Umean = -99.0
@@ -184,6 +184,31 @@ calc_uncertainty_and_plot_LTIR
                          draw $fx2 $(1.0/($chisqMIN+$chisqDELTA))
     ctype default ltype 0 device nodevice
     print "plot_chi2_probability_against_LIR.txt" {LTIR chisq revchisq}
+    print "plot_chi2_probability_against_Mstar.txt" {Mstar chisq revchisq}
+
+
+
+calc_uncertainty_of_EBV
+    calc_uncertainty_and_plot_EBV
+calc_uncertainty_and_plot_EBV
+    # 
+    read_chi2_data
+    calc_uncertainty_of EBV
+    # 
+    get_chi2_probability chisq EBV 0.0 1.5 0.3
+    set EBV_value = got_par_array
+    set chisq = got_chi_array set revchisq = 1.0/got_chi_array #<TODO># reduced chi square needs to be divided by N_data
+    load crabPlotHistogram.sm
+    set crabPlotHistogram_KeepDevice = 1
+    set crabPlotHistogram_ticksize = '0 0 0 0'
+    set crabPlotHistogram_xlimit = {0.0 1.5}
+    set crabPlotHistogram_xlabel = 'E(B-V)'
+    set crabPlotHistogram_ylabel = '1/\\chi^2'
+    crabPlotHistogram_xy "plot_chi2_probability_against_EBV.pdf" EBV_value revchisq
+    ctype magenta ltype 1 rel $fx1 $(1.0/($chisqMIN+$chisqDELTA)) 
+                         draw $fx2 $(1.0/($chisqMIN+$chisqDELTA))
+    ctype default ltype 0 device nodevice
+    print "plot_chi2_probability_against_EBV.txt" {EBV_value chisq revchisq}
 
 
 

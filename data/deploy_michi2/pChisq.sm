@@ -130,7 +130,7 @@ plotChisq 09
         if(NPARLib$iLib==0) {print 'Error! Could not recognize \"$(FileLi$iLib)\"! Please contact dzliu to modify the code!\n' {}}
         define pChisq_PreVerbose $verbose verbose 0
         set iCol = iCol+1 data $(FileOut) read i$iLib $(iCol)
-        set iCol = iCol+1 data $(FileOut) read a$iLib $(iCol)
+        set iCol = iCol+1 data $(FileOut) read a$iLib $(iCol).f
         verbose $pChisq_PreVerbose
         if(!is_vector(i$iLib)||!is_vector(a$iLib)) {
             print '\nError! Failed to read i$iLib and a$iLib from column $(iCol) of \"$(FileOut)\"! Please have a check!\n\n' {}
@@ -141,7 +141,9 @@ plotChisq 09
         if(NPARLib$iLib==0) {print 'Error! Some library files could not be recognized in current version of the code! Please contact dzliu to modify the code!\n' {} return}
         do iPar=1,NPARLib$iLib {
             define pChisq_PreVerbose $verbose verbose 0
-            set iCol = iCol+1 data $(FileOut) read t$iLib""par$iPar $(iCol)
+            set iCol = iCol+1
+            data $(FileOut) read t$iLib""par$iPar $(iCol).f
+            echo data $(FileOut) read t$iLib""par$iPar $(iCol).f
             verbose $pChisq_PreVerbose
             if(!is_vector(t$iLib""par$iPar)) {
                 print '\nError! Failed to read t$iLib""par$iPar from column $(iCol) of \"$(FileOut)\"! Please have a check!\n\n' {}
@@ -174,8 +176,12 @@ plotChisq 09
         #echo $(cid[3]) $(chi2[cid[3]])
         set cidTMP = 0,$($ns-1) # choose the nth best fit chi2 solutions
         set cid = cid[cidTMP]
-        if(dimen(cid)==0) {return}
-        if(is_vector(cid)==0) {return}
+        if(dimen(cid)==0) {
+            return
+        }
+        if(is_vector(cid)==0) {
+            return
+        }
     } # else {
     #     set cid = cid if(gCoo[cid])
     #     if(dimen(cid)==0) {return}
@@ -219,9 +225,9 @@ plotChisq 09
     # <NOTE><20160502><dzliu> separated this from "plotChisq", for speed up the "rChisq.sm". This must be run after "plotChisq"
     # 
     plotChisqInnerRoutine
-    
-    
-    
+
+
+
 plotChisqInnerRoutine
     # 
     # plot each model
@@ -265,6 +271,8 @@ plotChisqInnerRoutine
         if(is_vector(Mdust_Warm))      {unset Mdust_Warm}
         if(is_vector(Mstar))           {unset Mstar}
         if(is_vector(EBV))             {unset EBV}
+        if(is_vector(AGE))             {unset AGE}
+        if(is_vector(MTC))             {unset MTC}
         if(is_vector(LAGN))            {unset LAGN}
         if(is_vector(Umean))           {unset Umean}
         if(is_vector(original_chi2))   {unset original_chi2}
@@ -374,6 +382,8 @@ plotChisqInnerRoutine
                 set EBV = t$iLib""par4[$i]
                 set AGE = t$iLib""par2[$i]
                 set MTC = t$iLib""par1[$i]
+                #echo MTC = $(MTC), AGE = $(AGE), EBV = $(EBV)
+                #exit
             }
             if(index(FileLi$iLib,'AGN.')>=0) {
                 # 
@@ -839,11 +849,11 @@ readLibSED 02
     if(is_file(".readLibSED.tpar3")) {data ".readLibSED.tpar3" read {SEDTPAR3 1.s}}
     if(is_file(".readLibSED.tpar4")) {data ".readLibSED.tpar4" read {SEDTPAR4 1.s}}
     !cat $1 | grep -n -m $($2+$(SEDunit)) '^[^\#]' | tail -n $(SEDunit) > ".readLibSED.tmp"
-    data ".readLibSED.tmp" read {SEDwave 2 SEDflux 3}
-    if(is_vector(SEDTPAR1)) {read <$(SEDTPAR1) 4>}
-    if(is_vector(SEDTPAR2)) {read <$(SEDTPAR1) 5>}
-    if(is_vector(SEDTPAR3)) {read <$(SEDTPAR1) 6>}
-    if(is_vector(SEDTPAR4)) {read <$(SEDTPAR1) 7>}
+    data ".readLibSED.tmp" read {SEDwave 2.f SEDflux 3.f}
+    if(is_vector(SEDTPAR1)) {read <$(SEDTPAR1) 4.f>}
+    if(is_vector(SEDTPAR2)) {read <$(SEDTPAR1) 5.f>}
+    if(is_vector(SEDTPAR3)) {read <$(SEDTPAR1) 6.f>}
+    if(is_vector(SEDTPAR4)) {read <$(SEDTPAR1) 7.f>}
     verbose $_readLibSED_preverb undef _readLibSED_preverb
 
 

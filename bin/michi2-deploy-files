@@ -45,7 +45,7 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     unzip "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.Single.lib.SED.zip"
     unzip "${deploy_upper_dir}/data/lib_SED/RadioPowerlaw.Single.lib.SED.zip"
 elif echo "$deploy_type" | grep -q -i "LVG"; then
-    cp "${deploy_upper_dir}/data/deploy_michi2"/*.sm "${deploy_upper_dir}/data/deploy_michi2"/run*.sh .
+    cp "${deploy_upper_dir}/data/deploy_LVG"/*.sm "${deploy_upper_dir}/data/deploy_LVG"/run*.sh .
     cp "${deploy_upper_dir}/data/lib_LVG/"lib_*.lvg .
 fi
 if [[ $(uname) == "Darwin" ]]; then

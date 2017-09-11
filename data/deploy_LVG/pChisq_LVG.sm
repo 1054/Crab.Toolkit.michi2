@@ -49,7 +49,7 @@ plotChisq 07
     if(FileEps==FileOut) {data .FileEps  read row FileEps 1.s}
     if(FileEps==FileOut) {verbose $pChisq_PreVerbose}   # begin to check input_redshift.sm
     if(FileOK==0 && $verbose>0) {print 'Loading redshift information from \"input_redshift.sm\" ... ' {} 
-                   if(is_file("input_redshift.sm")) {print 'FILE OK\n' {}} else {print 'NOT FOUND!\n' {} FileOK=9}}
+                   if(is_file("input_redshift.sm")) {print 'FILE OK\n' {}} else {print 'NOT FOUND!\n' {} set FileOK=9}}
     if(FileOK>0) {print '\nError! Some input files are not found! Please check the information above and have a retry!\n\n' {} return}
     #FileFitNoOutput
     #FileEpsNoOutput
@@ -154,7 +154,11 @@ plotChisq 07
         }
         #[20170213] if fit LVG 2 components
         if(NumbLib==2 && $iLib==NumbLib) {
-            set gCoo = (gCoo && t2par2>t1par2) # component 2 must be denser
+            set gCoo = (gCoo && a1>0 && a2>0) # (gCoo && t2par2>t1par2) # component 2 must be denserxxx -- hotter
+        }
+        #[20170906] if fit LVG 1 component
+        if(NumbLib==1 && $iLib==NumbLib) {
+            set gCoo = (gCoo && a1>0 && t1par1<=150)
         }
     }
     # 
@@ -191,11 +195,12 @@ plotChisq 07
     vecminmax w1 wMIN wMAX
     define wMAX $(int($wMAX/0.25)*0.25+0.50)
     define wMIN $(int($wMIN/0.25)*0.25-0.75)
-    if(z>=1) {
-        define wMIN -0.5
-        define wMAX 5.5
-        define fMIN -4.0
-        define fMAX 3.0
+    if(index(FileLi1,'.lvg')>0) {
+        vecminmax w1 wMIN wMAX
+        define wMIN 0.5 # $($wMIN-0.5)
+        define wMAX 9.5 # $($wMAX+0.5)
+        define fMIN 0.0
+        define fMAX $(($fMAX)+($fMAX-$fMIN)*0.35)
     }
     ##echo $wMIN $wMAX $fMIN $fMAX
     # 
@@ -205,7 +210,7 @@ plotChisq 07
         device postencap $(FileEps)
         # xtcolours # do not use xtcolours
         define TeX_strings 1
-        #ticksize 0 0 0 0
+        ticksize 1 1 0 0
         limits $wMIN $wMAX $fMIN $fMAX
         #notation 0 0 -0.5 0.5
         #limits -0.5 5.5 -3.0 3.0 #[20160512] $fMIN $fMAX #[20160502] -1.5 5.5 $fMIN $fMAX
@@ -250,7 +255,7 @@ plotChisqInnerRoutine
         # set common x
         set SPIwc = 1,15,0.1
         set wc = SPIwc # the combined LVG wave in log
-        set fc = wc*.0-99 # the combined LVG flux in log
+        set fc = wc*.0+1e-99 # the combined LVG flux in log
         # 
         # 
         # unset values

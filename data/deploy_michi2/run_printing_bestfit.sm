@@ -1,0 +1,44 @@
+print_bestfit
+    # 
+    # Usage:
+    #   echo "macro read run_printing_bestfit.sm print_bestfit" | sm
+    # 
+    data "bestfit_Umean_range.txt" 
+    lines 2 1 read U_L68 4.f
+    lines 3 1 read U_U68 4.f
+    lines 4 1 read U_err 4.f
+    lines 5 1 read U 4.f
+    
+    data "bestfit_EBV_range.txt" 
+    lines 2 1 read EBV_L68 4.f
+    lines 3 1 read EBV_U68 4.f
+    lines 4 1 read EBV_err 4.f
+    lines 5 1 read EBV 4.f
+    
+    data "bestfit_LTIR_range_log10.txt" 
+    lines 2 1 read LIR_L68 4.f
+    lines 3 1 read LIR_U68 4.f
+    lines 4 1 read LIR_err 4.f
+    lines 5 1 read LIR 4.f
+    
+    data "bestfit_Mdust_range_log10.txt" 
+    lines 2 1 read Mdust_L68 4.f
+    lines 3 1 read Mdust_U68 4.f
+    lines 4 1 read Mdust_err 4.f
+    lines 5 1 read Mdust 4.f
+    
+    data "bestfit_Mstar_range_log10.txt" 
+    lines 2 1 read Mstar_L68 4.f
+    lines 3 1 read Mstar_U68 4.f
+    lines 4 1 read Mstar_err 4.f
+    lines 5 1 read Mstar 4.f
+    
+    print "bestfit_results.txt" '%10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f %10.2f %10.2f %10.2f %10.2f %10.4f %10.4f %10.4f %10.4f\n' \
+        {LIR LIR_err LIR_L68 LIR_U68 Mdust Mdust_err Mdust_L68 Mdust_U68 U U_err U_L68 U_U68 EBV EBV_err EBV_L68 EBV_U68 Mstar Mstar_err Mstar_L68 Mstar_U68}
+    
+    echo "Output to \"bestfit_results.txt\"!"
+    echo "--"
+    !cat "bestfit_results.txt"
+    echo "--"
+
+
