@@ -1,0 +1,540 @@
+#!/bin/bash
+# 
+# Aim: 
+#      Easily extract flux from big catalog
+#      Needs topcat
+# 
+# Revision history:
+#      2017-09-30 Copied from '/Users/dzliu/Cloud/Github/Crab.Toolkit.CAAP/bin/caap-extract-multi-wavelength-photometry-for-input-sample'
+# 
+
+
+usage() {
+    echo "Usage: "
+    echo "    michi2-extract-photometry-from-catalog-with-topcat -catalog input_catalog_with_id_ra_dec_columns.txt"
+    echo "    michi2-extract-photometry-from-catalog-with-topcat -catalog input_catalog_with_id_ra_dec_columns.fits"
+    echo "Aim: "
+    echo "    Extract multi-wavelength photometry from Laigle2015 for each source in the input catalog by matching the source ID."
+    echo ""
+    exit
+}
+
+
+#######################
+#      Functions      #
+#######################
+
+
+replace_quotes_text() {
+if [[ $# -gt 0 ]]; then
+cp $1 $1.backup
+cat $1.backup | sed -e 's/""/-99/g' \
+  > $1
+rm $1.backup
+fi
+}
+
+
+extract_meta_from_catalog() {
+# aim: 
+#   print meta data for FITS format data table using TOPCAT tool
+# usage:
+#   extract_meta_from_catalog catalog_aaa.fits > catalog_aaa_meta.txt
+if [[ $# -ge 1 ]]; then
+if [[ "$1" == *".fits" ]] || [[ "$1" == *".FITS" ]]; then
+topcat -stilts tpipe \
+               in="$1" \
+               ifmt=fits \
+               omode=meta
+else
+topcat -stilts tpipe \
+               in="$1" \
+               ifmt=ascii \
+               omode=meta
+fi
+fi
+}
+
+
+extract_column_from_catalog() {
+# aim: 
+#   extract one or several column(s) from the input catalog, row number is unchanged.
+# usage:
+#   extract_column_from_catalog "id" "catalog_aaa.fits"
+if [[ $# -ge 2 ]]; then
+catalog_input_1="${!#}"
+catalog_input_format_1="auto"
+echo "${catalog_input_1}"
+if [[ "${catalog_input_1}" == *".fits" ]] || [[ "${catalog_input_1}" == *".FITS" ]]; then catalog_input_format_1="fits"; else catalog_input_format_1="ascii"; fi
+if [[ -f "catalog_meta.txt" ]]; then if [[ $(cat "catalog_meta.txt" | head -n 1 | sed -e 's/in=//g') != "${catalog_input_1}" ]]; then rm "catalog_meta.txt"; fi; fi
+if [[ ! -f "catalog_meta.txt" ]]; then echo "extract_column_from_catalog() extract_meta_from_catalog ${catalog_input_1}"; extract_meta_from_catalog "${catalog_input_1}" > "catalog_meta.txt"; fi
+for (( t=1; t<$#; t++ )); do
+echo "extract_colname_from_catalog_meta" "${!t}" "catalog_meta.txt" "to" "catalog_col_${!t}.txt"
+catalog_input_col_1=$(extract_colname_from_catalog_meta "${!t}" "catalog_meta.txt")
+topcat -stilts tpipe \
+               in="${catalog_input_1}" \
+               ifmt="${catalog_input_format_1}" \
+               cmd="keepcols \"${catalog_input_col_1}\"" \
+               ofmt=ascii \
+               out="catalog_col_${!t}.txt" \
+               > "catalog_col_${!t}.log"
+replace_quotes_text "catalog_col_${!t}.txt"
+done
+fi
+}
+
+
+extract_colname_from_catalog_meta() {
+# aim:
+#   guess colname from catalog meta text file
+# example usage: 
+#   extract_colname_from_catalog_meta "id" "catalog_meta.txt"
+# output in terminal:
+#   id_XXX (the first occurance of whatever *id*-like colname)
+if [[ $# -ge 2 ]]; then
+input_colname="$1"
+input_catmeta="$2"; if [[ ! -f "$input_catmeta" ]]; then echo "extract_colname_from_catalog_meta() Error! \"$input_catmeta\" was not found!"; return; fi
+found_colname=("n/a")
+match_colname=("${input_colname}")
+match_colname+=("$(echo ${input_colname} | tr '[:upper:]' '[:lower:]')")
+match_colname+=("$(echo ${input_colname} | tr '[:lower:]' '[:upper:]')")
+match_colname+=("$(echo _${input_colname})")
+match_colname+=("$(echo ${input_colname}_)")
+match_colname+=("$(echo _${input_colname} | tr '[:upper:]' '[:lower:]')")
+match_colname+=("$(echo ${input_colname}_ | tr '[:upper:]' '[:lower:]')")
+match_colname+=("$(echo _${input_colname} | tr '[:lower:]' '[:upper:]')")
+match_colname+=("$(echo ${input_colname}_ | tr '[:lower:]' '[:upper:]')")
+if [[ "${input_colname}" == "id" ]]; then
+    match_colname+=("NUMBER")
+elif [[ "${input_colname}" == "z" ]]; then
+    match_colname=("z\$")
+    match_colname+=("ZPDF" "ZML" "PHOTOZ" "PHOTO-Z")
+elif [[ "${input_colname}" == "zphot" ]]; then
+    match_colname+=("z_phot" "z_ph" "z_op" "ZPDF" "ZML" "PHOTOZ" "PHOTO-Z")
+elif [[ "${input_colname}" == "zspec" ]]; then
+    match_colname+=("z_spec" "z_sp" "spez" "z_sp" "spec-z")
+elif [[ "${input_colname}" == "flux" ]]; then
+    match_colname=("[d]*f" "_[d]*f" "[a-zA-Z0-9_]*FLUX[a-zA-Z0-9_].*Jy")
+fi
+if [[ ! -f "catalog_meta_${input_colname}_reduced.txt" ]]; then
+    for (( t=0; t<${#match_colname[@]}; t++ )); do 
+        cat "$input_catmeta" | grep -E "^[ ]+[0-9]+[:][ ]${match_colname[t]}" >> "catalog_meta_${input_colname}.txt"
+    done
+    cat "catalog_meta_${input_colname}.txt" | sed -e 's/(.*)/ /g' | sed -e 's/[:/-]/ /g' | sed -e 's/^ *//g' | tr -s ' ' | cut -d ' ' -f 2 > "catalog_meta_${input_colname}_reduced.txt"
+    rm "catalog_meta_${input_colname}.txt"
+    found_colname=($(cat "catalog_meta_${input_colname}_reduced.txt" | head -n 1))
+fi
+if [[ "${input_colname}" == "flux" ]]; then
+    cat "catalog_meta_${input_colname}_reduced.txt" | grep -v "FLUXERR_250" | grep -v "FLUXERR_350" | grep -v "FLUXERR_500" | grep -v "GALEX" | grep -v "814W" | grep -v "90CM" | grep -v "FLUXPEAK" | grep -v "FLUXPEAKERR" | grep -v "fpeak" | grep -v "fres" | grep -v "flag" > "catalog_meta_${input_colname}_reduced_reduced.txt"
+    found_colname=() # $(cat "catalog_meta_${input_colname}_reduced_reduced.txt" | head -n 1)
+    IFS=$'\n' read -d '' -r -a found_colname < "catalog_meta_${input_colname}_reduced_reduced.txt"
+fi
+#if [[ -f "catalog_meta_${input_colname}_reduced.txt" ]]; then
+#    rm "catalog_meta_${input_colname}_reduced.txt"
+#fi
+#if [[ -f "catalog_meta_${input_colname}_reduced_reduced.txt" ]]; then
+#    rm "catalog_meta_${input_colname}_reduced_reduced.txt"
+#fi
+echo "${found_colname[@]}"
+fi
+}
+
+
+cross_match_catalog_Laigle2016() {
+# aim:
+#   cross-match the input catalog with Laigle2016 catalog
+# usage:
+#    cross_match_catalog_Laigle2016 "aaa_my_catalog.txt"
+# output:
+#    catalog_cross_matched.fits, catalog_cross_matched_col_*.txt
+if [[ $# -ge 1 ]]; then
+# firstly find the ID column of the input catalog
+extract_meta_from_catalog "$1" > "catalog_input_meta.txt"
+catalog_input_col_id=$(extract_colname_from_catalog_meta "id" "catalog_input_meta.txt")
+# secondly do the cross-match with topcat stilts by matching the exact id of Laigle2016
+if [[ "$1" == *".fits" ]] || [[ "$1" == *".FITS" ]]; then catalog_input_format="fits"; else catalog_input_format="ascii"; fi
+topcat -stilts tmatchn \
+               nin=2 \
+               in1="$1" \
+               ifmt1="$catalog_input_format" \
+               suffix1="" \
+               values1="$catalog_input_col_id" \
+               in2='/Users/dzliu/Work/AlmaCosmos/Catalogs/COSMOS2015_Laigle2016/COSMOS2015_Laigle+_v1.1.fits' \
+               ifmt2="fits" \
+               values2="NUMBER" \
+               suffix2="_Laigle" \
+               multimode=pairs \
+               matcher=exact \
+               join1=always \
+               fixcols=all \
+               ofmt=fits \
+               out="catalog_cross_matched.fits" \
+               > "catalog_cross_matched.log"
+               # http://www.star.bristol.ac.uk/~mbt/stilts/sun256/tmatchn-usage.html
+# then extract meta to tet file
+extract_meta_from_catalog "$1" > "catalog_cross_matched_meta.txt"
+# thirdly extract id, ra, dec and z columns
+for x in "id" "ra" "dec" "z" "zphot" "zspec"; do
+catalog_input_col_$x=$(extract_colname_from_catalog_meta "$x" "catalog_cross_matched_meta.txt")
+topcat -stilts tpipe \
+               in="catalog_cross_matched.fits" \
+               ifmt=fits \
+               cmd="keepcols \"${catalog_input_col_$x}\"" \
+               ofmt=ascii \
+               out="catalog_cross_matched_col_$x.txt"
+done
+fi
+}
+
+
+extract_row_from_catalog() {
+# input 1: row number starting from 1
+# input 2: catalog file
+# input 3-N: column names
+# output: 'catalog_extracted.fits'
+#         'catalog_extracted_band.txt'
+#         'catalog_extracted_flux.txt'
+#         'catalog_extracted_fluxerr.txt'
+if [[ $# -ge 2 ]]; then
+catalog_input_1="$2"; if [[ ! -f "$catalog_input_1" ]]; then echo "extract_row_from_catalog() Error! \"$catalog_input_1\" was not found!"; return; fi
+if [[ "${catalog_input_1}" == *".fits" ]] || [[ "${catalog_input_1}" == *".FITS" ]]; then catalog_input_format_1="fits"; else catalog_input_format_1="ascii"; fi
+catalog_row_1="$1"; shift; shift; if [[ $# -ge 1 ]]; then catalog_col_1=("$@"); else catalog_col_1=(); fi
+echo "extract_row_from_catalog() $catalog_row_1 $catalog_input_1"
+echo "--------"
+topcat -stilts tpipe \
+               in="$catalog_input_1" \
+               ifmt="$catalog_input_format_1" \
+               cmd="rowrange $catalog_row_1 +1" \
+               ofmt=fits \
+               out='catalog_extracted.fits' \
+               > "catalog_extracted.log"
+if [[ ${#catalog_col_1[@]} -gt 0 ]]; then
+echo "--------"
+topcat -stilts tpipe \
+               in='catalog_extracted.fits' \
+               ifmt=fits \
+               cmd="keepcols \"${catalog_col_1}\"" \
+               cmd='transpose' \
+               cmd='every 2' \
+               ofmt=ascii \
+               out='catalog_extracted_band.txt' \
+               > "catalog_extracted_band.log"
+echo "--------"
+topcat -stilts tpipe \
+               in='catalog_extracted.fits' \
+               ifmt=fits \
+               cmd="keepcols \"${catalog_col_1}\"" \
+               cmd='transpose' \
+               cmd='every 2' \
+               ofmt=ascii \
+               out='catalog_extracted_flux.txt' \
+               > "catalog_extracted_flux.log"
+echo "--------"
+topcat -stilts tpipe \
+               in='catalog_extracted.fits' \
+               ifmt=fits \
+               cmd="keepcols \"${catalog_col_1}\"" \
+               cmd='delcols 1' \
+               cmd='transpose' \
+               cmd='every 2' \
+               ofmt=ascii \
+               out='catalog_extracted_fluxerr.txt' \
+               > "catalog_extracted_fluxerr.log"
+fi
+fi
+}
+
+
+identify_wavelength() {
+if [[ $# -gt 0 ]]; then
+cp $1 $1.backup
+cat $1.backup \
+       | perl -p -e 's/([ ]*ALMA_WAVELENGTH[ ]+)([0-9eE\".+-]+)/${1}${2}   mJy/g' \
+       | perl -p -e 's/([ ]*Ks_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}2.15399   uJy/g' \
+       | perl -p -e 's/([ ]*Ks_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}2.15399   uJy/g' \
+       | perl -p -e 's/([ ]*Y_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}1.02142   uJy/g' \
+       | perl -p -e 's/([ ]*Y_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}1.02142   uJy/g' \
+       | perl -p -e 's/([ ]*H_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}1.64534   uJy/g' \
+       | perl -p -e 's/([ ]*H_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}1.64534   uJy/g' \
+       | perl -p -e 's/([ ]*J_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}1.25346   uJy/g' \
+       | perl -p -e 's/([ ]*J_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}1.25346   uJy/g' \
+       | perl -p -e 's/([ ]*B_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.44583   uJy/g' \
+       | perl -p -e 's/([ ]*B_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.44583   uJy/g' \
+       | perl -p -e 's/([ ]*V_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.54778   uJy/g' \
+       | perl -p -e 's/([ ]*V_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.54778   uJy/g' \
+       | perl -p -e 's/([ ]*ip_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.76839   uJy/g' \
+       | perl -p -e 's/([ ]*ip_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.76839   uJy/g' \
+       | perl -p -e 's/([ ]*r_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.62887   uJy/g' \
+       | perl -p -e 's/([ ]*r_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.62887   uJy/g' \
+       | perl -p -e 's/([ ]*u_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.38233   uJy/g' \
+       | perl -p -e 's/([ ]*u_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.38233   uJy/g' \
+       | perl -p -e 's/([ ]*zp_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.91057   uJy/g' \
+       | perl -p -e 's/([ ]*zp_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.91057   uJy/g' \
+       | perl -p -e 's/([ ]*zpp_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.91057   uJy/g' \
+       | perl -p -e 's/([ ]*zpp_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.91057   uJy/g' \
+       | perl -p -e 's/([ ]*Hw_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}1.63114   uJy/g' \
+       | perl -p -e 's/([ ]*Hw_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}1.63114   uJy/g' \
+       | perl -p -e 's/([ ]*Ksw_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}2.15904   uJy/g' \
+       | perl -p -e 's/([ ]*Ksw_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}2.15904   uJy/g' \
+       | perl -p -e 's/([ ]*yHSC_FLUX_APER2_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.97914   uJy/g' \
+       | perl -p -e 's/([ ]*yHSC_FLUX_APER3_Laigle[ ]+)([0-9eE\".+-]+)/${1}0.97914   uJy/g' \
+       | perl -p -e 's/([ ]*SPLASH_1_FLUX_Laigle[ ]+)([0-9eE\".+-]+)/${1}3.56343   uJy/g' \
+       | perl -p -e 's/([ ]*SPLASH_2_FLUX_Laigle[ ]+)([0-9eE\".+-]+)/${1}4.51101   uJy/g' \
+       | perl -p -e 's/([ ]*SPLASH_3_FLUX_Laigle[ ]+)([0-9eE\".+-]+)/${1}5.75934   uJy/g' \
+       | perl -p -e 's/([ ]*SPLASH_4_FLUX_Laigle[ ]+)([0-9eE\".+-]+)/${1}7.95949   uJy/g' \
+       | perl -p -e 's/([ ]*FLUX_24_Laigle[ ]+)([0-9eE\".+-]+)/${1}24.0    uJy/g' \
+       | perl -p -e 's/([ ]*FLUX_100_Laigle[ ]+)([0-9eE\".+-]+)/${1}100.0   mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_160_Laigle[ ]+)([0-9eE\".+-]+)/${1}160.0   mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_250_Laigle[ ]+)([0-9eE\".+-]+)/${1}250.0   mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_350_Laigle[ ]+)([0-9eE\".+-]+)/${1}350.0   mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_500_Laigle[ ]+)([0-9eE\".+-]+)/${1}500.0   mJy/g' \
+       | perl -p -e 's/([ ]*FLUXINT_90CM_Laigle[ ]+)([0-9eE\".+-]+)/${1}900000.0     mJy/g' \
+       | perl -p -e 's/([ ]*FLUXINT_20CM_Laigle[ ]+)([0-9eE\".+-]+)/${1}200000.0     mJy/g' \
+       | perl -p -e 's/([ ]*f24_Jin[ ]+)([0-9eE\".+-]+)/${1}24.0    uJy/g' \
+       | perl -p -e 's/([ ]*f24_jin_Jin[ ]+)([0-9eE\".+-]+)/${1}24.0    uJy/g' \
+       | perl -p -e 's/([ ]*f20cm_Jin[ ]+)([0-9eE\".+-]+)/${1}213571.4     uJy/g' \
+       | perl -p -e 's/([ ]*f20cm_2_Jin[ ]+)([0-9eE\".+-]+)/${1}213571.4     uJy/g' \
+       | perl -p -e 's/([ ]*f100_Jin[ ]+)([0-9eE\".+-]+)/${1}100.0   mJy/g' \
+       | perl -p -e 's/([ ]*f160_Jin[ ]+)([0-9eE\".+-]+)/${1}160.0   mJy/g' \
+       | perl -p -e 's/([ ]*_fch1_Jin[ ]+)([0-9eE\".+-]+)/${1}3.6     uJy/g' \
+       | perl -p -e 's/([ ]*_fch2_Jin[ ]+)([0-9eE\".+-]+)/${1}4.5     uJy/g' \
+       | perl -p -e 's/([ ]*_fch3_Jin[ ]+)([0-9eE\".+-]+)/${1}5.8     uJy/g' \
+       | perl -p -e 's/([ ]*_fch4_Jin[ ]+)([0-9eE\".+-]+)/${1}8.0     uJy/g' \
+       | perl -p -e 's/([ ]*fch1_Jin[ ]+)([0-9eE\".+-]+)/${1}3.6     uJy/g' \
+       | perl -p -e 's/([ ]*fch2_Jin[ ]+)([0-9eE\".+-]+)/${1}4.5     uJy/g' \
+       | perl -p -e 's/([ ]*fch3_Jin[ ]+)([0-9eE\".+-]+)/${1}5.8     uJy/g' \
+       | perl -p -e 's/([ ]*fch4_Jin[ ]+)([0-9eE\".+-]+)/${1}8.0     uJy/g' \
+       | perl -p -e 's/([ ]*fKs_Jin[ ]+)([0-9eE\".+-]+)/${1}2.15    mJy/g' \
+       | perl -p -e 's/([ ]*f250_Jin[ ]+)([0-9eE\".+-]+)/${1}250.0     mJy/g' \
+       | perl -p -e 's/([ ]*f350_Jin[ ]+)([0-9eE\".+-]+)/${1}350.0     mJy/g' \
+       | perl -p -e 's/([ ]*f500_Jin[ ]+)([0-9eE\".+-]+)/${1}500.0     mJy/g' \
+       | perl -p -e 's/([ ]*f850_Jin[ ]+)([0-9eE\".+-]+)/${1}850.0     mJy/g' \
+       | perl -p -e 's/([ ]*f1100_Jin[ ]+)([0-9eE\".+-]+)/${1}1100.0    mJy/g' \
+       | perl -p -e 's/([ ]*f1200_Jin[ ]+)([0-9eE\".+-]+)/${1}1200.0    mJy/g' \
+       | perl -p -e 's/([ ]*f3ghz_Jin[ ]+)([0-9eE\".+-]+)/${1}100000.0     uJy/g' \
+       | perl -p -e 's/([ ]*f3ghz_org_Jin[ ]+)([0-9eE\".+-]+)/${1}100000.0     uJy/g' \
+       | perl -p -e 's/([ ]*f3ghz_1arc5_Jin[ ]+)([0-9eE\".+-]+)/${1}100000.0     uJy/g' \
+       | perl -p -e 's/([ ]*f3ghz_2arc_Jin[ ]+)([0-9eE\".+-]+)/${1}100000.0     uJy/g' \
+       | perl -p -e 's/([ ]*FLUX_IRAC1[ ]+)([0-9eE\".+-]+)/${1}3.6     mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_IRAC2[ ]+)([0-9eE\".+-]+)/${1}4.5     mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_IRAC3[ ]+)([0-9eE\".+-]+)/${1}5.8     mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_IRAC4[ ]+)([0-9eE\".+-]+)/${1}8.0     mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_MIPS24[ ]+)([0-9eE\".+-]+)/${1}24.0     mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_3GHz[ ]+)([0-9eE\".+-]+)/${1}100000.0     mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_3GHz_[^ ]*[ ]+)([0-9eE\".+-]+)/${1}100000.0     mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_1.4GHz[ ]+)([0-9eE\".+-]+)/${1}200000.0     mJy/g' \
+       | perl -p -e 's/([ ]*FLUX_1.4GHz_[^ ]*[ ]+)([0-9eE\".+-]+)/${1}200000.0     mJy/g' \
+       | perl -p -e 's/([ ]*f100[ ]+)([0-9eE\".+-]+)/${1}100.0     mJy/g' \
+       | perl -p -e 's/([ ]*f160[ ]+)([0-9eE\".+-]+)/${1}160.0     mJy/g' \
+       | perl -p -e 's/([ ]*f250[ ]+)([0-9eE\".+-]+)/${1}250.0     mJy/g' \
+       | perl -p -e 's/([ ]*f350[ ]+)([0-9eE\".+-]+)/${1}350.0     mJy/g' \
+       | perl -p -e 's/([ ]*f500[ ]+)([0-9eE\".+-]+)/${1}500.0     mJy/g' \
+       | perl -p -e 's/([ ]*f850[ ]+)([0-9eE\".+-]+)/${1}850.0     mJy/g' \
+       | perl -p -e 's/([ ]*f1100[ ]+)([0-9eE\".+-]+)/${1}1100.0     mJy/g' \
+       | perl -p -e 's/([ ]*f1200[ ]+)([0-9eE\".+-]+)/${1}1200.0     mJy/g' \
+  > $1
+rm $1.backup
+fi
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########################
+#      Main script     #
+########################
+
+# 
+# Check user input WaveData and FluxData
+# 
+m_Catalogue=""
+m_SourceIDs=()
+m_Input_ArgType="N/A"
+
+while [[ $# -gt 0 ]]; do
+    
+    TempStr=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+    TempCmd=""
+    
+    case "$TempStr" in
+                    
+             "-ID") TempCmd="$1"; shift
+                    m_Input_ArgType="SourceIDs"
+                    ;;
+                    
+           "-CAT"*) TempCmd="$1"; shift
+                    m_Input_ArgType="Catalogue"
+                    ;;
+                    
+                 *) #echo "$1"
+                    #shift
+                    
+    esac
+    
+    case "$m_Input_ArgType" in
+                                        
+                           "SourceIDs") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_SourceIDs+=("$1")
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with at least 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                           "Catalogue") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_Catalogue="$1"
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                                 "N/A") 
+                                        # check followed argument
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                     *) #echo "$1"
+                                        shift
+                                        
+    esac
+    
+done
+
+if [[ x"$m_Catalogue" == x ]]; then
+    usage
+    exit
+fi
+
+
+
+
+# 
+# Read input catalog name
+# 
+catalog_input="$m_Catalogue"
+
+if [[ ! -f "$catalog_input" ]] && [[ ! -L "$catalog_input" ]]; then
+    echo "Error! The input catalog \"$catalog_input\" was not found!"
+    exit
+fi
+
+
+# 
+# Cross-match Laigle2015 catalog
+# 
+#if [[ ! -f "catalog_cross_matched.fits" ]]; then
+#echo "cross-matching catalog Laigle+2016"
+#cross_match_catalog_Laigle2016 "$catalog_input"
+##--> output "catalog_cross_matched.fits"
+##ln -fs "catalog_cross_matched.fits" "catalog_id_ra_dec_photometry.fits"
+#fi
+
+
+# 
+# Extract id, ra, dec and z columns
+# 
+if [[ ! -f "catalog_meta.txt" ]]; then
+    extract_meta_from_catalog "$catalog_input" > "catalog_meta.txt"
+    extract_column_from_catalog "id" "ra" "dec" "z" "zphot" "zspec" "$catalog_input"
+fi
+
+
+# 
+# Extract flux columns
+# 
+col_flux=($(extract_colname_from_catalog_meta "flux" "catalog_meta.txt"))
+col_flux_str="${col_flux[@]}"
+echo "Flux columns count: ${#col_flux[@]}"
+#echo "Flux columns to extract: ${col_flux_str}"
+
+
+# 
+# Loop each source, prepare photo-z file
+# 
+source_list=()
+if [[ ${#m_SourceIDs[@]} -eq 0 ]]; then
+    source_list=($(cat 'catalog_col_id.txt' | grep -v "^#"))
+else
+    source_list=("${m_SourceIDs[@]}")
+fi
+echo "Source count: ${#source_list[@]}"
+#exit
+
+for (( i=0; i<${#source_list[@]}; i++ )); do
+    source_name=${source_list[i]}
+    if [[ ! -d "ID_$source_name" ]]; then mkdir "ID_$source_name"; fi
+    echo "ID_$source_name  ($((i+1))/${#source_list[@]})"
+    cd "ID_$source_name"
+    
+    # extract redshift data table for each source
+    for x in zphot zspec z; do
+        if [[ -f "../catalog_col_$x.txt" ]] && [[ ! -f "catalog_col_$x.txt" ]]; then
+            cat "../catalog_col_$x.txt" | head -n 1                    >  "catalog_col_$x.txt"
+            cat "../catalog_col_$x.txt" | head -n $((i+2)) | tail -n 1 >> "catalog_col_$x.txt"
+        fi
+    done
+    
+    # reformat data
+    extract_row_from_catalog $((i+1)) "../$catalog_input" "$col_flux_str"
+    identify_wavelength 'catalog_extracted_band.txt'
+    
+    # to prevent duplication, we add version mark
+    j=1
+    while [[ -f "catalog_extracted_band.$j.txt" ]]; do
+        j=$((j+1))
+    done
+    cp "catalog_extracted.fits"        "catalog_extracted.$j.fits"
+    cp "catalog_extracted.log"         "catalog_extracted.$j.log"
+    cp "catalog_extracted_band.txt"    "catalog_extracted_band.$j.txt"
+    cp "catalog_extracted_band.log"    "catalog_extracted_band.$j.log"
+    cp "catalog_extracted_flux.txt"    "catalog_extracted_flux.$j.txt"
+    cp "catalog_extracted_flux.log"    "catalog_extracted_flux.$j.log"
+    cp "catalog_extracted_fluxerr.txt" "catalog_extracted_fluxerr.$j.txt"
+    cp "catalog_extracted_fluxerr.log" "catalog_extracted_fluxerr.$j.log"
+    
+    # cd back
+    cd "../"
+    
+    # break
+    #break
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+

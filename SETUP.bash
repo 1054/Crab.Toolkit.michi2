@@ -14,8 +14,21 @@ CRABTOOLKITMICHI2=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 export CRABTOOLKITMICHI2
 #
 # PATH
-if [[ $PATH != *"$CRABTOOLKITMICHI2/bin"* ]]; then
-    export PATH="$CRABTOOLKITMICHI2/bin":$PATH
+if [[ x"$PATH" != x*"$CRABTOOLKITMICHI2/bin"* ]]; then
+    if [[ ! -z "IDL_PATH" ]]; then
+        export PATH="$CRABTOOLKITMICHI2/bin:$PATH"
+    else
+        export PATH="$CRABTOOLKITMICHI2/bin:/bin:/usr/bin:/usr/local/bin:/opt/local/bin"
+    fi
+fi
+#
+# IDL_PATH
+if [[ x"$IDL_PATH" != x*"+$CRABTOOLKITMICHI2/lib/idl"* ]]; then
+    if [[ ! -z "IDL_PATH" ]]; then
+        export IDL_PATH="+$CRABTOOLKITMICHI2/lib/idl:$IDL_PATH"
+    else
+        export IDL_PATH="+$CRABTOOLKITMICHI2/lib/idl"
+    fi
 fi
 #
 # LIST

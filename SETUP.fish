@@ -20,6 +20,9 @@ end
 if not contains "$CRABTOOLKITMICHI2/bin" $PATH
     set -x PATH "$CRABTOOLKITMICHI2/bin" $PATH
 end
+if not contains "$CRABTOOLKITMICHI2/lib/idl" $IDL_PATH
+    set -x IDL_PATH "$CRABTOOLKITMICHI2/lib/idl" $IDL_PATH
+end
 #
 # LIST
 set -x CRABTOOLKITCMD "michi2-deploy-files" "michi2-plot-results"

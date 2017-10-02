@@ -40,8 +40,11 @@ fi
 # 
 if echo "$deploy_type" | grep -q -i "SED"; then
     cp "${deploy_upper_dir}/data/deploy_michi2"/*.sm "${deploy_upper_dir}/data/deploy_michi2"/run*.sh .
+    cp "${deploy_upper_dir}/data/deploy_SED"/run*.sh .
+    cp -r "${deploy_upper_dir}/data/deploy_SED"/filters .
     unzip "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
-    unzip "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
+    #unzip "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
+    unzip "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.lib.zip"
     unzip "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.Single.lib.SED.zip"
     unzip "${deploy_upper_dir}/data/lib_SED/RadioPowerlaw.Single.lib.SED.zip"
 elif echo "$deploy_type" | grep -q -i "LVG"; then
@@ -50,9 +53,11 @@ elif echo "$deploy_type" | grep -q -i "LVG"; then
 fi
 if [[ $(uname) == "Darwin" ]]; then
     echo "Mac!"; sleep 1.0
-    cp "${deploy_upper_dir}/bin/michi2_v03_20160727mac" .
-    ln -fs "michi2_v03_20160727mac" michi2_v03
-    chmod +x michi2_v03
+    #cp "${deploy_upper_dir}/bin/michi2_v03_20160727mac" .
+    #ln -fs "michi2_v03_20160727mac" michi2_v03
+    cp "${deploy_upper_dir}/bin/michi2_v04_20171002_0621_mac" .
+    ln -fs "michi2_v04_20171002_0621_mac" michi2_v04
+    chmod +x michi2_v04
 else
     cp "${deploy_upper_dir}/bin/michi2_v03_20160829_Linux_x86_64" .
     ln -fs "michi2_v03_20160829_Linux_x86_64" michi2_v03

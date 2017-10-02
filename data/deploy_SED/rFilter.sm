@@ -1,0 +1,44 @@
+rFilter 02
+    # 
+    # Aim:
+    #     find filter curve for the input wavelength,flux,fluxerr file
+    #     also filter low S/N data
+    # 
+    if(!$?1) {
+        print 'usage: macro read rFilter.sm rFilter input_w_f_df.txt\n' {}
+        return
+    }
+    data $1 read {w 1.f f 2.f df 3.f}
+    
+    set snr = w*0.0
+    set sid = 0,dimen(w)-1
+    set sid = sid if(df>0 && df<1e6) #<TODO># I assume df>1e6 as invalid data, i.e. no measurement
+    set snr[sid] = f[sid]/df[sid]
+    set wavelength_um = w if(snr>2.0)
+    set flux_mJy = f if(snr>2.0)
+    set fluxerr_mJy = df if(snr>2.0)
+    
+    # fit also low SNR data, set f_low_SNR = f+2*df, df_low_SNR = df
+    set wavelength_um_low_snr = w if(snr>0.0 && snr<=2.0)
+    set flux_mJy_low_snr = f if(snr>0.0 && snr<=2.0)
+    set fluxerr_mJy_low_snr = df if(snr>0.0 && snr<=2.0)
+    set flux_mJy_low_snr = (flux_mJy_low_snr<fluxerr_mJy_low_snr) ? flux_mJy_low_snr+2.0*fluxerr_mJy_low_snr : 3.0*fluxerr_mJy_low_snr
+    set wavelength_um = wavelength_um concat wavelength_um_low_snr
+    set flux_mJy = flux_mJy concat flux_mJy_low_snr
+    set fluxerr_mJy = fluxerr_mJy concat fluxerr_mJy_low_snr
+    
+    sort {wavelength_um flux_mJy fluxerr_mJy}
+    
+    # guess filter curve
+    set filter_curve = (wavelength_um>0) ? 'none' : 'none' 
+    set filter_curve = (abs(wavelength_um-24)<0.5) ? 'filters/filter_curve_24um.dat' : filter_curve
+    
+    # print
+    print "flux_obsframe.dat" '%20.10g %20.10g %20.10g\n' {wavelength_um flux_mJy fluxerr_mJy}
+    print "filter.list" '%20.10g    %s\n' {wavelength_um filter_curve}
+
+
+
+
+
+

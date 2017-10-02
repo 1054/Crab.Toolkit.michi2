@@ -1,0 +1,126 @@
+calcUmean 03
+    # 
+    # input Umin of DL07.LoExCom.lib.SED 
+    #   and Umin of DL07.HiExCom.lib.SED
+    # output the <U> Umean
+    # 
+    # usage:
+    #     macro read rUmean.sm calc calcUmean(8.0,10.65,09.34)
+    # 
+    if($?1==0||$?2==0){print 'Usage: set Umean = calcUmean(0.3,25) # Umin,gamma\n' {}}
+    if($?1==0||$?2==0){print 'Usage: set Umean = calcUmean(0.3,10.65,09.34) # Umin,lgMdust1,lgMdust2\n' {} return}
+    # 
+    # the Draine & Li 2007 IRSF (interstellar radiation field) model is like Dale 2005, 
+    # LoExComponent has a ISRF (or U) of Umin * G0, while
+    # HiExComponent has ISRF (or U) described by a exponential function within range of Umin and Umax, 
+    # usually Umax is fixed to 1e6 * G0, and the slope of exponential function is fixed to -2. 
+    # So the mean U value can be computed by 
+    #     
+    #     (1-gamma) * Umin + gamma * Umin * (ln(1e6/Umin)/(1-Umin/1e6))
+    #     
+    #     in which, gamma = aoe_Hi / (aoe_Lo+aoe_Hi) = a2/(a1+a2) = Mdust2/(Mdust1+Mdust2)
+    #     
+    #     e.g. Aniano et al. 2012
+    # 
+    set _calcUmean_Umax = 1e6
+    set _calcUmean_Umin = $1
+    set _calcUmean_gamma = $2
+    if($?3==1){
+    set _calcUmean_gamma = (10**($3))/(10**($3)+10**($2))
+    }
+    set _calcUmean_Umean_1 = (1-_calcUmean_gamma) * _calcUmean_Umin
+    set _calcUmean_Umean_2 = (ln(_calcUmean_Umax/_calcUmean_Umin)/(1-_calcUmean_Umin/_calcUmean_Umax))
+    set _calcUmean_Umean = _calcUmean_Umean_1 + _calcUmean_gamma * _calcUmean_Umin * _calcUmean_Umean_2
+    set $0 = _calcUmean_Umean
+    return
+
+
+calcMdust 04
+    # here we calculate Mdust from DL07 cold+warm dust model
+    # $1 is z
+    # $2 is a1_cold
+    # $3 is a2_warm
+    # $4 is output file (optional)
+    # $5 is wave_SED_um
+    # $6 is flux_SED_mJy
+    # $7 is Umin
+    # 
+    if($?1==0||$?2==0||$?3==0){
+        print 'Usage: set Mdust = calcMdust(0.3,25,"bestfit.txt",wc,fc,Umin) # z,aCold,aWarm,[output_txt,w_um,f_mJy,Umin]\n' {}
+    }
+    ##### Method 1
+    ##set Mdust = (a1[$i]+a2[$i])*dL**2
+    ##set LTIR = 0.0
+    ##set LFIR = 0.0
+    ##set restframe_bestfit_w = bestfit_w/opz
+    ##set Jy2LsMpc2 = 4*pi*dL**2*9.5214/3.839e8
+    ##set wTIR = lg(8.0),lg(1000.0),0.02 set wTIR = 10**wTIR set vTIR = 299792.458/wTIR spline restframe_bestfit_w bestfit_f wTIR fTIR
+    ##set wFIR = lg(50.0),lg(500.0),0.02 set wFIR = 10**wFIR set vFIR = 299792.458/wFIR spline restframe_bestfit_w bestfit_f wFIR fFIR
+    ##set LTIR = sum(fTIR*1e-3*Jy2LsMpc2*1e9*vTIR/opz)*0.02/lg(exp(1))
+    ##set LFIR = sum(fFIR*1e-3*Jy2LsMpc2*1e9*vFIR/opz)*0.02/lg(exp(1))
+    ##set Mdust = Mdust/opz #<TODO># why /opz ???
+    ##echo 
+    ##echo "Best-fit L_TIR  = "$(sprintf('%0.3E',LTIR))" L_sun (method 1)"
+    ##echo "Best-fit L_FIR  = "$(sprintf('%0.3E',LFIR))" L_sun (method 1)"
+    ##echo "Best-fit M_dust = "$(sprintf('%0.3E',Mdust))" M_sun (method 1)"
+    ##print {Mdust LTIR LFIR}
+    ### Method 2
+    load astroSfig.sm
+    set _calcMdust_z = $1
+    set _calcMdust_opz = 1.0+_calcMdust_z
+    set _calcMdust_dL = calc_lumdist(_calcMdust_z)
+    set _calcMdust_Mdust = (($2)+($3))*_calcMdust_dL**2/_calcMdust_opz
+    set _calcMdust_out = {"bestfit_dust_properties.txt"}
+    if($?4){if(strlen($4)>2){set _calcMdust_out = <"$4">}}
+    if($?7){
+        set _calcMdust_wc = $5
+        set _calcMdust_fc = $6
+        set _calcMdust_Umin = $7
+        set _calcMdust_Ucold = (lg(($2)*_calcMdust_dL**2))
+        set _calcMdust_Uwarm = (lg(($3)*_calcMdust_dL**2))
+        set _calcMdust_Umean = calcUmean(_calcMdust_Umin,_calcMdust_Ucold,_calcMdust_Uwarm) # $2 is LoEx, $3 is HiEx. 
+        define print_noheader 1
+        print  $(_calcMdust_out) '\n' {}
+        print +$(_calcMdust_out) 'Best-fit Umean = %0.3f\n' {_calcMdust_Umean}
+        print +$(_calcMdust_out) '\# calculated as calcUmean(%g,%g,%g)\n' {_calcMdust_Umin _calcMdust_Ucold _calcMdust_Uwarm}
+        print +$(_calcMdust_out) '\n' {}
+        define print_noheader 0
+        set _calcMdust_wTIR = lg(8.0),lg(1000.0),0.02
+        set _calcMdust_wTIR = 10**_calcMdust_wTIR*_calcMdust_opz
+        set _calcMdust_vTIR = 299792.458/_calcMdust_wTIR
+        set _calcMdust_wTIR = lg(_calcMdust_wTIR)
+        spline _calcMdust_wc _calcMdust_fc _calcMdust_wTIR _calcMdust_fTIR
+        set _calcMdust_wFIR = lg(50.0),lg(500.0),0.02
+        set _calcMdust_wFIR = 10**_calcMdust_wFIR*_calcMdust_opz
+        set _calcMdust_vFIR = 299792.458/_calcMdust_wFIR
+        set _calcMdust_wFIR = lg(_calcMdust_wFIR)
+        spline _calcMdust_wc _calcMdust_fc _calcMdust_wFIR _calcMdust_fFIR
+        set _calcMdust_LTIR = sum(10**_calcMdust_fTIR*1e-3*_calcMdust_Jy2LsMpc2*1e9*_calcMdust_vTIR)*0.02/lg(exp(1))
+        set _calcMdust_LFIR = sum(10**_calcMdust_fFIR*1e-3*_calcMdust_Jy2LsMpc2*1e9*_calcMdust_vFIR)*0.02/lg(exp(1))
+        print  $(_calcMdust_out) '\n' {}
+        print +$(_calcMdust_out) 'Best-fit L_TIR  = %0.3e L_sun\n' {_calcMdust_LTIR}
+        print +$(_calcMdust_out) '\# integrated over 8-1000um\n' {}
+        print +$(_calcMdust_out) '\n' {}
+        print +$(_calcMdust_out) 'Best-fit L_FIR  = %0.3e L_sun\n' {_calcMdust_LFIR}
+        print +$(_calcMdust_out) '\# integrated over 50-500um\n' {}
+        print +$(_calcMdust_out) '\n' {}
+        set _calcMdust_Mdust_LIRU21 = 10**(lg(_calcMdust_LTIR)-lg(_calcMdust_Umean)-2.1)
+        print +$(_calcMdust_out) '\n' {}
+        print +$(_calcMdust_out) 'Best-fit M_dust = %0.3e M_sun (lgMdust=lgLIR-lgUmean-2.1)\n' {_calcMdust_Mdust_LIRU21}
+        print +$(_calcMdust_out) '\# calculated as lgMdust = lgLIR - lgUmean - 2.1\n' {}
+        print +$(_calcMdust_out) '\n' {}
+    }
+    # print {Mdust LTIR LFIR}
+    define print_noheader 1
+    print  $(_calcMdust_out) '\n' {}
+    print +$(_calcMdust_out) 'Best-fit M_dust = %0.3e M_sun\n' {_calcMdust_Mdust}
+    print +$(_calcMdust_out) '\n' {}
+    !cat   $(_calcMdust_out)
+    define print_noheader 0
+    return
+
+
+
+
+
+

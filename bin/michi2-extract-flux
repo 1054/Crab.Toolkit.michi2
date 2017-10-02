@@ -17,6 +17,7 @@
 # 
 usage() {
     echo "Usage: "
+    echo "  michi2-extract-flux -catalog aaa.fits"
     echo "  michi2-extract-flux -catalog aaa.fits -id 222"
     echo ""
 }
@@ -138,8 +139,9 @@ m_ScriptDir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 # 
 # Check user input WaveData and FluxData
 # 
-m_Catalogue=""
-m_SourceIDs=()
+m_Catalogs=()
+m_Sources=()
+m_OutputDir=""
 m_Input_ArgType="N/A"
 
 while [[ $# -gt 0 ]]; do
@@ -150,11 +152,15 @@ while [[ $# -gt 0 ]]; do
     case "$TempStr" in
                     
              "-ID") TempCmd="$1"; shift
-                    m_Input_ArgType="SourceIDs"
+                    m_Input_ArgType="Source"
                     ;;
                     
            "-CAT"*) TempCmd="$1"; shift
-                    m_Input_ArgType="Catalogue"
+                    m_Input_ArgType="Catalog"
+                    ;;
+                    
+           "-OUT"*) TempCmd="$1"; shift
+                    m_Input_ArgType="OutputDir"
                     ;;
                     
                  *) #echo "$1"
@@ -164,10 +170,10 @@ while [[ $# -gt 0 ]]; do
     
     case "$m_Input_ArgType" in
                                         
-                           "SourceIDs") 
+                           "Source") 
                                         # check followed argument
                                         if [[ $# -ge 1 ]]; then
-                                            m_SourceIDs+=("$1")
+                                            m_Sources+=("$1")
                                         else
                                             echo ""
                                             echo "Error! Input argument $TempCmd should be followed with at least 1 argument!"
@@ -177,10 +183,23 @@ while [[ $# -gt 0 ]]; do
                                         shift
                                         ;;
                                         
-                           "Catalogue") 
+                           "Catalog") 
                                         # check followed argument
                                         if [[ $# -ge 1 ]]; then
-                                            m_Catalogue="$1"
+                                            m_Catalogs+=("$1")
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                           "OutputDir") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_OutputDir="$1"
                                         else
                                             echo ""
                                             echo "Error! Input argument $TempCmd should be followed with 1 argument!"
@@ -203,7 +222,7 @@ while [[ $# -gt 0 ]]; do
     
 done
 
-if [[ x"$m_Catalogue" == x || ${#m_SourceIDs[@]} -eq 0 ]]; then
+if [[ "${#m_Catalogs[@]}" -eq 0 ]]; then
     usage
     exit
 fi
@@ -216,147 +235,70 @@ fi
 # 
 # Prepare outdir
 # 
-m_OutputDir="$(pwd -P)/catalog_flux"
+#m_OutputDir="$(pwd -P)/catalog_flux"
 
 # 
 # Backup outdir
 # 
-if [[ -d "$m_OutputDir" ]]; then
-    if [[ -d "$m_OutputDir.backup" ]]; then
-        if [[ -d "$m_OutputDir.backup.backup" ]]; then
-            rm -rf "$m_OutputDir.backup.backup"
-        fi
-        mv "$m_OutputDir.backup" "$m_OutputDir.backup.backup"
-    fi
-    mv "$m_OutputDir" "$m_OutputDir.backup"
-fi
+#if [[ -d "$m_OutputDir" ]]; then
+#    if [[ -d "$m_OutputDir.backup" ]]; then
+#        if [[ -d "$m_OutputDir.backup.backup" ]]; then
+#            rm -rf "$m_OutputDir.backup.backup"
+#        fi
+#        mv "$m_OutputDir.backup" "$m_OutputDir.backup.backup"
+#    fi
+#    mv "$m_OutputDir" "$m_OutputDir.backup"
+#fi
 
 # 
 # Make outdir
 # 
-if [[ ! -d "$m_OutputDir" ]]; then
-    mkdir -p "$m_OutputDir"
-fi
-
-
-
-
-
-
-# 
-# Prepare python code
-# 
-# use different methods for different types of catalog
-# 
-if [[ $(echo "$m_Catalogue" | tr '[:lower:]' '[:upper:]') == *".FITS" ]]; then
-    # 
-    # if the input catalog is in fits table format
-    # 
-    if [[ -f "$m_ScriptDir/michi2_extract_flux_from_fits_table.py" ]]; then
-        chmod +x "$m_ScriptDir/michi2_extract_flux_from_fits_table.py"
-        echo "$m_ScriptDir/michi2_extract_flux_from_fits_table.py" "$m_Catalogue" "${m_SourceIDs[@]}"
-        "$m_ScriptDir/michi2_extract_flux_from_fits_table.py" "$m_Catalogue" "${m_SourceIDs[@]}"
-    else
-        echo "Error! Failed to call \"$m_ScriptDir/michi2_extract_flux_from_fits_table.py\", which should be distributed along with this code!"
-        exit 1
+if [[ "$m_OutputDir"x != x ]]; then
+    if [[ ! -d "$m_OutputDir" ]]; then
+        mkdir -p "$m_OutputDir"
     fi
-else
-    # 
-    # if the input catalog is in ascii text format
-    # 
-    m_Cat_Head=()
-    m_Cat_Data=()
-    m_Str_Head=""
-    m_Str_Data=""
-    m_Col_ID=-1
-    m_Col_z=-1
-    m_Found_Source=0
-    m_Found_SED=()
-    # 
-    # print catalog file name
-    echo "# Reading catalog \"$m_Catalogue\""
-    # 
-    # read catalog file
-    while read -r m_str
-    do
-        if [[ ${#m_Cat_Data[@]} -eq 0  &&  $(echo "$m_str" | sed -e 's/ *//g' | grep "^#[a-z0-9_]" | wc -l) -eq 1 ]]; then
-            m_Str_Head="$m_str"
-            m_Cat_Head=($(echo "$m_str" | sed -e 's/^ *# *//g' | tr -s ' '))
-            echo "# Got column head count: ${#m_Cat_Head[@]}"
-            echo "# Got column head list: ${m_Cat_Head[@]}"
-            for (( i=0; i<${#m_Cat_Head[@]}; i++ )); do
-                if [[ $m_Col_ID -lt 0 ]]; then 
-                    if echo "${m_Cat_Head[i]}" | grep -q -i "^id$"; then m_Col_ID=$i;
-                    elif echo "${m_Cat_Head[i]}" | grep -q -i "^id_"; then m_Col_ID=$i; fi
-                fi
-                if [[ $m_Col_z -lt 0 ]]; then 
-                    if echo "${m_Cat_Head[i]}" | grep -q -i "^z$"; then m_Col_z=$i;
-                    elif echo "${m_Cat_Head[i]}" | grep -q -i "^z"; then m_Col_z=$i; fi
-                fi
-            done
-            echo "# Got column ID: $m_Col_ID"
-            echo "# Got column z: $m_Col_z"
-        fi
-        if [[ ${#m_Cat_Head[@]} -gt 0  &&  $(echo "$m_str" | sed -e 's/ *//g' | grep -v "^#" | grep -v "^$" | wc -l) -gt 0 ]]; then 
-            m_Str_Data="$m_str"
-            m_Cat_Data=($(echo "$m_str" | sed -e 's/^ *//g' | tr -s ' '))
-            for (( i=0; i<${#m_SourceIDs[@]}; i++ )); do
-                if [[ "${m_Cat_Data[m_Col_ID]}" == "${m_SourceIDs[i]}" ]]; then
-                    m_Found_Source=1
-                    printf "# %15s %15s\n" "Found source id" "${m_Cat_Data[m_Col_ID]}"
-                    printf "# %15s %15s\n" "z" "${m_Cat_Data[m_Col_z]}"
-                    # 
-                    # loop data columns to find flux
-                    for (( j=0; j<${#m_Cat_Head[@]}; j++ )); do
-                        m_Str_Head="${m_Cat_Head[j]}"
-                        if echo "$m_Str_Head" | grep -q -i "^f[0-9]"; then 
-                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^f(.*)/\1/g")
-                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"))
-                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"
-                        elif echo "$m_Str_Head" | grep -q -i "^fK$"; then 
-                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^f(.*)/\1/g")
-                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"))
-                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"
-                        elif echo "$m_Str_Head" | grep -q -i "^fch[0-9]$"; then 
-                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^fch(.*)/irac\1/g")
-                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"))
-                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "flux" "${m_Cat_Data[j]}"
-                        elif echo "$m_Str_Head" | grep -q -i "^df[0-9]"; then 
-                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^df(.*)/\1/g")
-                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"))
-                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"
-                        elif echo "$m_Str_Head" | grep -q -i "^dfK"; then 
-                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^df(.*)/\1/g")
-                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"))
-                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"
-                        elif echo "$m_Str_Head" | grep -q -i "^dfch[0-9]"; then 
-                            m_Str_Band=$(echo "$m_Str_Head" | perl -p -e "s/^dfch(.*)/irac\1/g")
-                            m_Found_SED=($(append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"))
-                            #         echo append_sed_data m_Found_SED[@] "$m_Str_Band" "error" "${m_Cat_Data[j]}"
-                        fi
-                    done
-                    # 
-                    # print the found SED
-                    for (( j=0; j<${#m_Found_SED[@]}; j+=4 )); do
-                        if [[ $j -eq 0 ]]; then
-                            printf "# \n"
-                            printf "# %15s %15s %15s %15s\n" "wave_um" "flux_mJy" "error_mJy" "band"
-                        fi
-                        printf "%17g %15g %15g %15s\n" "${m_Found_SED[j+1]}" "${m_Found_SED[j+2]}" "${m_Found_SED[j+3]}" "${m_Found_SED[j+0]}"
-                        if [[ $j -eq $((${#m_Found_SED[@]}-1)) ]]; then
-                            printf "\n"
-                        fi
-                    done
-                fi
-            done
-        fi
-        if [[ $m_Found_Source -eq 1 ]]; then
-            break
-        fi
-    done < "$m_Catalogue"
-
 fi
 
+# 
+# run python code to get flux
+# 
+if [[ ! -f "$m_ScriptDir/michi2_extract_flux_from_data_table.py" ]]; then
+    echo "Error! Failed to call \"$m_ScriptDir/michi2_extract_flux_from_data_table.py\", which should be distributed along with this code!"
+    exit 1
+fi
+
+for (( i=0; i<${#m_Catalogs[@]}; i++ )); do
+    
+    m_CatalogUrl=$(perl -MCwd -e 'print Cwd::abs_path shift' "${m_Catalogs[i]}")
+    
+    if [[ "$m_OutputDir"x != x ]]; then
+        cd "$m_OutputDir"
+    fi
+    
+    echo "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" ">" "extracted_flux.log"
+    "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" | tee "extracted_flux.log"
+    
+    mv "extracted_flux.txt" "extracted_flux_from_cat_${i}.txt"
+    mv "extracted_flux.log" "extracted_flux_from_cat_${i}.log"
+    
+    if [[ "$m_OutputDir"x != x ]]; then
+        cd "../"
+    fi
+    
+done
+
+
+
+if [[ "$m_OutputDir"x != x ]]; then
+    cd "$m_OutputDir"
+fi
+
+head -n 2 "extracted_flux_from_cat_0.txt" > "extracted_flux_combined.txt"
+cat "extracted_flux_from_cat_"*".txt" | grep -v "^#" >> "extracted_flux_combined.txt"
+
+if [[ "$m_OutputDir"x != x ]]; then
+    cd "../"
+fi
 
 
 
