@@ -1,0 +1,13 @@
+We will run radex to make certain format of lib data for "michi2". 
+Here is the howto:
+
+    cd /data/mkradexlib
+        makeliblvg_z_4_dvddr_1_dVDoW_50.sm
+        radex/{bin,inp,data}
+    
+    sm
+    
+    macro read makeliblvg_z_4_dvddr_1_dVDoW_50 makeliblvg
+    
+    
+

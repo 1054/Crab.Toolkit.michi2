@@ -1,0 +1,6 @@
+# Delete 8lsindx file.
+# Delete 5color file for non SSP's.
+rm -f out_constant_SFH.5color
+# Delete 8lsindx file.
+# Delete 5color file for non SSP's.
+rm -f out_constant_SFH.5color

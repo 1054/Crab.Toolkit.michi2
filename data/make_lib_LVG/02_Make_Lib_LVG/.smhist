@@ -1,0 +1,12 @@
+calc 2.73*3
+quit
+macro read makeliblvg_z_1.500_co_dvddr_5.0_dVDoW_50.0_Faster.sm makeliblvg
+quit
+macro read makeliblvg_z_1.500_co_dvddr_5.0_dVDoW_50.0_Faster_Warm.sm makeliblvg
+quit
+macro read makeliblvg_z_1.500_co_dvddr_5.0_dVDoW_50.0_Faster_Cold.sm makeliblvg
+quit
+macro read makeliblvg_z_2.000_co_dvddr_5.0_dVDoW_50.0_Faster_Warm.sm makeliblvg
+quit
+macro read makeliblvg_z_2.000_co_dvddr_5.0_dVDoW_50.0_Faster_Cold.sm makeliblvg
+quit

@@ -1,0 +1,41 @@
+cd bc03/src/
+
+grep --color -i "character.*file" *.f
+
+
+vim filter_n.f
+character sedfile*80 --> character sedfile*256
+character sedfile*80 --> character sedfile*256
+character filtfile*80 --> character filtfile*256
+
+vim zmag.f
+character file*128,filtid*64 --> character file*256,filtid*64
+
+vim interpolate_ssp.f
+character*(*) name,files(mmod)*128 --> character*(*) name,files(mmod)*256
+
+vim rf_color.f
+character genfile*96,envfile*96,rfcolorfile*96,h(0:200)*24 --> character genfile*256,envfile*256,rfcolorfile*256,h(0:200)*24
+
+vim cm_evolution.f
+character file*96,name*96,ext*24,ext1*4,ext2*4 --> character file*256,name*256,ext*24,ext1*4,ext2*4
+
+vim mm_evolution.f
+character file*128,name*128,ext*24,argu*1024 --> character file*256,name*256,ext*24,argu*1024
+
+vim flux_evolution.f
+character file*96,name*96,ext*24,ext1*4,ext2*4 --> character file*256,name*256,ext*24,ext1*4,ext2*4
+
+vim add_filters.f
+character ans,name*96,aux*128 --> character ans,name*256,aux*128
+
+vim file_header.f
+character name*(*),und,buffer*96,blank*32 -->  character name*(*),und,buffer*256,blank*32
+
+vim sdss_color.f
+character genfile*96,envfile*96,rfcolorfile*96,fid(0:mxft)*64 --> character genfile*256,envfile*256,rfcolorfile*256,fid(0:mxft)*64
+
+make clean
+
+make all
+

@@ -9,7 +9,7 @@ fi
 
 ./michi2_v04 -obs flux_obsframe.dat \
              -redshift $1 \
-             -lib FSPS.Padova.BaSeL.Z0.0190.EBV.lib.SED \
+             -lib lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED \
                   MullaneyAGN.Single.lib.SED \
                   DL07.HiExCom.lib.SED \
                   DL07.LoExCom.lib.SED \

@@ -1,0 +1,38 @@
+# cd bc03
+# cd src
+# vim Makefile
+#  /replace gfortran with gfortran-mp-4.8/
+# make
+# make all
+
+
+# vim ../src/.bc_bash
+
+
+bash
+cd bc03/
+mkdir out
+cd out
+source ../src/.bc_bash
+
+vim input_for_csp
+cat input_for_csp
+
+$bc03/csp_galaxev < input_for_csp
+
+ls out_constant_SFH.ised
+$bc03/ascii_ised out_constant_SFH.ised
+ls out_constant_SFH.ised_ASCII
+
+$bc03/interpolate_ised out_constant_SFH.ised 200e6 > out_constant_SFH_wave_flux_at_200Myr.txt
+head -n 30 out_constant_SFH_wave_flux_at_200Myr.txt
+
+# By default, the spectra are output as luminosity per unit wavelength in units of L⊙ ̊A−1, with L⊙ = 3.826 × 10^33 ergs s−1.
+
+
+
+
+
+
+
+

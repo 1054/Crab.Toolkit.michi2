@@ -1,0 +1,7 @@
+see 
+    
+    ~/Cloud/Nutstore/SpireLines/Tool/Level_3_SciData/07_SED_Synthesis/02_Make_Lib_SED/make_Calzetti2000law.sm
+
+
+The SEDs have Calzetti2000 extinction E(B-V) as the 4-th parameter. 
+

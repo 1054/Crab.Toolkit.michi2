@@ -1,0 +1,48 @@
+# Compute stellar evolution of a composite stellar population
+# INPUT PARAMETERS
+#
+ROOTDIR		/scratch/bc03/  #Specify here root BC03 directory
+IMF		salpeter	#salpeter/chabrier
+RESOLUTION	hr 		#high = hr, low = lr
+METALLICITY	0.008	
+#  Padova1994 tracks: 0.0001/0.0004/0.004/0.008/0.02/0.05 
+#  Padova2000 tracks: 0.0004/0.001/0.004/0.008/0.019/0.03
+TRACKS		Padova1994 	#Padova1994 / Padova2000
+DUST		Y 	#Y/N. 
+#  If DUST=Y the following 2 dust parameters are used
+TAU_V 		1.0 	#total effective attenuation optical depth
+MU		0.3	#fraction of tau_V arising from the ambient ISM
+SFH		exponential [exponential/SSP/singleburst] 
+#  exponential: 	exponentially declining with e-folding timescale TAU 
+#  SSP: 		instantaneous burst, TAU=none
+#  singleburst: 	single burst with duration= TAU 
+TAU		0.5	#exponential: tau; SSP: none; singleburst: DeltaT
+GASRECYCLE	Y	#Y/N 
+EPSILON		0.001	#recycled fraction of gas (from 0.001 to 1)
+# Recycle gas ejected by stars, only for exponential SFH. 
+# The EPSILON parameter is only considered if GASRECYCLE = Y
+TCUTSFR		20	#Set SFR = 0 at time > TcutSFR (Gyr)
+CSPOUTFILE	output_csp_file	#basename of output files
+#_____________                      _______________
+#Extract a spectrum at a given age
+#
+EXTRACT_AGE	5	#output age(s)(Gyr), 24 ages max; N=do not extract 
+SPECRANGEMIN	1000 	#minimum wavelength range (Angstrom)
+SPECRANGEMAX	25000	#maximum wavelength range (Angstrom)
+FNU_LAMBDA	lambda	#nu/lambda 
+# nu = Fnu vs. lambda; lambda = Flambda vs. lambda)
+F0SCALING	10 	#Normalization flux at wavelength W0. N= no scaling
+W0SCALING	4000	#W0
+# Scale spectrum to flux F0 at lambda W0
+#_____________                      _______________
+#Redshift evolution
+#
+H_0		70.	#Hubble constant
+Omega		0.3	#Omega_M
+Omega_Lambda	0.7	#Omega_Lambda
+GALAXY_AGE_TODAY	10.	#Galaxy age at z=0	
+REDSHIFT_EVOL	col 	#col/mag. 
+# col = magnitude and colour evolution 
+# mag = only magnitude evolution
+FILTER1		12	#filter for magnitude evolution
+FILETR2		3	#additional filter, if REDSHIFT_EVOL = col

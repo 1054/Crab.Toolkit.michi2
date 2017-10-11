@@ -123,7 +123,7 @@ plotChisq 09
     }
     do iLib=1,NumbLib {
         set NPARLib$iLib = 0  # the number of Parameters in Lib$iLib, e.g. DL07 LoEx has 2 Paramters: Umin, qPAH
-        if(index(FileLi$iLib,'FSPS.')>=0) {set NPARLib$iLib = 4} # BC03 stellar -- Metal, Age, Mass, EBV
+        if(index(FileLi$iLib,'FSPS.')>=0 || index(FileLi$iLib,'lib.BC03.')>=0) {set NPARLib$iLib = 4} # BC03 stellar -- Metal, Age, Mass, EBV
         if(index(FileLi$iLib,'AGN.')>=0)  {set NPARLib$iLib = 1} # Mullaney AGN -- Type
         if(index(FileLi$iLib,'DL07.')>=0) {set NPARLib$iLib = 2} # DL07 dust -- Umin, qPAH
         if(index(FileLi$iLib,'RadioPowerlaw.')>=0) {set NPARLib$iLib = 1} # RadioPowerlaw -- powerlaw_index
@@ -196,7 +196,7 @@ plotChisq 09
     vecminmax w1 wMIN wMAX
     define wMAX $(int($wMAX/0.25)*0.25+0.50)
     define wMIN $(int($wMIN/0.25)*0.25-0.75)
-    if(z>=1) {
+    if(z>=0) {
         define wMIN -0.5
         define wMAX 5.5
         define fMIN -4.0
@@ -374,7 +374,7 @@ plotChisqInnerRoutine
                 set Umin_Warm = t$iLib""par1[$i]
                 set qPAH_Warm = t$iLib""par2[$i]
             }
-            if(index(FileLi$iLib,'FSPS.')>=0) {
+            if(index(FileLi$iLib,'FSPS.')>=0 || index(FileLi$iLib,'lib.BC03.')>=0) {
                 # 
                 # calc stellar mass, EBV
                 # 
@@ -694,14 +694,14 @@ plotChisqInnerRoutine
                 set LabelPosX = 01350+01350
                 do iLib=1,NumbLib {
                     # 
-                    if(index(FileLi$iLib,'FSPS.')>=0)     { set LabelPosX = LabelPosX+8425 }
+                    if(index(FileLi$iLib,'FSPS.')>=0 || index(FileLi$iLib,'lib.BC03.')>=0)     { set LabelPosX = LabelPosX+8425 }
                     if(index(FileLi$iLib,'AGN.')>=0)      { set LabelPosX = LabelPosX+3225 }
                     if(index(FileLi$iLib,'DL07.HiEx')>=0) { set LabelPosX = LabelPosX+8275 }
                     if(index(FileLi$iLib,'DL07.LoEx')>=0) { set LabelPosX = LabelPosX+8275 }
                     # 
                     relocate ($(LabelPosX) $(18500+1000*(dimen(cid)+1))) # ($(01350+27000/NumbLib*$iLib) $(28500+1200*01))
                     # 
-                    if(index(FileLi$iLib,'FSPS.')>=0)     { ctype star expand 1.25 putlabel 4 "Stellar" }
+                    if(index(FileLi$iLib,'FSPS.')>=0 || index(FileLi$iLib,'lib.BC03.')>=0)     { ctype star expand 1.25 putlabel 4 "Stellar" }
                     if(index(FileLi$iLib,'AGN.')>=0)      { ctype nuck expand 1.25 putlabel 4 "AGN" }
                     if(index(FileLi$iLib,'DL07.HiEx')>=0) { ctype red  expand 1.25 putlabel 4 "Warm Dust" }
                     if(index(FileLi$iLib,'DL07.LoEx')>=0) { ctype blue expand 1.25 putlabel 4 "Cold Dust" }
@@ -718,7 +718,7 @@ plotChisqInnerRoutine
             # 
             do iLib=1,NumbLib {
                 relocate ($(17000+1100*$iLib-1100) $(28500+1200*01)) ltype 1 
-                if(index(FileLi$iLib,'FSPS.')>=0)     { ptype 4 1 expand 0.5 lweight 1.0 ctype star connect w$iLib f$iLib }
+                if(index(FileLi$iLib,'FSPS.')>=0 || index(FileLi$iLib,'lib.BC03.')>=0)     { ptype 4 1 expand 0.5 lweight 1.0 ctype star connect w$iLib f$iLib }
                 if(index(FileLi$iLib,'AGN.')>=0)      { ptype 4 1 expand 0.5 lweight 1.0 ctype nuck connect w$iLib f$iLib }
                 if(index(FileLi$iLib,'DL07.HiEx')>=0) { ptype 4 1 expand 0.5 lweight 1.0 ctype red  connect w$iLib f$iLib }
                 if(index(FileLi$iLib,'DL07.LoEx')>=0) { ptype 4 1 expand 0.5 lweight 1.0 ctype blue connect w$iLib f$iLib }

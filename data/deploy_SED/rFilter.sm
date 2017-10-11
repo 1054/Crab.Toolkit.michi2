@@ -18,6 +18,14 @@ rFilter 02
     set flux_mJy = f if(snr>2.0)
     set fluxerr_mJy = df if(snr>2.0)
     
+    # set SNR no higher than 10
+    set coo_SNR_GE_10 = (flux_mJy>0 && fluxerr_mJy && flux_mJy>10.0*fluxerr_mJy)
+    if(sum(coo_SNR_GE_10)>0) {
+        set cid_SNR_GE_10 = 0,dimen(fluxerr_mJy)-1
+        set cid_SNR_GE_10 = cid_SNR_GE_10 if(coo_SNR_GE_10)
+        set fluxerr_mJy[cid_SNR_GE_10] = flux_mJy[cid_SNR_GE_10]/10.0
+    }
+    
     # fit also low SNR data, set f_low_SNR = f+2*df, df_low_SNR = df
     set wavelength_um_low_snr = w if(snr>0.0 && snr<=2.0)
     set flux_mJy_low_snr = f if(snr>0.0 && snr<=2.0)
@@ -28,6 +36,12 @@ rFilter 02
     set fluxerr_mJy = fluxerr_mJy concat fluxerr_mJy_low_snr
     
     sort {wavelength_um flux_mJy fluxerr_mJy}
+    
+    # remove radio
+    set coo_Radio = (wavelength_um>=0.8e5)
+    set wavelength_um = wavelength_um if(!coo_Radio)
+    set flux_mJy = flux_mJy if(!coo_Radio)
+    set fluxerr_mJy = fluxerr_mJy if(!coo_Radio)
     
     # guess filter curve
     set filter_curve = (wavelength_um>0) ? 'none' : 'none' 

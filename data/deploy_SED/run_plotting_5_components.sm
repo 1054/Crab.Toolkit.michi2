@@ -1,7 +1,7 @@
 go
     macro read pChisq.sm plotChisq \
     flux_obsframe.dat \
-    FSPS.Padova.BaSeL.Z0.0190.EBV.lib.SED \
+    lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED \
     MullaneyAGN.Single.lib.SED \
     DL07.HiExCom.lib.SED \
     DL07.LoExCom.lib.SED \

@@ -1,0 +1,85 @@
+make_Calzetti2000law_FSPSlib
+    #  
+    #  macro read make_Calzetti2000law.sm make_Calzetti2000law_FSPSlib
+    #  
+    #  see formula of Calzetti2000law: 
+    #  http://webast.ast.obs-mip.fr/hyperz/hyperz_manual1/node10.html
+    #  
+    chdir "outputs"
+    
+    data "FSPS.Padova.BaSeL.Z0.0190.lib.SED"
+    read {lambda 1 flux 2 metallicity 3 age 4 mass 5}
+    
+    # now we only keep 3 age values
+    set coo = (abs(age-0.00750)<1e-6 || abs(age-0.63096)<1e-6 || abs(age-1.18850)<1e-6)
+    foreach foo {lambda flux metallicity age mass} {set $foo = $foo if(coo)}
+    foreach foo {lambda flux metallicity age mass} {set _$foo = $foo}
+    set flux_lambda = flux / (lambda/1e6)**2 * 2.99792458e8
+    set _flux_lambda = flux_lambda
+    
+    # we set 3 E(B-V) values
+    # we set 9 E(B-V) values
+    set ebminusv =                  lambda*0+0.0
+    set ebminusv = ebminusv concat (lambda*0+0.1)
+    set ebminusv = ebminusv concat (lambda*0+0.2)
+    set ebminusv = ebminusv concat (lambda*0+0.3)
+    set ebminusv = ebminusv concat (lambda*0+0.4)
+    set ebminusv = ebminusv concat (lambda*0+0.5)
+    set ebminusv = ebminusv concat (lambda*0+0.6)
+    set ebminusv = ebminusv concat (lambda*0+0.7)
+    set ebminusv = ebminusv concat (lambda*0+0.8)
+    set ebminusv_numb = 9
+    do i=1,ebminusv_numb-1 {
+        foreach foo {lambda flux flux_lambda metallicity age mass} {set $foo = $foo concat _$foo}
+    }
+    
+    # <TODO> extended wavelength range
+    # set k_lambda = (lambda>=0.12 && lambda<0.63) ? 2.659*(-2.156+1.509/lambda-0.198/lambda**2+0.011/lambda**3)+4.05 : 0.0
+    # set k_lambda = (lambda>=0.63 && lambda<2.20) ? 2.659*(-1.857+1.040/lambda)+4.05 : k_lambda
+    # <TODO> extended wavelength range
+    set k_lambda = (lambda>=0.00 && lambda<0.63) ? 2.659*(-2.156+1.509/lambda-0.198/lambda**2+0.011/lambda**3)+4.05 : 0.0
+    set k_lambda = (lambda>=0.63 && lambda<=1e4) ? 2.659*(-1.857+1.040/lambda)+4.05 : k_lambda
+    set k_lambda = (k_lambda<0.0) ? 0.0 : k_lambda
+    set A_lambda = ebminusv * k_lambda
+    set B_lambda = 10**(-0.4*A_lambda)
+    set f_lambda = flux_lambda * B_lambda
+    set f_nu = f_lambda * (lambda/1e6)**2 / 2.99792458e8
+    set f_nu = f_nu<1e-30 ? 1e-30 : f_nu   #<TODO># make sure than lib.SED does not contain 0 flux!
+    set flux = f_nu
+    
+    # write new lib file
+    define outputf "FSPS.Padova.BaSeL.Z0.0190.EBV.lib.SED"
+    define print_noheader 1
+    !echo \\# \$(date) > $outputf
+    print +$outputf '\# NVAR  = 2     \# Wave & Flux\n' {}
+    print +$outputf '\# TVAR1 = Wave  \# band wavelength (rest-frame) (lambda) [um]\n' {}
+    print +$outputf '\# TVAR2 = Flux  \# flux density in unit of solar luminosity per Hz' {}
+    print +$outputf ' | (VAR2*3.839e33*1e26/(4*pi*dL**2*9.52140e48)/(1+z)) becomes [mJy]\n' {}
+    print +$outputf '\# CVAR1 = 1     \# the colomn number of VAR1\n' {}
+    print +$outputf '\# CVAR2 = 2     \# the colomn number of VAR2\n' {}
+    print +$outputf '\# NVAR1 = 1963  \# NAXIS1 -- the number of wavelength in one spectrum\n' {}
+    print +$outputf '\# NVAR2 = 9     \# NAXIS2 -- the number of spectra -- product of all indepedent PAR\n' {} # now 3 Age x 4 EBV
+    print +$outputf '\# NPAR  = 4     \# Metallicity, Age, Mass (locked to Age), EBV\n' {}
+    print +$outputf '\# TPAR1 = Metal \# Absolute Metallicity (note that solar metallicity is 0.0190)\n' {}
+    print +$outputf '\# TPAR2 = Age   \# Age in unit of Gyr\n' {}
+    print +$outputf '\# TPAR3 = Mass  \# Stellar Mass in unit of solar mass (associated with Age, not independent)\n' {}
+    print +$outputf '\# TPAR4 = EBV   \# E(B-V)\n' {}
+    print +$outputf '\# CPAR1 = 3     \# the colomn number of PAR1\n' {}
+    print +$outputf '\# CPAR2 = 4     \# the colomn number of PAR2\n' {}
+    print +$outputf '\# CPAR3 = 5     \# the colomn number of PAR2\n' {}
+    print +$outputf '\# CPAR4 = 6     \# the colomn number of PAR2\n' {}
+    print +$outputf '\# NPAR1 = 1     \# Number of different PAR1\n' {}
+    print +$outputf '\# NPAR2 = 3     \# Number of different PAR2\n' {}
+    print +$outputf '\# NPAR3 = 3     \# Number of different PAR3\n' {}
+    print +$outputf '\# NPAR4 = $(ebminusv_numb)     \# Number of different PAR4\n' {}
+    print +$outputf '\# \n' {}
+    print +$outputf '\#        lambda           flux    metallicity         age        mass         ebv\n' {}
+    print +$outputf '\#          [um]      [Lsun/Hz]                      [Gyr]      [Msun]            \n' {}
+    print +$outputf '%15e%15e%15g%12g%12g%12g\n' {lambda flux metallicity age mass ebminusv}
+    define print_noheader 0
+    
+    set __flux = _flux concat _flux
+    set __flux = __flux concat _flux
+    print "test.txt" {lambda A_lambda B_lambda __flux flux}
+
+

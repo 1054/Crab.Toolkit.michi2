@@ -1,8 +1,131 @@
 go
     # 
     # Usage:
-    #   echo "macro read run_printing_bestfit.sm print_bestfit" | sm
+    #   echo "macro read run_printing_5_components.sm go" | sm
     # 
+    
+    !cat "fit_5.out.info" | perl -p -e 's/^([a-zA-Z0-9_]+) *= *([^ ]+)\\n\$/set \1 = {\2}\\n/g' > input_libs.sm
+    input input_libs.sm
+    
+    data "flux_obsframe.dat" read {w 1.f f 2.f df 3.f}
+    set coo_FIR_MM = (w>=70 && w<=3000)
+    set w = w if(coo_FIR_MM)
+    set f = f if(coo_FIR_MM)
+    set df = df if(coo_FIR_MM)
+    
+    data "fit_5.out"
+    read {i0 1.d chi2 2.f i1 3.f a1 4.f i2 5.f a2 6.f i3 7.f a3 8.f i4 9.f a4 10.f i5 11.f a5 12.f Metal 13.f Age 14.f Mass 15.f EBV 16.f AGN_TYPE 17.d Umin_Warm 18.f qPAH_Warm 19.f Umin_Cold 20.f qPAH_Cold 21.f}
+    
+    set original_chi2 = chi2
+    set recomputed_chi2 = chi2*0.0+1e10
+    
+    input input_redshift.sm
+    
+    if(is_file("fit_rchisq.dat")) {
+        data "fit_rchisq.dat" read {cid 1.d}
+        if(dimen(i0)!=dimen(cid)) {
+            !mv "fit_rchisq.dat" "fit_rchisq.dat.backup"
+        }
+    }
+    
+    if(!is_file("fit_rchisq.dat")) {
+        
+        set Umax = 1e6
+        set Umin = Umin_Cold
+        set Frac_Warm = a3/(a3+a4) # Warm/(Warm+Cold)
+        set Umean_1 = (1-Frac_Warm) * Umin
+        set Umean_2 = (ln(Umax/Umin)/(1-Umin/Umax))
+        set Umean = Umean_1 + Frac_Warm * Umin * Umean_2
+        
+        set Mdust_Warm = a3 * dL**2 / opz
+        set Mdust_Cold = a4 * dL**2 / opz
+        set Mdust = Mdust_Warm + Mdust_Cold
+        
+        set LTIR = Mdust * 0.0
+        
+        set Mstar = a1/(3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * Mass / opz #<TODO># / opz OR NOT ???
+        
+        load astroSfig.sm
+        macro read pChisq.sm
+        do i=0,dimen(i0)-1 {
+            
+            echo "Integrating LIR "$($i+1)/$(dimen(i0)) 
+            
+            # !./michi2_read_lib_SED "DL07.HiExCom.lib.SED" $(i3[$i]) $(a3[$i]) "tmp_DL07_HiExCom_SED"
+            # !./michi2_read_lib_SED "DL07.LoExCom.lib.SED" $(i4[$i]) $(a4[$i]) "tmp_DL07_LoExCom_SED"
+            # 
+            # data "tmp_DL07_HiExCom_SED.vLv_8_1000" read {LTIR_Warm 1.f}
+            # data "tmp_DL07_LoExCom_SED.vLv_8_1000" read {LTIR_Cold 1.f}
+            # set LTIR[$i] = (LTIR_Warm + LTIR_Cold) * 4*pi*dL**2
+            # 
+            # data "tmp_DL07_HiExCom_SED" read {w1 1.f f1 2.f}
+            # data "tmp_DL07_LoExCom_SED" read {w2 1.f f2 2.f}
+            # set wSED = w1
+            # set fSED = f1+f2
+            # 
+            # interp2 wSED fSED w fSPL
+            # 
+            # set recomputed_chi2[$i] = sum((fSPL-f)**2/df**2)
+            
+            readLibSED $(LIB3) $(i3[$i])
+            if(a3[$i]>0) {
+                set w3 = (SEDwave * opz)
+                set f3 = (SEDflux * a3[$i])
+            } else {
+                set w3 = (SEDwave * opz)
+                set f3 = w3*0.0+1e-99
+            }
+            verbose 0
+            set LTIR_Warm = calc_ltir(w3,f3,z)
+            
+            readLibSED $(LIB4) $(i4[$i])
+            if(a4[$i]>0) {
+                set w4 = (SEDwave * opz)
+                set f4 = (SEDflux * a4[$i])
+            } else {
+                set w4 = (SEDwave * opz)
+                set f4 = w4*0.0+1e-99
+            }
+            verbose 0
+            set LTIR_Cold = calc_ltir(w4,f4,z)
+            
+            set LTIR[$i] = (LTIR_Warm + LTIR_Cold)
+            
+            set wSED = w3
+            set fSED = lg(f3+f4)
+            
+            spline wSED fSED w fSPL
+            set fSPL = 10**fSPL
+            
+            set recomputed_chi2[$i] = sum((fSPL-f)**2/df**2) # only FIR-to-mm
+            
+            #echo LTIR_Warm = $(LTIR_Warm)
+            #echo LTIR_Cold = $(LTIR_Cold)
+            #echo LTIR[$i] = $(LTIR[$i])
+            echo recomputed_chi2[$i] = $(recomputed_chi2[$i])
+            #print {w f df fSPL}
+            
+            verbose 1
+        }
+        
+        set cid = i0
+        print "fit_rchisq.dat" '%15d%20g%20g%15g%15g%15g%15g%15g\n' \
+                {cid original_chi2 recomputed_chi2 Umean Mdust LTIR Mstar EBV}
+        
+    }
+    
+    data "fit_rchisq.dat"
+    read {cid 1 original_chi2 2 recomputed_chi2 3 Umean 4 Mdust 5 LTIR 6 Mstar 7 EBV 8}
+    
+    
+    macro read rChisq.sm
+    #calc_chisq_probability
+    calc_uncertainty_of_U
+    calc_uncertainty_of_Mdust
+    calc_uncertainty_of_Mstar
+    calc_uncertainty_of_LIR
+    calc_uncertainty_of_EBV
+    
     data "bestfit_Umean_range.txt" 
     lines 2 1 read U_L68 4.f
     lines 3 1 read U_U68 4.f

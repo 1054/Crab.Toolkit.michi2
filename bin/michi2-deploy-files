@@ -39,10 +39,11 @@ fi
 # Copy files
 # 
 if echo "$deploy_type" | grep -q -i "SED"; then
-    cp "${deploy_upper_dir}/data/deploy_michi2"/*.sm "${deploy_upper_dir}/data/deploy_michi2"/run*.sh .
+    #cp "${deploy_upper_dir}/data/deploy_michi2"/*.sm "${deploy_upper_dir}/data/deploy_michi2"/run*.sh .
     cp "${deploy_upper_dir}/data/deploy_SED"/run*.sh .
     cp -r "${deploy_upper_dir}/data/deploy_SED"/filters .
-    unzip "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
+    #unzip "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
+    unzip "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip"
     #unzip "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
     unzip "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.lib.zip"
     unzip "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.Single.lib.SED.zip"

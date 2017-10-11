@@ -1,0 +1,66 @@
+./data/co.dat
+./out/highjco.out
+100 1500
+20.003
+1
+H2
+1e1
+2.73
+1.5e20
+350.0
+1
+./data/co.dat
+./out/highjco.out
+100 1500
+25.003
+1
+H2
+1e2
+2.73
+1.5e21
+350.0
+1
+./data/co.dat
+./out/highjco.out
+100 1500
+30.003
+1
+H2
+1e3
+2.73
+1.5e22
+350.0
+1
+./data/co.dat
+./out/highjco.out
+100 1500
+35.003
+1
+H2
+1e4
+2.73
+1.5e23
+350.0
+1
+./data/co.dat
+./out/highjco.out
+100 1500
+40.003
+1
+H2
+1e5
+2.73
+1.5e24
+350.0
+1
+./data/co.dat
+./out/highjco.out
+100 1500
+45.003
+1
+H2
+1e6
+2.73
+0.9e25
+350.0
+0

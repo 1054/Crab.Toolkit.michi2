@@ -1,0 +1,66 @@
+makeliblvg_flower
+    # 
+    # convert 12co_1E-5_vgrad1.0-z1.522-flower.lvg to flower.lvg
+    # 
+    # Usage:
+    #     macro read makeliblvg_flower.sm makeliblvg_flower
+    # 
+    set dirMKLIB = {"/Users/dliu/Working/SpireLines/Tool/Level_3_SciData/06_LVG_Synthesis/02_Make_Lib_LVG"}
+    # 
+    CHDIR $(dirMKLIB)
+    cd flower
+    # 
+    data "12co_1E-5_vgrad1.0-z1.522-flower.lvg" read {J_up 1 J_low 2 T_Kin 3 n_H_2 4 aaa 5 bbb 6 ccc 7 tau 8 T_ex 9 T_RJ 10}
+    # 
+    set Tk = 5.0,100,5.0
+    set nH = 2.0,6.1,0.1
+    # 
+    # constants 
+    set k_B = 1.380658e-16 # Boltzmann constant CGS erg K-1
+    set h_0 = 6.6260755e-27 # Planck constant CGS erg s
+    set v_c = 2.99792458e10 # cm/s
+    set g_0 = 6.672e-11
+    set tkc = 2.0*k_B/v_c/v_c
+    # 
+    # 
+    !date +"\#\ %Y-%m-%d\ %H:%M:%S" > "flower.lvg"
+    print +"flower.lvg" '\# NVAR  = 2 \# Variable X Y\n' {}
+    print +"flower.lvg" '\# TVAR1 = J_{upper}\n' {}
+    print +"flower.lvg" '\# TVAR2 = S_{CO}*(1+z)^3/Ω_S, in unit of Jy km/s ' {}
+    print +"flower.lvg" '\# Ω_S == π * r_S^2 / d_A^2, in unit of sr\n' {}
+    print +"flower.lvg" '\# CVAR1 = 1\n' {}
+    print +"flower.lvg" '\# CVAR2 = 11\n' {}
+    print +"flower.lvg" '\# NVAR1 = 11 \# CO J=11-10 to 1-0\n' {}
+    print +"flower.lvg" '\# NVAR2 = $(dimen(Tk)*dimen(nH)) \# \n' {}
+    print +"flower.lvg" '\# NPAR  = 2 \# Parameter 1 2 3 ...\n' {}
+    print +"flower.lvg" '\# TPAR1 = T_{kin}\n' {}
+    print +"flower.lvg" '\# TPAR2 = n_{H_2}\n' {}
+    print +"flower.lvg" '\# NPAR1 = $(dimen(Tk))\n' {}
+    print +"flower.lvg" '\# NPAR2 = $(dimen(nH))\n' {}
+    print +"flower.lvg" '\# CPAR1 = 3\n' {}
+    print +"flower.lvg" '\# CPAR2 = 4\n' {}
+    print +"flower.lvg" '\# \n' {}
+    print +"flower.lvg" '\# J_upper  J_lower      T_Kin            n_H_2    Null1    Null2    Null3' {}
+    print +"flower.lvg" '              tau             T_ex             T_RJ         S_CO_1zO\n' {}
+    # 
+    # 
+    define dVDoW 100.0 # <TODO> see Weiss 2007 APM08297 Fig.8 Caption
+    set FREQ = { 115.2712018 230.5380000 345.7959899 461.0407682 576.2679305 \
+                 691.4730763 806.6518060 921.7997000 1036.9123930 1151.9854520 1267.0144860 }
+    set S_CO = T_RJ * 0.0
+    do i=0,dimen(Tk)*dimen(nH)-1 {
+        set ico = $i*11,$i*11+10,1
+        set S_CO[ico] = T_RJ[ico] * tkc * (FREQ*1e9)**2 * 1.0645*$dVDoW * 1e23 # T_RJ * 2 k nu^2/c^2 * DeltaV
+                                                                               # in unit of Jy km/s
+                                                                               # 1.0645 see radex_manual.pdf sec.4.3
+    }
+    # 
+    # 
+    define print_noheader 1
+    print +"flower.lvg" '%9.0f%9.0f %10g %16e %8g %8g %8g %16e %16e %16e %16e\n' {J_up J_low T_Kin n_H_2 aaa bbb ccc tau T_ex T_RJ S_CO}
+    define print_noheader 0
+    # 
+    # 
+    CHDIR $(dirMKLIB)
+    # 
+    # end

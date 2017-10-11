@@ -1,0 +1,13 @@
+./data/co.dat
+./out/nonconverge.out
+100 1500
+700
+2
+o-H2
+0.75e4
+p-H2
+0.25e4
+6.89
+5e19
+1e3
+0

@@ -1,0 +1,100 @@
+makeliblvg
+    # 
+    # run radex and make lib.lvg
+    # 
+    # Usage:
+    #     macro read makeliblvg_z_2.000_co_dvddr_1.0_dVDoW_10.0_Faster.sm makeliblvg
+    # 
+    # Note:
+    #     please note these:
+    #         define TbCMB 8.19    # <TODO> T_{CMB} at z~2.000
+    #                              # <TODO> T_{CMB} = 6.89 at z~1.5 see Dannerbauer 2009 BzK
+    #                              # <TODO> T_{CMB} = 2.73 * (1+z) # http://www.astronomy.ohio-state.edu/~dhw/A873/notes4.pdf
+    # 
+    set dirMKLIB = {"../../02_Make_Lib_LVG"}
+    set dirRADEX = {"../01_RadiativeTransferCode/RADEX"}
+    # 
+    set Tk = 5.0,400.,25
+    set nH = 2.0,6.5,0.25
+    # 
+    !echo -n "Will make "$(dimen(Tk)*dimen(nH)*16)' items for lib.lvg, '
+    define OK ?
+    if(!$OK){
+        echo Abort by user. 
+        return
+    }
+    # 
+    # constants 
+    set k_B = 1.380658e-16 # Boltzmann constant CGS erg K-1
+    set h_0 = 6.6260755e-27 # Planck constant CGS erg s
+    set v_c = 2.99792458e10 # cm/s
+    set g_0 = 6.672e-11
+    set tkc = 2.0*k_B/v_c/v_c
+    # 
+    CHDIR $(dirRADEX)
+    !date +"\#\ %Y-%m-%d\ %H:%M:%S" > "lib.lvg"
+    print +"lib.lvg" '\# NVAR  = 2 \# Variable X Y\n' {}
+    print +"lib.lvg" '\# TVAR1 = J_{upper}\n' {}
+    print +"lib.lvg" '\# TVAR2 = S_{CO}*(1+z)^3/Ω_S, in unit of Jy km/s ' {}
+    print +"lib.lvg" '\# Ω_S == π * r_S^2 / d_A^2, in unit of sr\n' {}
+    print +"lib.lvg" '\# CVAR1 = 1\n' {}
+    print +"lib.lvg" '\# CVAR2 = 11\n' {}
+    print +"lib.lvg" '\# NVAR1 = 16 \# CO J=16-15 to 1-0\n' {}
+    print +"lib.lvg" '\# NVAR2 = $(dimen(Tk)*dimen(nH)) \# \n' {}
+    print +"lib.lvg" '\# NPAR  = 2 \# Parameter 1 2 3 ...\n' {}
+    print +"lib.lvg" '\# TPAR1 = T_{kin}\n' {}
+    print +"lib.lvg" '\# TPAR2 = n_{H_2}\n' {}
+    print +"lib.lvg" '\# NPAR1 = $(dimen(Tk))\n' {}
+    print +"lib.lvg" '\# NPAR2 = $(dimen(nH))\n' {}
+    print +"lib.lvg" '\# CPAR1 = 3\n' {}
+    print +"lib.lvg" '\# CPAR2 = 4\n' {}
+    print +"lib.lvg" '\# \n' {}
+    print +"lib.lvg" '\# J_upper  J_lower      T_Kin            n_H_2    Null1    Null2    Null3' {}
+    print +"lib.lvg" '              tau             T_ex             T_RJ         S_CO_1zO\n' {}
+    define ii 0
+    foreach TkOne Tk {
+        foreach nHOne nH {
+            define dvddr 1.0   # <TODO> well, not sure!
+            define dVDoW 10.0  # <TODO> well, not sure!
+            define NXAbD 5e-5  # <TODO> CO Abundance, see Dannerbauer 2009 Sec.4 where they fix NXAbD/dvddr=1E-5, see Weiss 2005 M82 range 1E-6 to ?E-5
+            define NHLoS $($dVDoW/$dvddr*(10**$nHOne)*3.086e18)
+            define NXLoS $($NHLoS*$NXAbD)
+            define TbCMB 8.19 #<TODO>#
+            print  "inp/co.inp" './data/co.dat\n' {}
+            print +"inp/co.inp" './out/co_$TkOne"_"$nHOne.out\n' {}
+            print +"inp/co.inp" '100 1900\n' {} # Freq Range 
+            print +"inp/co.inp" '$TkOne\n' {} # Tk
+            print +"inp/co.inp" '2\n' {}
+            print +"inp/co.inp" 'o-H2\n' {}
+            print +"inp/co.inp" '$(0.75*(10**$nHOne))\n' {} # 0.75 ortho-H2 see Dannerbauer 2009 BzK
+            print +"inp/co.inp" 'p-H2\n' {}
+            print +"inp/co.inp" '$(0.25*(10**$nHOne))\n' {} # 0.25 para-H2 see Dannerbauer 2009 BzK
+            print +"inp/co.inp" '$TbCMB\n' {} # T_{CMB} at z~1.5 Dannerbauer
+           #print +"inp/co.inp" '$NHLoS\n' {} # Column H2 Density along Line of Sight -- NHLoS
+            print +"inp/co.inp" '$NXLoS\n' {} # Column CO Density along Line of Sight -- NXLoS
+            print +"inp/co.inp" '$dVDoW\n' {} # Velocity Corresponding to Doppler Width -- dVDoW
+            print +"inp/co.inp" '0\n' {}
+            !./bin/radex < inp/co.inp > out/co_$TkOne"_"$nHOne.log
+            # 
+            !sed -i -e 's/ -- /    /g' "out/co_"$TkOne"_"$nHOne".out"
+            data "out/co_"$TkOne"_"$nHOne".out" lines 14 0 read {J_UP 1 J_LOW 2 FREQ 4 T_EX 6 TAU 7 T_RJ 8 FLUX1 11}
+            set TkArr = T_RJ*0.0+$TkOne
+            set nHArr = T_RJ*0.0+(10**$nHOne)
+            set emArr = T_RJ*0.0+0.0
+            set S_CO = T_RJ * tkc * (FREQ*1e9)**2 * 1.0645*$dVDoW * 1e23 # T_RJ * 2 k nu^2/c^2 * DeltaV
+                                                                         # in unit of Jy km/s
+                                                                         # 1.0645 see radex_manual.pdf sec.4.3
+            # 
+            define print_noheader 1
+            print +"lib.lvg" '%9.0f%9.0f %10g %16e %8g %8g %8g %16e %16e %16e %16e\n' \
+                             {J_UP J_LOW TkArr nHArr emArr emArr emArr TAU T_EX T_RJ S_CO}
+        }
+    }
+    !pwd
+    CHDIR $(dirMKLIB)
+    !pwd
+    # 
+    # copy
+    !cp $(dirRADEX)/lib.lvg lib_z_2.000_co_dvddr_1.0_dVDoW_10.0_Faster.lvg
+    # 
+    # end

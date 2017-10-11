@@ -1,0 +1,5 @@
+First column: wavelength in \AA
+
+Second to last columns: flux in Lsun Hz^{-1}. 
+
+BASEL, PADOVA, 1.0 Zsun. 

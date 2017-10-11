@@ -1,0 +1,11 @@
+Input:
+    * frequency range
+    * molecular hydrogen gas kinetic temperature
+    * number of ?? (1)
+    * type of ?? (H2)
+    * molecular hydrogen gas volume number density
+    * background radiation field blackbody temperature (2.73)
+    * molecular hydrogen gas column number density
+    * molecular hydrogen gas velocity dispersion
+    * go to next or stop (0 to stop)
+    

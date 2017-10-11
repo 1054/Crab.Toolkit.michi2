@@ -1,0 +1,29 @@
+Flexible Stellar Population Synthesis model SSPs (v2.3)
+-------------------------------------------------------------
+
+SSPs for several IMFs, spectral libraries, and stellar evolutionary
+codes can be found in this directory.
+
+The filename specifies the IMF (Kroupa, Chabrier, or Salpeter),
+spectral library (BaSeL or MILES), and stellar evolutionary code
+(Padova).  Within each tarball you will find one file for each
+metallicity, where the metallicity is also part of the filename (in
+the units such that Z0.0190 is solar metallicity).
+
+Each .spec file contains a header followed by information for the
+spectral evolution of the SSP as a function of time.  There are two
+lines for each age.  The first line specifies the age in log(yrs),
+mass in log(Msun), bolometric luminosity in log(Lsun) and a dummy
+number.  The second line specifies the flux in fnu units.  The flux is
+in units of Lsun/Hz.  Before the first age the wavelength array is
+printed.  Wavelengths are in angstroms in vacuum.
+
+Within this directory you will also find the files basel.lambda and
+miles.lambda.  These files contain the wavelengths corresponding to
+the fluxes in the .spec files.  The number of wavelength points in
+these files corresponds to the number of spectral elements within the
+.spec files.  Wavelengths are in angstroms.
+
+This directory also contains an IDL routine (read_spec.pro) that will
+read the .spec files into an IDL structure.
+
