@@ -48,9 +48,9 @@ PRO makelibSED_BC03
         freq = 2.99792458d5 / wave * 1e9 ; Hz
         flux = vLv / freq ; [L_solar/Hz]
         
-        age = 2e6 / 1e9 ; Gyr
+        age = 200e6 / 1e9 ; Gyr
         
-        ; the BC03 CSP is constant SFH of 1 Msun/yr, age is 2Myr, mass loss is 
+        ; the BC03 CSP is constant SFH of 1 Msun/yr, age is 200 Myr, mass loss is 
         sfr = 1.0 ; Msun/yr, see '/Users/dzliu/Softwares/BC03/a_dzliu_note_20171004_make_constant_SFH.txt'
         mass = sfr * age*1e9 ; <TODO> mass loss?
         

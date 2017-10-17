@@ -97,6 +97,9 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
         Pattern = re.compile("^[a-zA-Z]+(_FLUX_).*")
         if Pattern.match(input_str):
             recognized_list.append(input_str)
+        Pattern = re.compile("^[_]*(f)(ch[0-9]+)")
+        if Pattern.match(input_str):
+            recognized_list.append(input_str)
     # 
     if special_file_name.find('Laigle')>=0:
         special_remove_list = ['FLUX_RADIUS', 'FLUX_814W', 'FLUX_XMM_0.5_2', 'FLUX_XMM_2_10', 'FLUX_XMM_5_10', 'FLUX_CHANDRA_0.5_2', 'FLUX_CHANDRA_2_10', 'FLUX_CHANDRA_0.5_10', 'FLUX_NUSTAR_3_24', 'FLUX_NUSTAR_3_8', 'FLUX_NUSTAR_8_24']
@@ -128,6 +131,9 @@ def recognize_Col_FLUXERR(input_list, special_file_name=''):
         if Pattern.match(input_str):
             recognized_list.append(input_str)
         Pattern = re.compile("^[a-zA-Z]+(_FLUXERR_).*")
+        if Pattern.match(input_str):
+            recognized_list.append(input_str)
+        Pattern = re.compile("^[_]*(df)(ch[0-9]+)")
         if Pattern.match(input_str):
             recognized_list.append(input_str)
     # 
@@ -327,16 +333,16 @@ def recognize_Filter(input_str, special_file_name=''):
             Filter_Name = 'CFHT MegaCam'
             Filter_Wave = 3823.3 * 1e-4 # um, Laigle 2016 Table 1
         # 
-        elif input_str == 'f_irac1' or input_str == 'df_irac1' or input_str == 'e_irac1': 
+        elif input_str == 'f_irac1' or input_str == 'df_irac1' or input_str == 'e_irac1' or input_str == 'fch1' or input_str == 'dfch1': 
             Filter_Name = 'Spitzer IRAC ch1'
             Filter_Wave = 35634.3 * 1e-4 # um
-        elif input_str == 'f_irac2' or input_str == 'df_irac2' or input_str == 'e_irac2': 
+        elif input_str == 'f_irac2' or input_str == 'df_irac2' or input_str == 'e_irac2' or input_str == 'fch2' or input_str == 'dfch2': 
             Filter_Name = 'Spitzer IRAC ch2'
             Filter_Wave = 45110.1 * 1e-4 # um
-        elif input_str == 'f_irac3' or input_str == 'df_irac3' or input_str == 'e_irac3': 
+        elif input_str == 'f_irac3' or input_str == 'df_irac3' or input_str == 'e_irac3' or input_str == 'fch3' or input_str == 'dfch3': 
             Filter_Name = 'Spitzer IRAC ch3'
             Filter_Wave = 57593.4 * 1e-4 # um
-        elif input_str == 'f_irac4' or input_str == 'df_irac4' or input_str == 'e_irac4': 
+        elif input_str == 'f_irac4' or input_str == 'df_irac4' or input_str == 'e_irac4' or input_str == 'fch4' or input_str == 'dfch4': 
             Filter_Name = 'Spitzer IRAC ch4'
             Filter_Wave = 79594.9 * 1e-4 # um
         # 
@@ -366,17 +372,25 @@ def recognize_Filter(input_str, special_file_name=''):
             Filter_Name = 'Spitzer IRAC ch4'
             Filter_Wave = 79594.9 * 1e-4 # um
         # 
-        elif input_str == 'FLUX_MIPS24' or input_str == 'FLUXERR_MIPS24': 
+        elif input_str == 'FLUX_MIPS24' or input_str == 'FLUXERR_MIPS24' or input_str == 'f24' or input_str == 'df24': 
             Filter_Name = 'Spitzer MIPS 24'
             Filter_Wave = 24.0 # um
+        # 
+        elif input_str == 'FLUX_24' or input_str == 'FLUXERR_24' or input_str == 'f24' or input_str == 'df24': 
+            Filter_Name = 'Spitzer MIPS 24'
+            Filter_Wave = 24.0 # um
+        # 
+        elif input_str == 'FLUX_16' or input_str == 'FLUXERR_16' or input_str == 'f16' or input_str == 'df16': 
+            Filter_Name = 'Spitzer IRS PUI 16'
+            Filter_Wave = 16.0 # um
+        # 
+        elif input_str == 'FLUX_K' or input_str == 'FLUXERR_K' or input_str == 'fK' or input_str == 'dfK': 
+            Filter_Name = 'unknown K band'
+            Filter_Wave = 2.15 # um
         # 
         elif input_str == 'FLUX_814W' or input_str == 'FLUXERR_814W': 
             Filter_Name = 'HST ACS F814W'
             Filter_Wave = 814.0e-4 # um
-        # 
-        elif input_str == 'FLUX_24' or input_str == 'FLUXERR_24': 
-            Filter_Name = 'Spitzer MIPS 24'
-            Filter_Wave = 24.0 # um
         # 
         # 
         if numpy.isnan(Filter_Wave):
