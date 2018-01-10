@@ -43,13 +43,16 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     cp "${deploy_upper_dir}/data/deploy_SED"/run*.sh .
     cp "${deploy_upper_dir}/data/deploy_SED"/run*.sm .
     cp "${deploy_upper_dir}/data/deploy_SED"/pChisq.sm .
+    cp "${deploy_upper_dir}/data/deploy_SED"/rShift.sm .
+    cp "${deploy_upper_dir}/data/deploy_SED"/rUmean.sm .
+    cp "${deploy_upper_dir}/data/deploy_SED"/rChisq.sm .
     cp -r "${deploy_upper_dir}/data/deploy_SED"/filters .
-    #unzip "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
-    unzip "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip"
-    #unzip "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
-    unzip "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.lib.zip"
-    unzip "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.Single.lib.SED.zip"
-    unzip "${deploy_upper_dir}/data/lib_SED/RadioPowerlaw.Single.lib.SED.zip"
+    #unzip -o "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
+    unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip"
+    #unzip -o "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
+    unzip -o "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.lib.zip"
+    unzip -o "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.Single.lib.SED.zip"
+    unzip -o "${deploy_upper_dir}/data/lib_SED/RadioPowerlaw.Single.lib.SED.zip"
 elif echo "$deploy_type" | grep -q -i "LVG"; then
     cp "${deploy_upper_dir}/data/deploy_LVG"/*.sm "${deploy_upper_dir}/data/deploy_LVG"/run*.sh .
     cp "${deploy_upper_dir}/data/lib_LVG/"lib_*.lvg .
