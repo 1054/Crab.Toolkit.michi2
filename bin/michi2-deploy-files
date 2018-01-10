@@ -41,6 +41,8 @@ fi
 if echo "$deploy_type" | grep -q -i "SED"; then
     #cp "${deploy_upper_dir}/data/deploy_michi2"/*.sm "${deploy_upper_dir}/data/deploy_michi2"/run*.sh .
     cp "${deploy_upper_dir}/data/deploy_SED"/run*.sh .
+    cp "${deploy_upper_dir}/data/deploy_SED"/run*.sm .
+    cp "${deploy_upper_dir}/data/deploy_SED"/pChisq.sm .
     cp -r "${deploy_upper_dir}/data/deploy_SED"/filters .
     #unzip "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
     unzip "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip"
@@ -65,6 +67,6 @@ else
     chmod +x michi2_v03
 fi
 
-ln -fs "run_plotting_quintuple.sm" "run_plotting.sm"
+#ln -fs "run_plotting_quintuple.sm" "run_plotting.sm"
 
 

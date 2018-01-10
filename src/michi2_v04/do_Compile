@@ -1,0 +1,22 @@
+#!/bin/bash
+# 
+
+output_date=$(date +"%Y%m%d")
+
+if [[ $(uname) == "Darwin" ]]; then
+    clang++ -std=c++11 -pthread main.cpp -o michi2_v04_${output_date}_mac
+    if [[ -f michi2_v04_${output_date}_mac ]]; then
+        echo "Successfully compiled \"michi2_v04_${output_date}_mac\"!"
+    else
+        echo "Error! Failed to compile the code!"
+    fi
+else
+    g++ -std=c++11 -pthread main.cpp -o michi2_v04_${output_date}_linux_$(arch)
+    if [[ -f michi2_v04_${output_date}_linux_$(arch) ]]; then
+        echo "Successfully compiled \"michi2_v04_${output_date}_linux_$(arch)\"!"
+    else
+        echo "Error! Failed to compile the code!"
+    fi
+fi
+
+

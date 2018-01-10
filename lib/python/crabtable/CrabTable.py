@@ -272,6 +272,69 @@ class CrabTable(object):
 
 
 
+# 
+def CrabTableReadInfo(data_table, fits_extension=0, key_name=[], verbose=1):
+    # This function reads all rows in a text file or data table with content like
+    # aaa = aaa_value
+    # bbb = bbb_value
+    # ccc = ccc_value
+    # 
+    # prepare output info dict
+    InfoDict = {}
+    # 
+    # read input data table
+    if os.path.isfile(data_table):
+        if data_table.endswith('.fits') or data_table.endswith('.FITS'):
+            data_table_format = 'FITS'
+        else:
+            data_table_format = 'ASCII'
+        # print message
+        if verbose > 0:
+            print('Reading %s Table: %s'%(data_table_format, data_table))
+        # read data table
+        if data_table_format == 'FITS':
+            # open FITS format data table with astropy.io.fits
+            data_table_struct = fits.open(data_table)
+            #print TableStruct.info()
+            # get the fits extension id according to the input fits_extension
+            # skip astropy.io.fits.hdu.image.PrimaryHDU
+            # only consider astropy.io.fits.hdu.table.BinTableHDU
+            data_table_index = []
+            for i in range(len(data_table_struct)):
+                if type(data_table_struct[i]) is astropy.io.fits.hdu.table.BinTableHDU:
+                    data_table_index.append(i)
+            # 
+            if len(data_table_index)>fits_extension:
+                TableIndex = data_table_index[fits_extension]
+                TableData = data_table_struct[data_table_index[fits_extension]].data
+                TableColumns = data_table_struct[data_table_index[fits_extension]].columns # dtype TableColumns
+                TableHeaders = TableColumns.names
+            # loop each table row, create dict data
+            if len(TableHeaders) > 1:
+                for i in range(len(TableData)):
+                    InfoDict[TableData[TableHeaders[0]]][i] = TableData[TableHeaders[1]][i]
+        else:
+            # open ASCII format data table with astropy.io.ascii
+            # http://cxc.harvard.edu/contrib/asciitable/
+            data_table
+            with open(data_table, "r") as data_table_ptr:
+                data_table_lines = data_table_ptr.readlines()
+                for data_table_line in data_table_lines:
+                    data_table_line_items = data_table_line.split('=')
+                    if len(data_table_line_items)>=2:
+                        InfoDict[data_table_line_items[0].strip()] = data_table_line_items[1].strip()
+    # 
+    # return
+    return InfoDict
+
+
+
+
+
+
+
+
+
 
 
 
