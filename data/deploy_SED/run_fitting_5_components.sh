@@ -15,6 +15,7 @@ fi
                   DL07.LoExCom.lib.SED \
                   RadioPowerlaw.Single.lib.SED \
              -out fit_5.out \
+             -parallel 2 \
              -constraint LIB3 INDEX EQ LIB4 INDEX \
              -constraint LIB5 NORM EQ SED "vLv(8,1000)*1.061619121e-06" -filter filter.list
 
