@@ -19,7 +19,7 @@ fi
 # 
 # Main program
 # 
-deploy_current_dir=$(pwd -P)
+deploy_current_dir=$(pwd)
 deploy_script_dir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
 deploy_upper_dir=$(readlink -f $(dirname "${deploy_script_dir}"))
 
@@ -62,9 +62,9 @@ if [[ $(uname) == "Darwin" ]]; then
     ln -fs "michi2_v04_20171002_0621_mac" michi2_v04
     chmod +x michi2_v04
 else
-    cp "${deploy_upper_dir}/bin/michi2_v03_20160829_Linux_x86_64" .
-    ln -fs "michi2_v03_20160829_Linux_x86_64" michi2_v03
-    chmod +x michi2_v03
+    cp "${deploy_upper_dir}/bin/michi2_v04_20180110_linux_x86_64" .
+    ln -fs "michi2_v04_20180110_linux_x86_64" michi2_v04
+    chmod +x michi2_v04
 fi
 
 #ln -fs "run_plotting_quintuple.sm" "run_plotting.sm"
