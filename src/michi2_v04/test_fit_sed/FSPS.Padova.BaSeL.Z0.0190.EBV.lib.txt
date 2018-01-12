@@ -1,4 +1,0 @@
-see /home/dzliu/Cloud/SpireLines/Tool/Level_3_SciData/07_SED_Synthesis/02_Make_Lib_SED/Calzetti2000law/
-
-with Calzetti2000 extinction E(B-V) as a free parameter. 
-
