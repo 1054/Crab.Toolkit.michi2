@@ -1,0 +1,879 @@
+plotChisq 09
+    # 
+    # Usage: 
+    #    macro read pChisq.sm plotChisq "flux.dat" "lib1.SED" "fit.out"
+    #    macro read pChisq.sm plotChisq "flux.dat" "lib1.SED" "lib2.SED" "fit.out"
+    #    macro read pChisq.sm plotChisq "flux.dat" "lib1.SED" "lib2.SED" "lib3.SED" "fit.out"
+    #    macro read pChisq.sm plotChisq "flux_obsframe.dat" "FSPS.Padova.BaSeL.Z0.0190.EBV.lib.SED" "DL07.HiExCom.SPAH.lib.SED" "DL07.LoExCom.SPAH.lib.SED" "fit_triple.out"
+    # 
+    # Link:
+    #    ln -s /Users/dliu/Working/SpireLines/Tool/Level_3_SciData/07_SED_Synthesis/04_Plot_Best_Chi2/p2chi2.sm
+    # 
+    # Last update:
+    #    20151101
+    #    20160502 when a1/2/3<0, set to 0 and recompute chi2. 
+    # 
+    # 
+    # Check Input
+    # 
+    do i=1,1 {if(is_vector(FileObs)) {unset FileObs}}
+    do i=1,6 {if(is_vector(FileLi$i)) {unset FileLi$i}}
+    if($?1==0) {print 'Usage: plotChisq \"flux.dat\" \"lib1.SED\" [\"lib2.SED\" [\"lib3.SED\" [\"lib4.SED\"]]] \"fit.out\"\n\n' {} return}
+    if($?2==0) {print 'Usage: plotChisq \"flux.dat\" \"lib1.SED\" [\"lib2.SED\" [\"lib3.SED\" [\"lib4.SED\"]]] \"fit.out\"\n\n' {} return}
+    if($?3==0) {print 'Usage: plotChisq \"flux.dat\" \"lib1.SED\" [\"lib2.SED\" [\"lib3.SED\" [\"lib4.SED\"]]] \"fit.out\"\n\n' {} return}
+    if($?3==1) {set FileLi1 = <"$2"> set NumbLib = 1}
+    if($?4==1) {set FileLi1 = <"$2"> set FileLi2 = <"$3"> set NumbLib = 2}
+    if($?5==1) {set FileLi1 = <"$2"> set FileLi2 = <"$3"> set FileLi3 = <"$4"> set NumbLib = 3}
+    if($?6==1) {set FileLi1 = <"$2"> set FileLi2 = <"$3"> set FileLi3 = <"$4"> set FileLi4 = <"$5"> set NumbLib = 4}
+    if($?7==1) {set FileLi1 = <"$2"> set FileLi2 = <"$3"> set FileLi3 = <"$4"> set FileLi4 = <"$5"> set FileLi5 = <"$6"> set NumbLib = 5}
+    if($?8==1) {set FileLi1 = <"$2"> set FileLi2 = <"$3"> set FileLi3 = <"$4"> set FileLi4 = <"$5"> set FileLi5 = <"$6"> FileLi6 = <"$7"> set NumbLib = 6}
+                set FileObs = <"$1"> set FileOut = <"$$(NumbLib+2)"> set FileOK = 0
+    if(FileOK==0 && $verbose>0) {print 'Welcome!\nReading input files ... \n' {}}
+    !rm .FileObs .FileLi? .FileOut 2>/dev/null
+    do i=1,1       {define pChisq_PreVerbose $verbose verbose 0} # begin to convert file path strings
+    do i=1,1       {!echo \\\\"$(FileObs)\\\\" > .FileObs}
+    do i=1,NumbLib {!echo \\\\"$(FileLi$i)\\\\" > .FileLi$i}
+    do i=1,1       {!echo \\\\"$(FileOut)\\\\" > .FileOut}
+    do i=1,1       {!echo \\\\"$(FileOut)\\\\" | sed -e 's%\.[^.\\\\"]*%.eps%g' > .FileEps}
+    do i=1,1       {data .FileObs  read row FileObs 1.s}
+    do i=1,NumbLib {data .FileLi$i read row FileLi$i 1.s}
+    do i=1,1       {data .FileOut  read row FileOut 1.s}
+    do i=1,1       {data .FileEps  read row FileEps 1.s}
+    do i=1,1       {verbose $pChisq_PreVerbose}
+    if($verbose>0) {
+    do i=1,1       {set FileST = is_file($(FileObs)) ?'"FILE OK"':'"NOT FOUND!"' echo FileObs = $(FileObs) ... $(FileST)}
+    do i=1,NumbLib {set FileST = is_file($(FileLi$i))?'"FILE OK"':'"NOT FOUND!"' echo FileLi$i = $(FileLi$i) ... $(FileST)}
+    do i=1,1       {set FileST = is_file($(FileOut)) ?'"FILE OK"':'"NOT FOUND!"' echo FileOut = $(FileOut) ... $(FileST)}
+    }              # begin to check file existence
+    do i=1,1       {set FileOK = FileOK + (is_file($(FileObs))==0)}
+    do i=1,NumbLib {set FileOK = FileOK + (is_file($(FileLi$i))==0)}
+    do i=1,1       {set FileOK = FileOK + (is_file($(FileOut))==0)}
+    if(FileEps==FileOut) {define pChisq_PreVerbose $verbose verbose 0} # <added> recheck FileEps
+    if(FileEps==FileOut) {!echo \\\\"$(FileOut)\\\\" | sed -e 's%\$%.eps%g' > .FileEps}
+    if(FileEps==FileOut) {data .FileEps  read row FileEps 1.s}
+    if(FileEps==FileOut) {verbose $pChisq_PreVerbose}   # begin to check input_redshift.sm
+    if(FileOK==0 && $verbose>0) {print 'Loading redshift information from \"input_redshift.sm\" ... ' {} 
+                   if(is_file("input_redshift.sm")) {print 'FILE OK\n' {}} else {print 'NOT FOUND!\n' {} FileOK=9}}
+    if(FileOK>0) {print '\nError! Some input files are not found! Please check the information above and have a retry!\n\n' {} return}
+    #FileFitNoOutput
+    #FileEpsNoOutput
+    if($?SetNoFile) { if($SetNoFile>0) {define FileFitNoOutput 1}} # if define SetNoFile 1 then do not output best fit files
+    if($?SetNoPlot) { if($SetNoPlot>0) {define FileEpsNoOutput 1}} # if define SetNoPlot 1 then do not output Plot.eps
+    if($?FileEpsNoOutput) {unset FileEps}
+    if($verbose>0) {
+      if(is_vector(FileEps)) {print 'Setting output to eps format file \"$(FileEps)\" ... FILE READY\n' {}}
+      if(!is_vector(FileEps)) {print 'Setting no output figure!\n' {}}
+    }
+    # 
+    # <added><20150629><dzliu> 
+    # 
+    if(!is_file("input_redshift.sm")) {
+        print 'Error! File input_redshift.sm not found! Please run redShift.sm first!\n' {} return
+    } else { input "input_redshift.sm" }
+    # 
+    # 
+    # 
+    # 
+    # Define Paramters
+    # 
+    if($?NumberOfSolution) {define ns $NumberOfSolution} else {define ns 6} # number of best fit solutions to show
+    # 
+    # 
+    # 
+    # 
+    # Add Colors
+    # 
+    if(is_vector(FileEps)) {
+        add_ctype star 051 204 051 # seagreen
+        add_ctype nuck 255 215  0 # darkorange
+    }
+    # 
+    # 
+    # 
+    # 
+    # Read FileObs
+    # 
+    define pChisq_PreVerbose $verbose verbose 0
+    data $(FileObs) read {w0 1 f0 2 df 3}
+    verbose $pChisq_PreVerbose
+    set w1 = lg(w0)
+    set coo = (f0>0.0 && df>0.0)
+    set w0 = w0 if(coo) set df = df if(coo) set f0 = f0 if(coo)
+    set w0 = lg(w0) set df = df/f0 set f0 = lg(f0)
+    set f1 = f0 if(df<(1/2.5/1.08)) # select only good S.N data for limits
+    if(!is_vector(w0)||!is_vector(f0)||!is_vector(df)) {
+        print '\nError! Failed to read w0 f0 df from \"$(FileObs)\"! Wrong format?\n\n' {}
+        return
+    }
+    # 
+    # 
+    # 
+    # 
+    # Read FileOut
+    # 
+    define pChisq_PreVerbose $verbose verbose 0
+    set iCol = 0 
+    set iCol = iCol+1 data $(FileOut) read i0 $(iCol)
+    set iCol = iCol+1 data $(FileOut) read chi2 $(iCol)
+    set gCoo = chi2>0 # goodSolutionMark
+    verbose $pChisq_PreVerbose
+    if(!is_vector(i0)||!is_vector(chi2)) {
+        print '\nError! Failed to read the SED fitting output file \"$(FileOut)\"! Wrong format?\n\n' {}
+        return
+    }
+    do iLib=1,NumbLib {
+        set NPARLib$iLib = 0  # the number of Parameters in Lib$iLib, e.g. DL07 LoEx has 2 Paramters: Umin, qPAH
+        if(index(FileLi$iLib,'FSPS.')>=0) {set NPARLib$iLib = 4} # BC03 stellar -- Metal, Age, Mass, EBV
+        if(index(FileLi$iLib,'AGN.')>=0)  {set NPARLib$iLib = 1} # Mullaney AGN -- Type
+        if(index(FileLi$iLib,'DL07.')>=0) {set NPARLib$iLib = 2} # DL07 dust -- Umin, qPAH
+        if(index(FileLi$iLib,'RadioPowerlaw.')>=0) {set NPARLib$iLib = 1} # RadioPowerlaw -- powerlaw_index
+        if(NPARLib$iLib==0) {print 'Error! Could not recognize \"$(FileLi$iLib)\"! Please contact dzliu to modify the code!\n' {}}
+        define pChisq_PreVerbose $verbose verbose 0
+        set iCol = iCol+1 data $(FileOut) read i$iLib $(iCol)
+        set iCol = iCol+1 data $(FileOut) read a$iLib $(iCol).f
+        verbose $pChisq_PreVerbose
+        if(!is_vector(i$iLib)||!is_vector(a$iLib)) {
+            print '\nError! Failed to read i$iLib and a$iLib from column $(iCol) of \"$(FileOut)\"! Please have a check!\n\n' {}
+            return
+        }
+    }
+    do iLib=1,NumbLib {
+        if(NPARLib$iLib==0) {print 'Error! Some library files could not be recognized in current version of the code! Please contact dzliu to modify the code!\n' {} return}
+        do iPar=1,NPARLib$iLib {
+            define pChisq_PreVerbose $verbose verbose 0
+            set iCol = iCol+1
+            data $(FileOut) read t$iLib""par$iPar $(iCol).f
+            echo data $(FileOut) read t$iLib""par$iPar $(iCol).f
+            verbose $pChisq_PreVerbose
+            if(!is_vector(t$iLib""par$iPar)) {
+                print '\nError! Failed to read t$iLib""par$iPar from column $(iCol) of \"$(FileOut)\"! Please have a check!\n\n' {}
+                return
+            }
+        }
+        #[20160502]
+        set gCoo = (gCoo && a$iLib>=0.0)
+    }
+    # 
+    # 
+    # 
+    # 
+    # Choose Best Fit Solutions to Show 
+    # <TODO><BUG> i0 has problem, do not use i0
+    # 
+    if(sum(gCoo)==0) {
+        print 'Error! No good solution?!\n' {}
+        return
+    }
+    if(!is_vector(cid)) {
+        set srchi2 = chi2 set sruuid = 0,dimen(chi2)-1 
+        set srgcoo = gCoo
+        sort {srchi2 sruuid srgcoo}
+        #set cid = sruuid if(srgcoo) # <fixed><bug><20150414> # <TODO> choose only goodSolution (a1>0 && a2>0)
+        set cid = sruuid if(gCoo[sruuid]) # <fixed><bug><20170219> # gCoo[cid]
+        #echo $(cid[0]) $(chi2[cid[0]])
+        #echo $(cid[1]) $(chi2[cid[1]])
+        #echo $(cid[2]) $(chi2[cid[2]])
+        #echo $(cid[3]) $(chi2[cid[3]])
+        set cidTMP = 0,$($ns-1) # choose the nth best fit chi2 solutions
+        set cid = cid[cidTMP]
+        if(dimen(cid)==0) {
+            return
+        }
+        if(is_vector(cid)==0) {
+            return
+        }
+    } # else {
+    #     set cid = cid if(gCoo[cid])
+    #     if(dimen(cid)==0) {return}
+    #     if(is_vector(cid)==0) {return}
+    # }
+    # 
+    # Calc the plot range
+    # 
+    vecminmax f1 fMIN fMAX
+    define fMAX $(int($fMAX/0.25)*0.25+0.75)
+    define fMIN $(int($fMIN/0.25)*0.25-0.50)
+    vecminmax w1 wMIN wMAX
+    define wMAX $(int($wMAX/0.25)*0.25+0.50)
+    define wMIN $(int($wMIN/0.25)*0.25-0.75)
+    if(z>=1) {
+        define wMIN -0.5
+        define wMAX 5.5
+        define fMIN -4.0
+        define fMAX 3.0
+    }
+    ##echo $wMIN $wMAX $fMIN $fMAX
+    # 
+    # Prepare the plot parameters
+    # 
+    if(is_vector(FileEps)) { 
+        device postencap $(FileEps)
+        # xtcolours # do not use xtcolours
+        define TeX_strings 1
+        ticksize -1 0 -1 0
+        limits $wMIN $wMAX $fMIN $fMAX
+        notation 0 0 -0.5 0.5
+        #limits -0.5 5.5 -3.0 3.0 #[20160512] $fMIN $fMAX #[20160502] -1.5 5.5 $fMIN $fMAX
+        erase expand 1.25 lweight 3.0 
+        location 4500 31500 08000 18000
+        box
+        xlabel Observing Wavelength [\mu m]
+        ylabel Continuum Flux [mJy]
+    }
+    # 
+    # plot each model
+    # <NOTE><20160502><dzliu> separated this from "plotChisq", for speed up the "rChisq.sm". This must be run after "plotChisq"
+    # 
+    plotChisqInnerRoutine
+
+
+
+plotChisqInnerRoutine
+    # 
+    # plot each model
+    # <NOTE><20160502><dzliu> separated this from "plotChisq", for speed up the "rChisq.sm". This must be run after "plotChisq"
+    # 
+    define i 0
+    define c 0
+    #echo $(cid[0]) $(chi2[cid[0]])
+    #echo $(cid[1]) $(chi2[cid[1]])
+    #echo $(cid[2]) $(chi2[cid[2]])
+    #echo $(cid[3]) $(chi2[cid[3]])
+    if(is_vector(gCoo)) {
+        set cid = cid if(gCoo[cid])
+        if(dimen(cid)==0) {return}
+        if(is_vector(cid)==0) {return}
+    } else {
+        print 'Error! Please do not run plotChisqInnerRoutine alone!\n' {}
+        return
+    }
+    foreach i cid {
+        # 
+        # 
+        # check whether this is a good solution
+        # 
+        # if(!gCoo[$i]) {continue}
+        if($verbose>0) {echo Loading chi2 solution $i (chi2=$(chi2[$i])) ... }
+        # 
+        # 
+        # set common x
+        set SPIwc = -2,5.5,0.01
+        set wc = SPIwc # the combined SED wave in log
+        set fc = wc*.0-99 # the combined SED flux in log
+        # 
+        # 
+        # unset values
+        if(is_vector(LTIR))            {unset LTIR}
+        if(is_vector(LTIR_Cold))       {unset LTIR_Cold}
+        if(is_vector(LTIR_Warm))       {unset LTIR_Warm}
+        if(is_vector(Mdust))           {unset Mdust}
+        if(is_vector(Mdust_Cold))      {unset Mdust_Cold}
+        if(is_vector(Mdust_Warm))      {unset Mdust_Warm}
+        if(is_vector(Mstar))           {unset Mstar}
+        if(is_vector(EBV))             {unset EBV}
+        if(is_vector(AGE))             {unset AGE}
+        if(is_vector(MTC))             {unset MTC}
+        if(is_vector(LAGN))            {unset LAGN}
+        if(is_vector(Umean))           {unset Umean}
+        if(is_vector(original_chi2))   {unset original_chi2}
+        if(is_vector(recomputed_chi2)) {unset recomputed_chi2}
+        # 
+        # 
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # loop FileLib
+        # 
+        do iLib=1,NumbLib {
+            # 
+            # load model wave flux
+            # 
+            set XiLib = i$iLib[$i]
+            set XaLib = a$iLib[$i]
+            readLibSED $(FileLi$iLib) $(XiLib)
+            # 
+            # fix a1/2/3<0 problem [20160502]
+            # 
+            if(XaLib>0) {
+                set w$iLib = lg(SEDwave * opz)
+                set f$iLib = lg(SEDflux * XaLib)
+            } else {
+                set w$iLib = lg(SEDwave * opz)
+                set f$iLib = w$iLib*0.0-99
+            }
+            # 
+            # spline wave flux
+            # 
+            set SPIw$iLib = SPIwc
+            vecminmax w$iLib SPLw$iLib SPUw$iLib
+            if(XaLib>0) {
+                spline w$iLib f$iLib SPIw$iLib SPIf$iLib
+                set SPIf$iLib = (SPIw$iLib<$SPLw$iLib) ? -99 : SPIf$iLib
+                set SPIf$iLib = (SPIw$iLib>$SPUw$iLib) ? -99 : SPIf$iLib
+            } else {
+                set SPIf$iLib = SPIw$iLib*0.0-99
+            }
+            # 
+            # calc stellar/dust mass/luminosity
+            # 
+            if(index(FileLi$iLib,'DL07.LoEx')>=0) {
+                # 
+                # calc dust mass
+                # 
+                if(XaLib>0) {
+                    set Mdust_Cold = XaLib*dL**2 / opz #<TODO># / opz OR NOT ??? 
+                } else {
+                    set Mdust_Cold = 1e-1
+                }
+                # 
+                # calc L_TIR
+                # 
+                if(XaLib>0) {
+                    ##### method - 1
+                    ##set INTfreq = (2.99792458e5/1000),(2.99792458e5/8),(2.99792458e5/1000) set INTwave = 2.99792458e5/INTfreq
+                    ##spline SEDwave SEDflux INTwave INTflux 
+                    ##set LTIR_Cold = sum(INTflux*XaLib*(2.99792458e5/1000)/40.31970*4*pi*dL**2)
+                    #### method - 2
+                    load astroSfig.sm define pChisq_PreVerbose $verbose verbose 0
+                    set LTIR_Cold = calc_ltir(10**w$iLib,10**f$iLib,z) verbose $pChisq_PreVerbose
+                } else {
+                    set LTIR_Cold = 1e-1
+                }
+                # 
+                # calc Umin, qPAH
+                # 
+                set Umin_Cold = t$iLib""par1[$i]
+                set qPAH_Cold = t$iLib""par2[$i]
+            }
+            if(index(FileLi$iLib,'DL07.HiEx')>=0) {
+                # 
+                # calc dust mass
+                # 
+                if(XaLib>0) {
+                    set Mdust_Warm = XaLib*dL**2 / opz #<TODO># / opz OR NOT ???
+                } else {
+                    set Mdust_Warm = 1e-1
+                }
+                # 
+                # calc L_TIR
+                # 
+                if(XaLib>0) {
+                    ##### method - 1
+                    ##set INTfreq = (2.99792458e5/1000),(2.99792458e5/8),(2.99792458e5/1000) set INTwave = 2.99792458e5/INTfreq
+                    ##spline SEDwave SEDflux INTwave INTflux 
+                    ##set LTIR_Warm = sum(INTflux*XaLib*(2.99792458e5/1000)/40.31970*4*pi*dL**2)
+                    #### method - 2
+                    load astroSfig.sm define pChisq_PreVerbose $verbose verbose 0
+                    set LTIR_Warm = calc_ltir(10**w$iLib,10**f$iLib,z) verbose $pChisq_PreVerbose
+                } else {
+                    set LTIR_Warm = 1e-1
+                }
+                # 
+                # calc Umin, qPAH
+                # 
+                set Umin_Warm = t$iLib""par1[$i]
+                set qPAH_Warm = t$iLib""par2[$i]
+            }
+            if(index(FileLi$iLib,'FSPS.')>=0) {
+                # 
+                # calc stellar mass, EBV
+                # 
+                set Mstar = XaLib/(3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * t$iLib""par3[$i] / opz #<TODO># / opz OR NOT ???
+                set EBV = t$iLib""par4[$i]
+                set AGE = t$iLib""par2[$i]
+                set MTC = t$iLib""par1[$i]
+                #echo MTC = $(MTC), AGE = $(AGE), EBV = $(EBV)
+                #exit
+            }
+            if(index(FileLi$iLib,'AGN.')>=0) {
+                # 
+                # calc fAGN
+                # 
+                load astroSfig.sm define pChisq_PreVerbose $verbose verbose 0
+                set LAGN = calc_ltir(10**w$iLib,10**f$iLib,z) verbose $pChisq_PreVerbose
+            }
+            # 
+            # add model to combined SED
+            # 
+            set fc = lg(10**fc+10**SPIf$iLib)
+            # 
+            # print debug message
+            # 
+            ##echo Loaded model $iLib
+        }
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # 
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # add Radio
+        # using Radio-FIR correlation
+        # note that qIR is log, and radio slope is 0.8 (Emanuele).
+        # we assume qIR = 2.4
+        # we assume radio slope is 0.8 (see Emanuele Daddi's email)
+        # -- see bottom figure of http://www.cv.nrao.edu/course/astr534/SynchrotronSpectrum.html
+        # -- see the original definition of qIR http://cdsads.u-strasbg.fr/abs/1985ApJ...298L...7H
+        # 
+        if(is_vector(LTIR_Cold)) {set LTIR = LTIR_Cold}
+        if(is_vector(LTIR_Warm)) {set LTIR = LTIR_Warm}
+        if(is_vector(LTIR_Warm) && is_vector(LTIR_Cold)) {set LTIR = LTIR_Warm + LTIR_Cold}
+        define No_Recompute_Radio 1
+        if(is_vector(LTIR) && !$?No_Recompute_Radio) {
+            
+            set SPIwRadio = SPIwc
+            ### set SPIfRadio = lg( LTIR/dL**2/1.1624 / 10**2.5 / 1e3 * (2.99792458e5/10**SPIwRadio)**(-0.45) )
+            set SPIfRadio = lg( LTIR/dL**2/1.1624 / 10**2.4 / 1e3 * (2.99792458e5/10**SPIwRadio)**(-0.80) ) # arxiv.org/pdf/1005.1072
+            ### echo $((Ltir3+Ltir4)) Lsun
+            ### echo $((Ltir3+Ltir4)/dL**2/1.1624 / 10**2.4) uJy
+            ### echo $((Ltir3+Ltir4)/dL**2/1.1624 / 10**2.4 / 1e3) mJy
+            # 
+            # add Radio to combined SED
+            # 
+            set fc = lg(10**fc+10**SPIfRadio)
+            # 
+            # <added> 
+            # recompute radio chi2
+            # 
+            if(1==1) {
+                macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+                set go_radio = (abs(w0-2e5)<0.1*2e5)
+                if(sum(go_radio)>0) {
+                    set w0_radio = w0 if(go_radio)
+                    set f0_radio = f0 if(go_radio)
+                    set df_radio = df if(go_radio)
+                    set LOGw0_radio = (lg(w0_radio))
+                    spline wc fc LOGw0_radio SEDf0_radio
+                    set SEDf0_radio = 10**SEDf0_radio
+                    set CHIf0_radio = ((f0_radio-SEDf0_radio)/df_radio) # this is chi not chi-square
+                    # now we do quadratic sum
+                    set radio_chi2 = sum(CHIf0_radio**2)
+                    set original_chi2 = chi2[$i]
+                    set recomputed_chi2 = original_chi2 + radio_chi2
+                    set chi2[$i] = recomputed_chi2
+                    ## print '\n' {}
+                    ## print {w0_radio f0_radio df_radio SEDf0_radio original_chi2 radio_chi2 recomputed_chi2}
+                } else {
+                    set original_chi2 = chi2[$i]
+                    set recomputed_chi2 = original_chi2
+                }
+            }
+        } else {
+            set original_chi2 = chi2[$i] # for compatible
+            set recomputed_chi2 = chi2[$i] # for compatible
+        }
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # 
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # output best fit results
+        # 
+        if(0==$c) {
+            # 
+            # output best fit wave flux
+            # 
+            if(0==$?FileFitNoOutput) {
+                set FileFit = {"bestfit_wave_flux.dat"}
+                set bestfit_w = 10**wc
+                set bestfit_f = 10**fc
+                if(is_vector(SPIw2) && is_vector(SPIf2)) {
+                    print $(FileFit) '%15g%15g%15g%15g%15g%15g%15g%15g\n' {bestfit_w bestfit_f wc fc SPIw1 SPIf1 SPIw2 SPIf2}
+                } else {
+                    print $(FileFit) '%15g%15g%15g%15g%15g%15g\n' {bestfit_w bestfit_f wc fc SPIw1 SPIf1}
+                }
+                
+                set FileFit = {"bestfit_wave_flux_chi2.dat"}
+                macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+                set bestfit_w_full = 10**wc
+                set bestfit_f_full = 10**fc
+                set bestfit_w = w0
+                spline bestfit_w_full bestfit_f_full bestfit_w bestfit_f
+                set bestfit_chi2 = (bestfit_f-f0)**2/df**2
+                print $(FileFit) '%15g%15g%15g%15g%15g%15g\n' {w0 f0 df bestfit_w bestfit_f bestfit_chi2}
+                
+                set FileFit = {"bestfit_wave_flux_chi2_smoothed.dat"} #<TODO># smooth model SED?
+                macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+                set bestfit_w_full = 10**wc
+                set bestfit_f_full = 10**fc
+                smooth bestfit_f_full bestfit_f_smoo 3
+                set bestfit_w = w0
+                spline bestfit_w_full bestfit_f_smoo bestfit_w bestfit_f
+                set bestfit_chi2 = (bestfit_f-f0)**2/df**2
+                print $(FileFit) '%15g%15g%15g%15g%15g%15g\n' {w0 f0 df bestfit_w bestfit_f bestfit_chi2}
+            }
+            # 
+            # output best fit Umean
+            # 
+            if(is_vector(Umin_Warm) && is_vector(Umin_Cold) && is_vector(Mdust_Warm) && is_vector(Mdust_Cold)) {
+                if(is_file("../../../rUmean.sm")) { macro read "../../../rUmean.sm" }
+                if(is_file("../../rUmean.sm")) { macro read "../../rUmean.sm" }
+                if(is_file("../rUmean.sm")) { macro read "../rUmean.sm" }
+                if(is_file("rUmean.sm")) { macro read "rUmean.sm" }
+                set Umean = calcUmean(Umin_Cold,(lg(Mdust_Cold)),(lg(Mdust_Warm))) # a2 is LoEx, a1 is HiEx. 
+                ### 
+                ### print 
+                ### 
+                if(0==$?FileFitNoOutput) {
+                    define print_noheader 1
+                    print  "bestfit_Umean.txt" '\n' {}
+                    print +"bestfit_Umean.txt" 'Best-fit Umean = %0.3f\n' {Umean}
+                    print +"bestfit_Umean.txt" 'calculated as calcUmean($(Umin_Cold),$(lg(Mdust_Cold)),$(lg(Mdust_Warm)))\n' {}
+                    print +"bestfit_Umean.txt" '\n' {}
+                    define print_noheader 0
+                }
+            }
+            # 
+            # output best fit qPAH
+            # 
+            if(is_vector(qPAH_Warm) && is_vector(qPAH_Cold)) {
+                ### 
+                ### print 
+                ### 
+                if(0==$?FileFitNoOutput) {
+                    define print_noheader 1
+                    print  "bestfit_qPAH.txt" '\n' {}
+                    print +"bestfit_qPAH.txt" 'Best-fit qPAH_Warm = %0.3f\n' {qPAH_Warm}
+                    print +"bestfit_qPAH.txt" 'Best-fit qPAH_Cold = %0.3f\n' {qPAH_Cold}
+                    print +"bestfit_qPAH.txt" '\n' {}
+                    if($verbose>0) {!cat "bestfit_qPAH.txt"}
+                    define print_noheader 0
+                }
+            }
+            # 
+            # output best fit Mdust
+            # 
+            if(is_vector(Mdust_Warm) && is_vector(Mdust_Cold)) {
+                ### 
+                ### method - 1
+                ### 
+                set Mdust = Mdust_Warm + Mdust_Cold
+                ### 
+                ### method - 2 (Emanuele)
+                ### 
+                set Mdust_LIRU21 = 10**(lg(LTIR)-lg(Umean)-2.1)
+            }
+            # 
+            # output best fit Stellar EBV AGE
+            # 
+            if(is_vector(EBV) && is_vector(AGE) && is_vector(MTC)) {
+                ### 
+                ### print 
+                ### 
+                if(0==$?FileFitNoOutput) {
+                    define print_noheader 1
+                    print  "bestfit_Star.txt" '\n' {}
+                    print +"bestfit_Star.txt" 'Best-fit EBV = %0.3f\n' {EBV}
+                    print +"bestfit_Star.txt" 'Best-fit Age = %0.5f \# Gyr\n' {AGE}
+                    print +"bestfit_Star.txt" 'Best-fit Metallicity = %0.5f \# Zs=0.0190\n' {MTC}
+                    print +"bestfit_Star.txt" 'Best-fit M_star = %0.5g \# M_sun/yr\n' {Mstar}
+                    print +"bestfit_Star.txt" '\n' {}
+                    if($verbose>0) {!cat "bestfit_Star.txt"}
+                    define print_noheader 0
+                }
+            }
+            # 
+            # output best fit LTIR
+            # 
+            if(is_vector(LTIR_Warm) && is_vector(LTIR_Cold)) {
+                ### 
+                ### method - 1
+                ### 
+                set LTIR_Method1 = LTIR_Warm + LTIR_Cold
+                ### 
+                ### method - 2 (Emanuele)
+                ### 
+                set Jy2LsMpc2 = 4*pi*dL**2*9.5214/3.839e8
+                set wTIR = lg(8.0),lg(1000.0),0.02 set wTIR = 10**wTIR*opz set vTIR = 299792.458/wTIR set wTIR = lg(wTIR) spline wc fc wTIR fTIR
+                set wFIR = lg(50.0),lg(500.0),0.02 set wFIR = 10**wFIR*opz set vFIR = 299792.458/wFIR set wFIR = lg(wFIR) spline wc fc wFIR fFIR
+                set LTIR_Method2 = sum(10**fTIR*1e-3*Jy2LsMpc2*1e9*vTIR)*0.02/lg(exp(1))
+                set LFIR_Method2 = sum(10**fFIR*1e-3*Jy2LsMpc2*1e9*vFIR)*0.02/lg(exp(1))
+                ### 
+                ### print 
+                ### 
+                if(0==$?FileFitNoOutput) {
+                    define print_noheader 1
+                    print  "bestfit_LIR_Mdust.txt" '\n' {}
+                    print +"bestfit_LIR_Mdust.txt" 'Best-fit L_TIR1 = %0.3e L_sun (method 1)\n' {LTIR_Method1}
+                    print +"bestfit_LIR_Mdust.txt" 'Best-fit L_TIR2 = %0.3e L_sun (method 2)\n' {LTIR_Method2}
+                    print +"bestfit_LIR_Mdust.txt" 'Best-fit L_TIR  = %0.3e L_sun\n' {LTIR}
+                   #print +"bestfit_LIR_Mdust.txt" 'Best-fit L_FIR  = %0.3e L_sun\n' {LFIR}
+                    print +"bestfit_LIR_Mdust.txt" 'Best-fit M_dust = %0.3e M_sun\n' {Mdust}
+                    print +"bestfit_LIR_Mdust.txt" 'Best-fit M_dust = %0.3e M_sun (lgMdust=lgLIR-lgUmean-2.1)\n' {Mdust_LIRU21}
+                    print +"bestfit_LIR_Mdust.txt" '\n' {}
+                    if($verbose>0) {!cat "bestfit_LIR_Mdust.txt"}
+                    define print_noheader 0
+                }
+            }
+            # 
+            # output best fit flux density at specified wavelength <TODO> 
+            # 
+            if(1==0) {
+                if(0==$?FileFitNoOutput) {
+                    # <TODO> 
+                    set w1000 = lg(1000.0)
+                    spline wc fc w1000 f1000
+                    set f1000 = 10**f1000
+                    define print_noheader 1
+                    print  "bestfit_flux_1000.0.txt" '\n' {}
+                    print +"bestfit_flux_1000.0.txt" 'Best-fit flux 1000.0 = %g mJy\n' {f1000}
+                    print +"bestfit_flux_1000.0.txt" '\n' {}
+                    if($verbose>0) {!cat "bestfit_flux_1000.0.txt"}
+                    define print_noheader 0
+                    # <TODO> 
+                    set w1160 = lg(1160.0)
+                    spline wc fc w1160 f1160
+                    set f1160 = 10**f1160
+                    define print_noheader 1
+                    print  "bestfit_flux_1160.0.txt" '\n' {}
+                    print +"bestfit_flux_1160.0.txt" 'Best-fit flux 1160.0 = %g mJy\n' {f1160}
+                    print +"bestfit_flux_1160.0.txt" '\n' {}
+                    if($verbose>0) {!cat "bestfit_flux_1160.0.txt"}
+                    define print_noheader 0
+                }
+            }
+            # 
+            # output best fit chi2
+            # 
+            if(1==1) {
+                if(0==$?FileFitNoOutput) {
+                    !echo "Best-fit chi2 = "$(sprintf('%g',chi2[$i]))
+                    !echo "Best-fit chi2 = "$(sprintf('%g',chi2[$i])) > "bestfit_chi2.txt" #<added><20170219><dzliu># 
+                    !echo ""
+                }
+            }
+            # 
+        }
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        # 
+        # 
+        # ------------------------------------------------------------------------------------
+        # 
+        if(is_vector(FileEps)) {
+            # 
+            # choose color
+            # 
+            set jColor = (155+55*$c)+256*(188-22*$c)+256*256*(22+44*$c)
+            if(jColor>255+256*255+256*256*255) {set jColor=jColor-255+256*255+256*256*255}
+            set dColor = CTYPE() # print '%.0f\n' {dColor}
+            set eColor = dColor concat jColor # now append user-defined color 10 to ctype
+            ctype = eColor
+            ptype 4 1 ctype $(dimen(eColor)-1) expand 1.1 lweight 1.75
+            # 
+            # plot best fit combined SED
+            # 
+            connect wc fc
+            # 
+            # plot best fit model parameters
+            # 
+            #<20170220># relocate (01350 $(28500-1000*$c)) expand $(1.1/(1+0.16*NumbLib)) lweight 3.0 label (\chi^2=$(sprintf('%.2f',chi2[$i])))
+            relocate ($(01350+01350) $(18500+1000*(dimen(cid)-$c))) 
+            expand $(1.1/(1+0.16*NumbLib)) lweight 3.0 label (\chi^2=$(sprintf('%.2f',chi2[$i])))"  "
+            ctype = dColor
+            ctype 0
+            if(is_vector(Mstar)){                    ctype star label " lgM_*="$(sprintf('%05.2f',(lg(Mstar)))) }
+            if(is_vector(EBV)){                      ctype star label " E_{B-V}="$(sprintf('%04.2f',(float(EBV)))) }
+            if(is_vector(LAGN)){                     ctype nuck label " lgL_{AGN}="$(sprintf('%05.2f',(lg(LAGN)))) }
+            if(is_vector(Umin_Warm)){                ctype red  label " U_{min}="$(sprintf('%04.1f',(Umin_Warm))) }
+                                                  #  ctype red  label " qPAH="$(sprintf('%04.2f',(qPAH_Warm))) 
+            if(is_vector(Mdust_Warm)){               ctype red  label " lgM_d="$(sprintf('%05.2f',(lg(Mdust_Warm)))) }
+            if(is_vector(LTIR_Warm)){                ctype red  label " lgL_{IR}="$(sprintf('%05.2f',(lg(LTIR_Warm)))) }
+            if(is_vector(Umin_Cold)){                ctype blue label " U_{min}="$(sprintf('%04.1f',(Umin_Cold))) }
+                                                  #  ctype blue label " qPAH="$(sprintf('%04.2f',(qPAH_Cold)))
+            if(is_vector(Mdust_Cold)){               ctype blue label " lgM_d="$(sprintf('%05.2f',(lg(Mdust_Cold)))) }
+            if(is_vector(LTIR_Cold)){                ctype blue label " lgL_{IR}="$(sprintf('%05.2f',(lg(LTIR_Cold)))) }
+            # 
+            # plot best fit model component types
+            # 
+            if(0==$c) {
+                # 
+                set LabelPosX = 01350+01350
+                do iLib=1,NumbLib {
+                    # 
+                    if(index(FileLi$iLib,'FSPS.')>=0)     { set LabelPosX = LabelPosX+8425 }
+                    if(index(FileLi$iLib,'AGN.')>=0)      { set LabelPosX = LabelPosX+3225 }
+                    if(index(FileLi$iLib,'DL07.HiEx')>=0) { set LabelPosX = LabelPosX+8275 }
+                    if(index(FileLi$iLib,'DL07.LoEx')>=0) { set LabelPosX = LabelPosX+8275 }
+                    # 
+                    relocate ($(LabelPosX) $(18500+1000*(dimen(cid)+1))) # ($(01350+27000/NumbLib*$iLib) $(28500+1200*01))
+                    # 
+                    if(index(FileLi$iLib,'FSPS.')>=0)     { ctype star expand 1.25 putlabel 4 "Stellar" }
+                    if(index(FileLi$iLib,'AGN.')>=0)      { ctype nuck expand 1.25 putlabel 4 "AGN" }
+                    if(index(FileLi$iLib,'DL07.HiEx')>=0) { ctype red  expand 1.25 putlabel 4 "Warm Dust" }
+                    if(index(FileLi$iLib,'DL07.LoEx')>=0) { ctype blue expand 1.25 putlabel 4 "Cold Dust" }
+                }
+                # 
+                relocate $($fx1+($fx2-$fx1)/20) $($fy2-($fy2-$fy1)/10) 
+                ctype 0 expand 0.95 
+                if(is_vector(Source)) {puts $(Source)} #<added><20170219><dzliu># 
+                puts z = $(sprintf('%0.3f',float(z)))
+                puts dL = $(sprintf('%0.0f',float(dL))) Mpc
+            }
+            # 
+            # plot dashed line curve for each model
+            # 
+            do iLib=1,NumbLib {
+                relocate ($(17000+1100*$iLib-1100) $(28500+1200*01)) ltype 1 
+                if(index(FileLi$iLib,'FSPS.')>=0)     { ptype 4 1 expand 0.5 lweight 1.0 ctype star connect w$iLib f$iLib }
+                if(index(FileLi$iLib,'AGN.')>=0)      { ptype 4 1 expand 0.5 lweight 1.0 ctype nuck connect w$iLib f$iLib }
+                if(index(FileLi$iLib,'DL07.HiEx')>=0) { ptype 4 1 expand 0.5 lweight 1.0 ctype red  connect w$iLib f$iLib }
+                if(index(FileLi$iLib,'DL07.LoEx')>=0) { ptype 4 1 expand 0.5 lweight 1.0 ctype blue connect w$iLib f$iLib }
+                ltype 0
+            }
+        }
+        # 
+        # 
+        # 
+        # go to next solution
+        # 
+        ptype 4 1 ctype 0 expand 1.25 lweight 3.0 # this is default
+        define c $($c+1)
+    }
+    # 
+    # 
+    # 
+    # 
+    # 
+    # 
+    if(is_vector(FileEps)) {
+        # 
+        # plot obs datapoints
+        # 
+        ptype 4 0 ctype 0 expand 2.5 lweight 3.5
+       #points w0 f0
+        # 
+        # plot errorbars for detected datapoints
+        # 
+       #data $(FileObs) read {w0 1 f0 2 df 3}
+        macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+        load vecSNR.sm set snr = vecSNR(f0,df)
+        set coo = (f0>0.0 && df>0.0 && snr>=2.0) #<TODO># snr limit 2-sigma
+        if(sum(coo)>0) {
+            foreach var {w0 f0 df} {set _$var=$var if(coo)}
+            set _w0 = lg(_w0)
+            set _df = _df/_f0
+            set _f0 = lg(_f0)
+            points _w0 _f0
+            error_y _w0 _f0 _df
+        }
+        # 
+        # plot downarrow for low S/N datapoints 
+        # 
+       #data $(FileObs) read {w0 1 f0 2 df 3}
+        macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+        load vecSNR.sm set snr = vecSNR(f0,df)
+        set coo = (f0>0.0 && df>0.0 && snr<2.0) #<TODO># snr limit 2-sigma
+        if(sum(coo)>0) {
+            foreach var {w0 f0 df} {set __$var=$var if(coo)}
+            set __w0 = lg(__w0)
+            set __df = lg(__f0+__df*3.0)
+            upper ptype $upper
+            points __w0 __df
+        }
+        # 
+        # plot downarrow for non-detected up-limits
+        # 
+       #data $(FileObs) read {w0 1 f0 2 df 3}
+        macro read rShift.sm rShift_read_flux_obsframe $(FileObs)
+        set coo = (f0<=0.0 && df>0.0)
+        if(sum(coo)>0) {
+            foreach var {w0 f0 df} {set ___$var=$var if(coo)}
+            set ___w0 = lg(___w0)
+            set ___df = lg(___df*3.0)
+            upper ptype $upper
+            points ___w0 ___df
+        }
+        # 
+        ptype 4 1 ctype 0 expand 1.25 lweight 3.0 # this is default
+        # 
+        if($?FileEpsDoNotClose) {if(!$FileEpsDoNotClose) {device nodevice}} else {device nodevice}
+        !ps2pdf -dEPSCrop $(FileEps)
+       #!open $(FileEps)
+        !echo Final eps format figure has been output to $(FileEps)
+        !echo Final pdf format figure has been output to $(FileEps) | sed -e 's%\.eps%.pdf%g'
+    }
+    if($verbose>0) {!echo Done!}
+    # 
+    # end
+    # 
+
+
+
+readLibLVG 03
+    # aim: 
+    #     read only data line and skip all comment line starting with #
+    # usage:
+    #     readLibLVG "DataFile" StartLineNumber NumberofLinesToRead
+    # output:
+    #     ModJ1 and ModS1
+    # 
+    define _readLibLVG_preverb $verbose verbose 0
+    # !cat $1 | grep --line-number --max-count=$2 '^[^#]' | cut -d : -f 1 > .firstDataLine
+    !cat $1 | grep -n -m $($2+$3) '^[^\#]' | tail -n $3 > .readLibLVG.tmp
+    # define aaa ? # note that # must be \#
+    data ".readLibLVG.tmp" read {ModJ1 2 ModS1 12}
+    verbose $_readLibLVG_preverb undef _readLibLVG_preverb
+
+
+
+readLibSED 02
+    # aim: 
+    #     read only data line and skip all comment line starting with #
+    # usage:
+    #     readLibSED "DataFile" StartLineNumber NumberofLinesToRead
+    # output:
+    #     SEDw1 and SEDf1
+    # 
+    define _readLibSED_preverb $verbose verbose 0
+    !rm ".readLibSED."* 2>/dev/null
+    !cat $1 | grep '\# NVAR1 = ' | perl -p -e 's/\# NVAR1 = ([0-9]+).*/\1/g' > ".readLibSED.num"
+    !cat $1 | grep '\# TPAR1 = ' | perl -p -e 's/\# TPAR1 = ([^ ]*).*/\1/g' > ".readLibSED.tpar1"
+    !cat $1 | grep '\# TPAR2 = ' | perl -p -e 's/\# TPAR2 = ([^ ]*).*/\1/g' > ".readLibSED.tpar2"
+    !cat $1 | grep '\# TPAR3 = ' | perl -p -e 's/\# TPAR3 = ([^ ]*).*/\1/g' > ".readLibSED.tpar3"
+    !cat $1 | grep '\# TPAR4 = ' | perl -p -e 's/\# TPAR4 = ([^ ]*).*/\1/g' > ".readLibSED.tpar4"
+    data ".readLibSED.num" read {SEDunit 1}
+    if(is_vector(SEDTPAR1)) {unset SEDTPAR1}
+    if(is_vector(SEDTPAR2)) {unset SEDTPAR2}
+    if(is_vector(SEDTPAR3)) {unset SEDTPAR3}
+    if(is_vector(SEDTPAR4)) {unset SEDTPAR4}
+    ![ -s ".readLibSED.tpar1" ] || rm ".readLibSED.tpar1"
+    ![ -s ".readLibSED.tpar2" ] || rm ".readLibSED.tpar2"
+    ![ -s ".readLibSED.tpar3" ] || rm ".readLibSED.tpar3"
+    ![ -s ".readLibSED.tpar4" ] || rm ".readLibSED.tpar4"
+    if(is_file(".readLibSED.tpar1")) {data ".readLibSED.tpar1" read {SEDTPAR1 1.s}}
+    if(is_file(".readLibSED.tpar2")) {data ".readLibSED.tpar2" read {SEDTPAR2 1.s}}
+    if(is_file(".readLibSED.tpar3")) {data ".readLibSED.tpar3" read {SEDTPAR3 1.s}}
+    if(is_file(".readLibSED.tpar4")) {data ".readLibSED.tpar4" read {SEDTPAR4 1.s}}
+    !cat $1 | grep -n -m $($2+$(SEDunit)) '^[^\#]' | tail -n $(SEDunit) > ".readLibSED.tmp"
+    data ".readLibSED.tmp" read {SEDwave 2.f SEDflux 3.f}
+    if(is_vector(SEDTPAR1)) {read <$(SEDTPAR1) 4.f>}
+    if(is_vector(SEDTPAR2)) {read <$(SEDTPAR1) 5.f>}
+    if(is_vector(SEDTPAR3)) {read <$(SEDTPAR1) 6.f>}
+    if(is_vector(SEDTPAR4)) {read <$(SEDTPAR1) 7.f>}
+    verbose $_readLibSED_preverb undef _readLibSED_preverb
+
+
+
+strStandardVector 01
+        # <TODO> copied from astroGalfit.sm
+        # <TODO> situations: "abc 123" 'abc 123' abc123 abc/123 abc.123 123
+        # convert anything to a standard str vector {"XXX XXX"}
+        if(!$?1) { return } # AND the input should be in quotes!
+        !echo -n $1 | grep -v '__strStandardVector_arg1' > /dev/null
+        if($exit_status!=0) { set strstdvec1 = __strStandardVector_arg1
+                     } else { set strstdvec1 = <'$1'>    
+                        if(whatis(strstdvec1)==137) {set strstdvec1 = string($1)}
+                     }
+        set strstdvec2 = {"} + strstdvec1[0]
+        do  strstdveci=1,dimen(strstdvec1)-1 {set strstdvec2 = strstdvec2 + ' ' + strstdvec1[$strstdveci]}
+        set strstdvec2 = strstdvec2 + {"}
+        set $0 = strstdvec2 
+        return
+
+
+

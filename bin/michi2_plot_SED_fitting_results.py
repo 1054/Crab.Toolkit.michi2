@@ -130,14 +130,19 @@ else:
     # 
     # Read chi2 table
     DataFile = sys.argv[1]
+    if DataFile == '' or not os.path.isfile(DataFile):
+        print('Error! The input fitted chi2 data file "%s" was not found!'%(DataFile))
+        sys.exit()
     print('# Reading "%s"'%(DataFile))
     DataTable = CrabTable(DataFile, verbose=1)
     # 
     # Read fit info
     InfoFile = DataFile + '.info'
-    if os.path.isfile(InfoFile):
-        print('# Reading "%s"'%(InfoFile))
-        InfoDict = CrabTableReadInfo(InfoFile, verbose=0)
+    if not os.path.isfile(InfoFile):
+        print('Error! The input fitted chi2 info file "%s" was not found!'%(InfoFile))
+        sys.exit()
+    print('# Reading "%s"'%(InfoFile))
+    InfoDict = CrabTableReadInfo(InfoFile, verbose=0)
     CheckInfoDictOK = True
     for InfoKey in ['OBS', 'NLIB', 'OUT']:
         if InfoKey not in InfoDict:

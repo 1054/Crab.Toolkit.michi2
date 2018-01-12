@@ -3,20 +3,51 @@
 
 output_date=$(date +"%Y%m%d")
 
+main_cpp=("-pthread" "michi2_DataClass.cpp" "michi2_MinPack.cpp" "michi2_Constraint.cpp" "michi2_v04.cpp" "main.cpp")
+
+name_out="michi2_v04"
+
+# ln -fs ../michi2_v04/integrate.cpp
+
 if [[ $(uname) == "Darwin" ]]; then
-    clang++ -std=c++11 -pthread main.cpp -o michi2_v04_${output_date}_mac
-    if [[ -f michi2_v04_${output_date}_mac ]]; then
-        echo "Successfully compiled \"michi2_v04_${output_date}_mac\"!"
+    clang++ -std=c++11 ${main_cpp[@]} -o ${name_out}_${output_date}_mac
+    if [[ -f ${name_out}_${output_date}_mac ]]; then
+        echo "Successfully compiled \"${name_out}_${output_date}_mac\"!"
     else
         echo "Error! Failed to compile the code!"
     fi
+    echo "cp ${name_out}_${output_date}_mac ${name_out}_mac"
+    cp ${name_out}_${output_date}_mac ${name_out}_mac
 else
-    g++ -std=c++11 -pthread main.cpp -o michi2_v04_${output_date}_linux_$(arch)
-    if [[ -f michi2_v04_${output_date}_linux_$(arch) ]]; then
-        echo "Successfully compiled \"michi2_v04_${output_date}_linux_$(arch)\"!"
+    g++ -std=c++11 ${main_cpp[@]} -o ${name_out}_${output_date}_linux_$(arch)
+    if [[ -f ${name_out}_${output_date}_linux_$(arch) ]]; then
+        echo "Successfully compiled \"${name_out}_${output_date}_linux_$(arch)\"!"
     else
         echo "Error! Failed to compile the code!"
     fi
+    echo "${name_out}_${output_date}_linux_$(arch) ${name_out}_linux_$(arch)"
+    cp ${name_out}_${output_date}_linux_$(arch) ${name_out}_linux_$(arch)
 fi
+
+
+
+
+#output_date=$(date +"%Y%m%d")
+#
+#if [[ $(uname) == "Darwin" ]]; then
+#    clang++ -std=c++11 -pthread michi2_DataClass.cpp michi2_MinPack.cpp michi2_Constraint.cpp michi2_v04.cpp main.cpp -o michi2_v04_${output_date}_mac
+#    if [[ -f michi2_v04_${output_date}_mac ]]; then
+#        echo "Successfully compiled \"michi2_v04_${output_date}_mac\"!"
+#    else
+#        echo "Error! Failed to compile the code!"
+#    fi
+#else
+#    g++ -std=c++11 -pthread michi2_DataClass.cpp michi2_MinPack.cpp michi2_Constraint.cpp michi2_v04.cpp main.cpp -o michi2_v04_${output_date}_linux_$(arch)
+#    if [[ -f michi2_v04_${output_date}_linux_$(arch) ]]; then
+#        echo "Successfully compiled \"michi2_v04_${output_date}_linux_$(arch)\"!"
+#    else
+#        echo "Error! Failed to compile the code!"
+#    fi
+#fi
 
 

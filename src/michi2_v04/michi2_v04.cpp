@@ -38,19 +38,30 @@
        add filter curve
        add -constraint LIB2 NORM EQ SED vLv(8,1000)*1.01e-6 # i.e. IR-radio correlation
 
+ HIST: 20180110
+       constraint VALUE
+       constraint MathPower, Multiplication, Addition
  
  */
 
 
 
 #include "michi2_v04.h"
+#include "spline.cpp"
+#include "integrate.cpp"
+extern vector<double> spline(vector<double> &x, vector<double> &y, vector<double> &output_x);
+extern double integrate(vector<double> &x, vector<double> &y, vector<double> &xrange);
+extern double integrate_LIR(vector<double> &x, vector<double> &y, vector<double> &xrange);
 
 
 
+const char *InfoRedshift = "";
 
+int NumbParallel = 2; // number of parallel subprocesses
 
+std::vector<michi2Constraint *> Constraints;
 
-
+std::vector<FilterCurveXY *> FilterCurves;
 
 
 
@@ -379,23 +390,6 @@ double michi2VecMean(std::vector<double> vec)
 
 /* 20160714 mnchi2 */
 /* --- pthread ---- */
-struct mnchi2parallelParams {
-    std::vector<michi2DataClass*> SDOBSList;
-    std::vector<michi2DataClass*> SDLIBList;
-    //std::vector<std::ofstream*> SDOUTList;
-    std::vector<std::string> InputLibList;
-    std::vector<std::string> OutputTableList;
-                long  ibOBS;     //    begin index of OBS list
-                long  idOBS;     //          index of OBS list
-                long  ieOBS;     //      end index of OBS list
-                bool  irOBS;     // rounding index of OBS list 就是计算是否进位
-    std::vector<long> ibLIBList; //    begin index of LIB list
-    std::vector<long> idLIBList; //          index of LIB list
-    std::vector<long> ieLIBList; //      end index of LIB list
-    std::vector<bool> irLIBList; // rounding index of LIB list 就是计算是否进位
-    long iBegin; long iEnd; long i;
-    long nObs; long nLib; long nRow;
-};
 pthread_mutex_t mnchi2parallelMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t mnchi2parallelCondition = PTHREAD_COND_INITIALIZER;
 long mnchi2parallelProgress = 0;
@@ -452,6 +446,9 @@ void mnchi2(std::vector<std::string> InputObsList, std::vector<std::string> Inpu
             OutputInfoFileStream << "LIB" << iLib+1 << " = " << InputLibList.at(iLib) << std::endl;
         }
         OutputInfoFileStream << "OUT = " << OutputTableList.at(i) << std::endl;
+        //if(strlen(InfoRedshift)>0) {
+            OutputInfoFileStream << "REDSHIFT = " << InfoRedshift << std::endl;
+        //}
         OutputInfoFileStream.close();
         // output fitted coefficients, chisq etc. to an output file
         std::ofstream SDOUT(OutputTableList.at(i).c_str());
@@ -665,176 +662,179 @@ void *mnchi2parallel(void *params)
             } std::cout << std::endl;
         }
         //
-        // get OBS data block
-        if(pParams->irOBS) {
-            SDOBS = pParams->SDOBSList.at(pParams->idOBS);
-            pParams->irOBS = false;
-        }
-        //
-        // get LIB data block
-        for(long iLib = 0; iLib < pParams->nLib; iLib++) {
-            if(pParams->irLIBList[iLib]) {
-                //std::cout << "DEBUG: SDLIBS[" << iLib << "]=0x" << std::hex << (size_t)SDLIBS[iLib] << ", " << "pParams->SDLIBList[" << iLib << "]=0x" << std::hex << (size_t)pParams->SDLIBList[iLib] << std::endl;
-                SDLIBS[iLib] = pParams->SDLIBList[iLib];
-                //std::cout << "DEBUG: SDLIBS[" << iLib << "]=0x" << std::hex << (size_t)SDLIBS[iLib] << std::endl;
-                SDLIBS[iLib]->getDataBlock(pParams->idLIBList[iLib] * SDLIBS[iLib]->XNum + 1, SDLIBS[iLib]->XNum);
-                if(debug>=2) {std::cout << "mnchi2parallel: Read LIB" << iLib+1 << " data block " << pParams->idLIBList[iLib]+1 << "/" << pParams->SDLIBList[iLib]->YNum << std::endl;}
-                pParams->irLIBList[iLib] = false;
-            }
-        }
-        //
-        // prepare MinPack input data structure
-        std::vector<std::vector<double> > fLIB; fLIB.clear();
-        std::vector<double> fOBS;
-        std::vector<double> eOBS;
-        std::vector<double> aFIT; aFIT.resize(pParams->nLib);
-        //
         // check constraints <Added><20160719><dzliu>
         bool ConstraintOK = true;
         if(Constraints.size()>0) {
             for(int iCon = 0; iCon < Constraints.size(); iCon++) {
                 michi2Constraint *TempConstraint = Constraints[iCon];
-                if( TempConstraint->fromLIB>0 && TempConstraint->toLIB>0 && TempConstraint->fromPAR>0 && TempConstraint->toPAR>0 ) {
-                    // set constraint: toLIB.toPAR \Operator\ fromLIB.fromPAR
-                    double TempPAR1 = SDLIBS[TempConstraint->toLIB-1]->FPAR[TempConstraint->toPAR-1][0];
-                    double TempPAR2 = SDLIBS[TempConstraint->fromLIB-1]->FPAR[TempConstraint->fromPAR-1][0];
-                    if(TempConstraint->OperatorType == 0) {
-                        ConstraintOK = (TempPAR1 == TempPAR2); // set constraint: toLIB.toPAR EQ fromLIB.fromPAR
-                    } else if(TempConstraint->OperatorType == 1) {
-                        ConstraintOK = (TempPAR1 >= TempPAR2); // set constraint: toLIB.toPAR GE fromLIB.fromPAR
-                    } else if(TempConstraint->OperatorType == -1) {
-                        ConstraintOK = (TempPAR1 <= TempPAR2); // set constraint: toLIB.toPAR LE fromLIB.fromPAR
-                    } else if(TempConstraint->OperatorType == 2) {
-                        ConstraintOK = (TempPAR1 > TempPAR2); // set constraint: toLIB.toPAR GT fromLIB.fromPAR
-                    } else if(TempConstraint->OperatorType == -2) {
-                        ConstraintOK = (TempPAR1 < TempPAR2); // set constraint: toLIB.toPAR LT fromLIB.fromPAR
-                    }
-                } else if( TempConstraint->fromLIB>0 && TempConstraint->toLIB>0 && TempConstraint->fromPAR==0 && TempConstraint->toPAR==0 ) {
-                    // set constraint: toLIB.toINDEX \Operator\ toINDEX.fromINDEX
-                    double TempINDEX1 = pParams->idLIBList.at(TempConstraint->toLIB-1);
-                    double TempINDEX2 = pParams->idLIBList.at(TempConstraint->fromLIB-1);
-                    //std::cout << "set constraint: toLIB.toINDEX EQ fromLIB.fromINDEX: " << TempINDEX1 << " " << TempINDEX2;
-                    if(TempConstraint->OperatorType == 0) {
-                        ConstraintOK = (TempINDEX1 == TempINDEX2); // set constraint: toLIB.toINDEX EQ fromLIB.fromINDEX
-                    } else if(TempConstraint->OperatorType == 1) {
-                        ConstraintOK = (TempINDEX1 >= TempINDEX2); // set constraint: toLIB.toINDEX GE fromLIB.fromINDEX
-                    } else if(TempConstraint->OperatorType == -1) {
-                        ConstraintOK = (TempINDEX1 <= TempINDEX2); // set constraint: toLIB.toINDEX LE fromLIB.fromINDEX
-                    } else if(TempConstraint->OperatorType == 2) {
-                        ConstraintOK = (TempINDEX1 > TempINDEX2); // set constraint: toLIB.toINDEX GT fromLIB.fromINDEX
-                    } else if(TempConstraint->OperatorType == -2) {
-                        ConstraintOK = (TempINDEX1 < TempINDEX2); // set constraint: toLIB.toINDEX LT fromLIB.fromINDEX
-                    }
-                    //std::cout << " " << ConstraintOK << std::endl;
-                } else {
-                    // set constraint: toLIB[LowerX:UpperX]*Factor = toLIB[LowerX:UpperX]*Factor
-                    // <TODO><20160719><dzliu>
-                    // ITS TOO HARD TO IMPLEMENT SO MANY THINGS
-                    // Constraining the normalization of a LIB is not what should be constrained here.
-                    // This code should only be a tool to compute minimum chi2 from OBS data with multiple LIB data.
-                    // We can set constraints on LIB parameters, LIB index, but not LIB normalization!
-                }
+                ConstraintOK = TempConstraint->check(pParams,debug-1);
+                if(!ConstraintOK) {break;}
             }
         }
         //
-        // match LIB to OBS data block
-        // match LIB to OBS data block <updated><20170930> apply filter curves to fLIB at each wOBS, if the running mode is SED.
+        // if passed the constraint check
+        // <20180110> moved the reading of OBS data block and LIB data block after the constraint, which can speed up a lot!
         if(ConstraintOK) {
+            if(debug>=2) {std::cout << "mnchi2parallel: Passed the constraint check!" << std::endl;}
+            //
+            // get OBS data block
+            if(pParams->irOBS) {
+                if(debug>=3) {std::cout << "mnchi2parallel: Reading OBS " << pParams->idOBS+1 << " data" << std::endl;}
+                SDOBS = pParams->SDOBSList.at(pParams->idOBS);
+                pParams->irOBS = false;
+            }
+            //
+            // get LIB data block
             for(long iLib = 0; iLib < pParams->nLib; iLib++) {
-                if(debug>=2) {std::cout << "mnchi2parallel: Matching LIB" << iLib+1 << " to OBS" << pParams->idOBS+1 << std::endl;}
-                MatchedObsLibStruct SDDAT = michi2MatchObs(SDOBS, SDLIBS[iLib], debug-1);
-                if(debug>=2) {std::cout << "mnchi2parallel: Matched LIB" << iLib+1 << " to OBS" << pParams->idOBS+1 << std::endl;}
-                // check data block
-                if(SDDAT.f0.size()>0) {
-                    // min chi2 by n components
-                    fLIB.push_back(SDDAT.f1);
-                    if(iLib == (pParams->nLib-1)) {
-                        fOBS = SDDAT.f0; eOBS = SDDAT.df;
-                    }
-                } else {
-                    std::cout << "mnchi2parallel: Error! Failed to read data block from LIB" << iLib+1 << " " << pParams->InputLibList.at(iLib) << std::endl;
-                    return(NULL);
+                if(pParams->irLIBList[iLib]) {
+                    //std::cout << "DEBUG: SDLIBS[" << iLib << "]=0x" << std::hex << (size_t)SDLIBS[iLib] << ", " << "pParams->SDLIBList[" << iLib << "]=0x" << std::hex << (size_t)pParams->SDLIBList[iLib] << std::endl;
+                    SDLIBS[iLib] = pParams->SDLIBList[iLib];
+                    //std::cout << "DEBUG: SDLIBS[" << iLib << "]=0x" << std::hex << (size_t)SDLIBS[iLib] << std::endl;
+                    SDLIBS[iLib]->getDataBlock(pParams->idLIBList[iLib] * SDLIBS[iLib]->XNum + 1, SDLIBS[iLib]->XNum);
+                    if(debug>=3) {std::cout << "mnchi2parallel: Reading LIB" << iLib+1 << " data block " << pParams->idLIBList[iLib]+1 << "/" << pParams->SDLIBList[iLib]->YNum << std::endl;}
+                    pParams->irLIBList[iLib] = false;
                 }
             }
-        }
-        //
-        // do MinPack
-        if(fLIB.size()>0) {
-            if(debug>=2) {std::cout << "mnchi2parallel: Calling MPACK" << std::endl;}
             //
-            michi2MinPack *MPACK = new michi2MinPack(fLIB,fOBS,eOBS);
-            //
-            //
-            // check constraints on LIB coefficients <Added><20160719><dzliu>
+            // check constraints again, now with SDLIBS and SDOBS
             if(Constraints.size()>0) {
                 for(int iCon = 0; iCon < Constraints.size(); iCon++) {
                     michi2Constraint *TempConstraint = Constraints[iCon];
-                    if(TempConstraint->fromLIB==-1 &&
-                       TempConstraint->fromPAR==-3 &&
-                       TempConstraint->toLIB>0 &&
-                       TempConstraint->toLIB<=pParams->nLib &&
-                       TempConstraint->toPAR==-1 )
-                    {
-                        // set constraint: LIB2 NORM EQ SED LIR(8,1000) qIR=250
-                        //<DEBUG><20171001> std::cout << "DEBUG: setting constraint: LIB" << TempConstraint->toLIB << "NORM EQ SED vLv(8,1000)*1.061619121e-06, i.e. q_IR = 2.4, 10^q_IR = S_IR(8-1000)/(3.75e12Wm-2)/(S_(1.4GHz)/1Wm-2Hz-1)." << std::endl;
-                        // this can be done by adding LIB2 to each other LIBs then exclude LIB2 from fitting
-                        double LibIntegrated[pParams->nLib];
-                        double LibIntegratedTotal = 0.0;
-                        std::vector<double> LibIntegrateRange; LibIntegrateRange.push_back(TempConstraint->fromLowerX); LibIntegrateRange.push_back(TempConstraint->fromUpperX);
-                        for(long iLib=0; iLib < pParams->nLib; iLib++) {
-                            LibIntegrated[iLib] = integrate_LIR(SDLIBS[iLib]->X, SDLIBS[iLib]->Y, LibIntegrateRange);
-                            LibIntegratedTotal += LibIntegrated[iLib];
-                            //<DEBUG><20171001> std::cout << "DEBUG: calculating integral: LIB" << iLib+1 << " INT(" <<TempConstraint->fromLowerX << "," << TempConstraint->fromUpperX << ") = " << LibIntegrated[iLib] << std::endl;
+                    ConstraintOK = TempConstraint->check(SDLIBS,debug-1);
+                    if(!ConstraintOK) {break;}
+                }
+            }
+            //
+            // if passed the second constraint check
+            if(ConstraintOK) {
+                if(debug>=2) {std::cout << "mnchi2parallel: Passed the second constraint check!" << std::endl;}
+                //
+                // prepare MinPack input data structure
+                std::vector<std::vector<double> > fLIB; fLIB.clear();
+                std::vector<double> fOBS;
+                std::vector<double> eOBS;
+                std::vector<double> aFIT; aFIT.resize(pParams->nLib);
+                //
+                // match LIB to OBS data block
+                // match LIB to OBS data block <updated><20170930> apply filter curves to fLIB at each wOBS, if the running mode is SED.
+                for(long iLib = 0; iLib < pParams->nLib; iLib++) {
+                    if(debug>=3) {std::cout << "mnchi2parallel: Matching LIB" << iLib+1 << " to OBS" << pParams->idOBS+1 << std::endl;}
+                    MatchedObsLibStruct SDDAT = michi2MatchObs(SDOBS, SDLIBS[iLib], debug-2); // set debug>=3 to debug this.
+                    if(debug>=3) {std::cout << "mnchi2parallel: Matched LIB" << iLib+1 << " to OBS" << pParams->idOBS+1 << std::endl;}
+                    // check data block
+                    if(SDDAT.f0.size()>0) {
+                        // min chi2 by n components
+                        fLIB.push_back(SDDAT.f1);
+                        if(iLib == (pParams->nLib-1)) {
+                            fOBS = SDDAT.f0; eOBS = SDDAT.df;
                         }
-                        //LibIntegrated[TempConstraint->toLIB-1] = LibIntegrated[TempConstraint->toLIB-1] * TempConstraint->fromMultiplication / TempConstraint->toMultiplication; //<TODO> + TempConstraint->toAddition;
-                        //
-                        std::vector<int> LibConstrainNumbers;
-                        std::vector<double> LibConstrainFactors;
-                        for(long iLib=0; iLib < pParams->nLib; iLib++) {
-                            if(iLib!=TempConstraint->toLIB-1) {
-                                LibConstrainNumbers.push_back(iLib+1);
-                                LibConstrainFactors.push_back( LibIntegrated[iLib] / (TempConstraint->toMultiplication/TempConstraint->fromMultiplication - LibIntegrated[TempConstraint->toLIB-1]) );
-                                // e.g. S_(1.4GHz) = 1e-6 S_(IR,8-1000), TempConstraint->toMultiplication is 1, TempConstraint->fromMultiplication = 1e-6.
-                                //      a1 * LibInt1 + a2 * LibInt2 + a3 * LibInt3 = S_(IR,8-1000)
-                                //      a1 * LibInt1 + a2 * LibInt2 + a3 * LibInt3 = S_(1.4GHz) / 1e-6, assuming radio SED templates are normalized to S_(1.4GHz) = 1 mJy,
-                                //      a1 * LibInt1 + a2 * LibInt2 + a3 * LibInt3 = a3 / 1e-6
-                                //      a3 * (1/1e-6 - LibInt3) = a1 * LibInt1 + a2 * LibInt2
-                                //      a3  = a1 * LibInt1/((1/1e-6)-LibInt3) + a2 * LibInt2/((1/1e-6)-LibInt3)
-                                //<DEBUG><20171001> std::cout << "DEBUG: calculating integral: LIB" << iLib+1 << " INT(" <<TempConstraint->fromLowerX << "," << TempConstraint->fromUpperX << ") = " << LibIntegrated[iLib] << ", " << "LibConstrainFactor = " << LibConstrainFactors[LibConstrainFactors.size()-1] << std::endl;
-                            } else {
-                                //<DEBUG><20171001> std::cout << "DEBUG: calculating integral: LIB" << iLib+1 << " INT(" <<TempConstraint->fromLowerX << "," << TempConstraint->fromUpperX << ") = " << LibIntegrated[iLib] << std::endl;
-                            }
-                        }
-                        //
-                        MPACK->constrain(TempConstraint->toLIB, LibConstrainNumbers, LibConstrainFactors);
-                        //
-                        break;
+                    } else {
+                        std::cout << "mnchi2parallel: Error! Failed to read data block from LIB" << iLib+1 << " " << pParams->InputLibList.at(iLib) << std::endl;
+                        return(NULL);
                     }
                 }
-            }
-            //
-            MPACK->fit();
-            //
-            // check parameter and write output results to stream
-            double chi2 = 0.0; for(int j=0;j<MPACK->chi2.size();j++) {chi2+=MPACK->chi2[j];}
-            std::stringstream pStream;
-            pStream << std::setw(8) << pParams->i << std::setw(15) << chi2;
-            for(long iLib = 0; iLib < pParams->nLib; iLib++) {
-                aFIT[iLib] = MPACK->aCOE[iLib];
-                pStream << std::setw(10) << pParams->idLIBList[iLib] * pParams->SDLIBList[iLib]->XNum << std::setw(15) << aFIT.at(iLib);
-            }
-            for(long iLib = 0; iLib < pParams->nLib; iLib++) {
-                //michi2DataClass *SDLIB = pParams->SDLIBList[iLib];
-                michi2DataClass *SDLIB = SDLIBS.at(iLib);
-                for(long iLibPar=0; iLibPar<SDLIB->FPAR.size(); iLibPar++) {
-                    pStream << std::setw(15) << SDLIB->FPAR[iLibPar][0];
+                //
+                // do MinPack
+                if(fLIB.size()>0) {
+                    if(debug>=3) {std::cout << "mnchi2parallel: Calling MPACK" << std::endl;}
+                    //
+                    michi2MinPack *MPACK = new michi2MinPack(fLIB,fOBS,eOBS);
+                    //
+                    //
+                    // check constraints on LIB coefficients <Added><20160719><dzliu>
+                    if(Constraints.size()>0) {
+                        for(int iCon = 0; iCon < Constraints.size(); iCon++) {
+                            michi2Constraint *TempConstraint = Constraints[iCon];
+                            if(TempConstraint->fromLIB==-1 &&
+                               TempConstraint->fromPAR==-3 &&
+                               TempConstraint->toLIB>0 &&
+                               TempConstraint->toLIB<=pParams->nLib &&
+                               TempConstraint->toPAR==-1 )
+                            {
+                                //
+                                // set constraint: LIB5 NORM EQ SED LIR(8,1000), i.e., fixing the normalization of LIB5 to the vLv(8,1000), i.e., qIR=250
+                                // -- NOTE vLv is not INT! vLv is the integration of \int x*SED dx, but INT is just the integration of \int SED dx.
+                                //
+                                //<DEBUG><20171001> std::cout << "DEBUG: setting constraint: LIB" << TempConstraint->toLIB << "NORM EQ SED vLv(8,1000)*1.061619121e-06, i.e. q_IR = 2.4, 10^q_IR = S_IR(8-1000)/(3.75e12Wm-2)/(S_(1.4GHz)/1Wm-2Hz-1)." << std::endl;
+                                //
+                                // in this case, LIB5 is not fitted but its normalization is fully deteremined by other LIBs (or by the full SED vLv)
+                                double LibIntegrated[pParams->nLib];
+                                double LibIntegratedTotal = 0.0;
+                                std::vector<double> LibIntegrateRange; LibIntegrateRange.push_back(TempConstraint->fromLowerX); LibIntegrateRange.push_back(TempConstraint->fromUpperX);
+                                // now we calculate the vLv(8,1000) of each LIB
+                                for(long iLib=0; iLib < pParams->nLib; iLib++) {
+                                    LibIntegrated[iLib] = integrate_LIR(SDLIBS[iLib]->X, SDLIBS[iLib]->Y, LibIntegrateRange);
+                                    LibIntegratedTotal += LibIntegrated[iLib];
+                                    //<DEBUG><20171001> std::cout << "DEBUG: calculating integral: LIB" << iLib+1 << " INT(" <<TempConstraint->fromLowerX << "," << TempConstraint->fromUpperX << ") = " << LibIntegrated[iLib] << std::endl;
+                                }
+                                //
+                                // then we calculate the coefficients of each LIB's vLv(8,1000) comparing to LIB5's vLv(8,1000)
+                                std::vector<int> LibConstrainNumbers;
+                                std::vector<double> LibConstrainFactors;
+                                for(long iLib=0; iLib < pParams->nLib; iLib++) {
+                                    if(iLib!=TempConstraint->toLIB-1) {
+                                        double TempCoefficient = 1.0;
+                                        if(!std::isnan(TempConstraint->toMultiplication)) { TempCoefficient = TempCoefficient / TempConstraint->toMultiplication; }
+                                        if(!std::isnan(TempConstraint->fromMultiplication)) { TempCoefficient = TempCoefficient * TempConstraint->fromMultiplication; }
+                                        LibConstrainNumbers.push_back(iLib+1);
+                                        //<before><20180110>//LibConstrainFactors.push_back( LibIntegrated[iLib] / (TempConstraint->toMultiplication/TempConstraint->fromMultiplication - LibIntegrated[TempConstraint->toLIB-1]) );
+                                        LibConstrainFactors.push_back( LibIntegrated[iLib] / (1.0 / TempCoefficient - LibIntegrated[TempConstraint->toLIB-1]) ); //<20180110>//
+                                        // -- NOTE
+                                        // e.g., if we want
+                                        //      S_(1.4GHz) = 1.061619121e-6 * S_(IR,8-1000), assuming the radio SED templates are normalized to S_(1.4GHz) = 1 mJy
+                                        // then we need
+                                        //      TempConstraint->toMultiplication is 1, TempConstraint->fromMultiplication = 1.061619121e-6.
+                                        // and we have
+                                        //      a1 * LibInt1 + a2 * LibInt2 + a3 * LibInt3 = S_(IR,8-1000)
+                                        // so we get
+                                        //      a1 * LibInt1 + a2 * LibInt2 + a3 * LibInt3 = S_(1.4GHz) / 1.061619121e-6
+                                        //      a1 * LibInt1 + a2 * LibInt2 + a3 * LibInt3 = a3 / 1.061619121e-6
+                                        //      a3 * (1/1.061619121e-6 - LibInt3) = a1 * LibInt1 + a2 * LibInt2
+                                        //      a3  = a1 * LibInt1/((1/1.061619121e-6)-LibInt3) + a2 * LibInt2/((1/1.061619121e-6)-LibInt3)
+                                        //
+                                        //<DEBUG><20171001> std::cout << "DEBUG: calculating integral: LIB" << iLib+1 << " INT(" <<TempConstraint->fromLowerX << "," << TempConstraint->fromUpperX << ") = " << LibIntegrated[iLib] << ", " << "LibConstrainFactor = " << LibConstrainFactors[LibConstrainFactors.size()-1] << std::endl;
+                                    } else {
+                                        //<DEBUG><20171001> std::cout << "DEBUG: calculating integral: LIB" << iLib+1 << " INT(" <<TempConstraint->fromLowerX << "," << TempConstraint->fromUpperX << ") = " << LibIntegrated[iLib] << std::endl;
+                                    }
+                                }
+                                //
+                                MPACK->constrain(TempConstraint->toLIB, LibConstrainNumbers, LibConstrainFactors);
+                                //
+                                break;
+                            }
+                        }
+                    }
+                    //
+                    MPACK->fit();
+                    //
+                    // check parameter and write output results to stream
+                    double chi2 = 0.0; for(int j=0;j<MPACK->chi2.size();j++) {chi2+=MPACK->chi2[j];}
+                    std::stringstream pStream;
+                    pStream << std::setw(8) << pParams->i << std::setw(15) << chi2;
+                    for(long iLib = 0; iLib < pParams->nLib; iLib++) {
+                        aFIT[iLib] = MPACK->aCOE[iLib];
+                        pStream << std::setw(10) << pParams->idLIBList[iLib] * pParams->SDLIBList[iLib]->XNum << std::setw(15) << aFIT.at(iLib);
+                    }
+                    for(long iLib = 0; iLib < pParams->nLib; iLib++) {
+                        //michi2DataClass *SDLIB = pParams->SDLIBList[iLib];
+                        michi2DataClass *SDLIB = SDLIBS.at(iLib);
+                        for(long iLibPar=0; iLibPar<SDLIB->FPAR.size(); iLibPar++) {
+                            pStream << std::setw(15) << SDLIB->FPAR[iLibPar][0];
+                        }
+                    }
+                    delete MPACK; MPACK = NULL;
+                    pStream << std::endl;
+                    pStrings[pParams->idOBS] += pStream.str();
+                    if(debug>=3) {std::cout << "mnchi2parallel: Done MPACK" << pStream.str();
+                        std::cout << std::endl;}
                 }
+            } else {
+                // failed to pass the constraint check
+                if(debug>=3) {std::cout << "mnchi2parallel: Did not pass the second constraint check!" << std::endl;}
             }
-            delete MPACK; MPACK = NULL;
-            pStream << std::endl;
-            pStrings[pParams->idOBS] += pStream.str();
-            if(debug>=2) {std::cout << "mnchi2parallel: Done MPACK" << pStream.str();
-                std::cout << std::endl;}
+        } else {
+            // failed to pass the constraint check
+            if(debug>=3) {std::cout << "mnchi2parallel: Did not pass the constraint check!" << std::endl;}
         }
         //
         // compute the rounding of each LIB index idLIBList[iLib] and goto next loop

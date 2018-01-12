@@ -1,10 +1,13 @@
 #!/bin/bash
 # 
 # common caller for wcstools:
+#=  bin_portable.sh
+#=  michi2_v04
 #=  michi2_read_lib_SED
-#=  michi2_compute_Delta_chisq_for_1_sigma
+#=  michi2_compute_delta_chisq_1sigma
+#=  lumdist
 # 
-# for ff in $(cat michi2_read_lib_SED | grep "^#= " | tr -s ' ' | cut -d ' ' -f 2); do cp michi2_read_lib_SED $ff; done
+# for ff in $(cat bin_portable.sh | grep "^#= " | tr -s ' ' | cut -d ' ' -f 2); do cp bin_portable.sh $ff; done
 #   
 # 
 # Linux

@@ -919,7 +919,7 @@ class CrabPlot(object):
                     if len(xclip) > 0:
                         for clip_x in xclip:
                             if len(clip_x) >= 2:
-                                print('plot_data_file: clipping data from %s to %s'%(clip_x[0],clip_x[1]))
+                                #print('CrabPlot::plot_data_file() Clipping data from %s to %s'%(clip_x[0],clip_x[1]))
                                 clip_mask = (input_x >= clip_x[0]) & (input_x < clip_x[1])
                                 clip_args = numpy.argwhere(clip_mask)
                                 if len(clip_args) > 0:

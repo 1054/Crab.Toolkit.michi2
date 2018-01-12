@@ -1,66 +1,9 @@
-#ifndef H_michi2DataClass
-#define H_michi2DataClass
-#include <stdio.h>
-#include <math.h>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <sstream>
-//#include <regex> gcc >=4.9 (CentOS >=8)
-//#include <iterator>
+#include "michi2_DataClass.h"
 #include "CrabStringClean.cpp"
 #include "CrabStringReadColumn.cpp"
 #include "CrabTableReadColumn.cpp"
 #include "CrabTableReadInfo.cpp"
 #include "CrabTableGetLineCount.cpp"
-
-using namespace std;
-
-extern std::string CrabStringTrim(const string &t, int trimflag);
-
-
-
-
-
-/* Struct Data Class */
-/*
- -> XStr    the X array in string format, full size
- -> YStr    the Y array in string format, full size
- -> X       the X array that matches obs, the same size as obs data
- -> Y       the Y array that matches obs, the same size as obs data
- -> CVAR    the column number of variable X and Y
- -> CPAR    the column number of parameter 1,2,3,...
- -> NVAR    the number count of variable, should be 2 because there are only two variable X and Y
- -> NPAR    the number count of parameters, can be any >=1, e.g. 2 if we have T_kin and n_H_2 when doing LVG modelling
- */
-class michi2DataClass {
-public:
-    std::vector<double> X;    std::vector<double> Y;    std::vector<double>  YErr;     std::vector<int>  Matched;
-    std::vector<string> XStr; std::vector<string> YStr; std::vector<string>  YErrStr;  long XCol; long YCol; long YErrCol; long XNum; long YNum;
-    std::vector<std::vector<double> > FVAR;             std::vector<long>    NVAR;     std::vector<long> CVAR;
-    std::vector<std::vector<double> > FPAR;             std::vector<long>    NPAR;     std::vector<long> CPAR;   std::vector<string> TPAR;
-    std::ifstream                     FileStream;       std::string          FilePath;
-    // FVAR[0] = X,    FVAR[1] = Y
-    // FPAR[0] = PAR1, FPAR[1] = PAR2, ...
-    std::vector<string> FilterCurveFilePath; // <added><20171001>
-    michi2DataClass(const char * InputFile, int verbose = 1);
-    ~michi2DataClass();
-    const char *michi2sprint(const char* wsPrefix, long wi, const char* wsSuffix);
-    int michi2stoi(string str);
-    int michi2wstoi(wstring wstr);
-    std::vector<double> michi2stod(std::vector<string> strVec);
-    std::vector<double> michi2wstod(std::vector<wstring> wstrVec);
-    std::vector<std::string> getDataBlock(long lineNumber, long lineCount, int debug = 0); // this function load data block into this->X, this->Y
-    std::vector<std::string> readFilterCurveListFile(const char * InputFile);
-};
-
-
-
-
-
-
-
-
 
 
 michi2DataClass::michi2DataClass(const char *InputFile, int verbose)
@@ -238,7 +181,7 @@ std::vector<std::string> michi2DataClass::getDataBlock(long lineNumber, long lin
         getline(*backstory,backline);
         textblock.push_back(backline);
         if(debug) { std::cout << "getDataBlock: " << backline << std::endl; }
-
+        
     }   if(debug) { std::cout << "getDataBlock: " << std::endl; } // <TODO><DEBUG>
     // read data <TODO>
     std::vector<std::string>  StFX = CrabStringReadColumn(textblock,this->XCol);
@@ -270,7 +213,7 @@ std::vector<std::string> michi2DataClass::readFilterCurveListFile(const char * I
     // second is the filter curve file path for each wavelength.
     //std::cout << "michi2DataClass::readFilterCurveListFile()" << std::endl;
     //int ReadRowNumber = 0;
-    this->FilterCurveFilePath = CrabTableReadColumn(InputFile, 2); // we use two white space to separate columns
+    this->FilterCurveFilePath = CrabTableReadColumn(InputFile, 2); // we use two white space to separate columns, read the second column.
     if(this->FilterCurveFilePath.size()!=this->X.size()) {this->FilterCurveFilePath.clear();}
     if(this->FilterCurveFilePath.size()==0) {this->FilterCurveFilePath.resize(this->X.size());}
     for(int i=0; i<this->FilterCurveFilePath.size(); i++) {
@@ -296,4 +239,11 @@ std::vector<std::string> michi2DataClass::readFilterCurveListFile(const char * I
 
 
 
-#endif
+
+
+
+
+
+
+
+

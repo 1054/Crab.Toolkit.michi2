@@ -1,0 +1,6 @@
+OBS = flux_obsframe.dat
+NLIB = 3
+LIB1 = FSPS.Padova.BaSeL.Z0.0190.EBV.lib.SED
+LIB2 = DL07.LoExCom.SPAH.lib.SED
+LIB3 = RadioPowerlaw.Single.lib.SED
+OUT = fit.out

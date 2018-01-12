@@ -1,0 +1,6 @@
+
+Best-fit EBV = 0.300
+Best-fit Age = 1.18850 # Gyr
+Best-fit Metallicity = 0.01900 # Zs=0.0190
+Best-fit M_star = 5.646e+11 # M_sun/yr
+

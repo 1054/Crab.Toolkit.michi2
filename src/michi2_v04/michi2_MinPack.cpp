@@ -1,18 +1,4 @@
-#ifndef H_michi2MinPack
-#define H_michi2MinPack
-#include <stdio.h>
-#include <math.h>
-#include <string>
-#include <vector>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <numeric>
-#include <cmath>
-#include "CrabTableReadColumn.cpp"
-#include "CrabStringReadColumn.cpp"
-#include "CrabTableReadInfo.cpp"
-#include "CrabTableGetLineCount.cpp"
+#include "michi2_MinPack.h"
 #include "cminpack/minpack.h"
 #include "cminpack/lmdif1_.c"
 #include "cminpack/lmdif_.c"
@@ -23,27 +9,25 @@
 #include "cminpack/qrfac_.c"
 #include "cminpack/qrsolv_.c"
 
-using namespace std;
 
 
-std::vector<double>                 michi2MinPack_fOBS;
-std::vector<double>                 michi2MinPack_eOBS;
-std::vector<double>                 michi2MinPack_aCOE;
-std::vector<std::vector<double> >   michi2MinPack_fLIB;
-long                                michi2MinPack_ncount = 0;
-struct michi2MinPack_constraint { int to=-1; std::vector<int> from; std::vector<double> multiplication; double addition=0.0; }; //<Added><20171001> allow to constraint aCOE of LIB, for example, lock LIB1 normalization coefficient = LIB2 normalization coefficient * 100, this is useful in locking radio SED to IR(8-1000um) via the IR-radio correlation.
+/* global variables */
+
+std::vector<double> michi2MinPack_fOBS;
+
+std::vector<double> michi2MinPack_eOBS;
+
+std::vector<double> michi2MinPack_aCOE;
+
+std::vector<std::vector<double> > michi2MinPack_fLIB;
+
+long michi2MinPack_ncount = 0;
+
 std::vector<michi2MinPack_constraint *> michi2MinPack_constraints; //<Added><20171001>
 
 
 
-
-
-
-
-
-
-
-void michi2MinPack_func(const int *m, const int *n, const double *x, double *fvec, int *iflag);
+/* global function */
 
 void michi2MinPack_func(const int *m, const int *n, const double *x, double *fvec, int *iflag)
 {
@@ -57,7 +41,10 @@ void michi2MinPack_func(const int *m, const int *n, const double *x, double *fve
         double *acoe = (double *)x; // x is the coefficiency a
         for (int iin=0; iin<(*n); iin++) { if(x[iin]<0.0) acoe[iin]=0.0; else acoe[iin]=x[iin]; } // <TODO> how to prevent coeff a to be negative?
         //
-        // <added><20171001> apply constraints directly on LIB normalization factors (i.e. aCOE)
+        // <added><20171001>
+        // we now allow to fix the normalization of one LIB to the normalization of other LIBs.
+        // i.e., apply constraints directly on LIB normalization factors (i.e. aCOE)
+        // to do so, we can input the argument like "-constraint LIB5 NORM EQ SED vLv(8,1000)*1.061619121e-06"
         if(michi2MinPack_constraints.size()>0) {
             for(int iicon=0; iicon<michi2MinPack_constraints.size(); iicon++) {
                 michi2MinPack_constraint *temp_constraint = michi2MinPack_constraints[iicon];
@@ -110,34 +97,13 @@ void michi2MinPack_func(const int *m, const int *n, const double *x, double *fve
 
 
 
-/* Struct Min Pack */
+
+
+
 /*
-   based on cminpack by 
- */
-class michi2MinPack {
-public:
-    std::vector<double> fOBS;
-    std::vector<double> eOBS;
-    std::vector<std::vector<double> > fLIB;
-    std::vector<double> aCOE;
-    std::vector<double> chi2;
-    michi2MinPack(std::vector<std::vector<double> > Input_fLIB, std::vector<double> Input_fOBS, std::vector<double> Input_eOBS, int Input_debug = 0);
-    void func(const int *m, const int *n, const double *x, double *fvec, int *iflag);
-    void init(std::vector<std::vector<double> > Input_fLIB, std::vector<double> Input_fOBS, std::vector<double> Input_eOBS, int Input_debug = 0);
-    void constrain(int toLib, std::vector<int> fromLibs, std::vector<double> multiplication_factors);
-    void constrain(int toLib, int fromLib, double multiplication_factor);
-    void fit(int Input_debug = 0);
-    double mean(std::vector<double> data);
-};
-
-
-
-
-
-
-
-
-
+   Struct Min Pack
+   based on cminpack
+*/
 
 michi2MinPack::michi2MinPack(std::vector<std::vector<double> > Input_fLIB, std::vector<double> Input_fOBS, std::vector<double> Input_eOBS, int Input_debug)
 {
@@ -147,6 +113,7 @@ michi2MinPack::michi2MinPack(std::vector<std::vector<double> > Input_fLIB, std::
     //fit(Input_debug);
     //
 }
+
 
 
 void michi2MinPack::init(std::vector<std::vector<double> > Input_fLIB, std::vector<double> Input_fOBS, std::vector<double> Input_eOBS, int Input_debug)
@@ -199,6 +166,7 @@ void michi2MinPack::init(std::vector<std::vector<double> > Input_fLIB, std::vect
 void michi2MinPack::constrain(int toLib, std::vector<int> fromLibs, std::vector<double> multiplication_factors)
 {
     // <20171001>
+    // add a constraint to (michi2MinPack_constraints) letting (toLib) equals (multiplication_factors*fromLibs)
     michi2MinPack_constraint *temp_constraint = new michi2MinPack_constraint();
     temp_constraint->to = toLib;
     temp_constraint->from.resize(fromLibs.size()); for(int k=0; k<fromLibs.size(); k++) {temp_constraint->from[k] = fromLibs[k];}
@@ -326,4 +294,3 @@ double michi2MinPack::mean(std::vector<double> data)
 
 
 
-#endif

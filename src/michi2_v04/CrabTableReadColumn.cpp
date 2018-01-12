@@ -274,7 +274,7 @@ std::vector<std::string> CrabTableReadColumn(const char *InputFile, const char *
             }
         }
         else {
-            std::cout << "CrabTableReadColumn: Unable to open file! Please check " << InputFile << std::endl;
+            std::cout << "CrabTableReadColumn: Unable to open file! Please check \"" << InputFile << "\"" << std::endl;
         }
     }
     // if(debug) {

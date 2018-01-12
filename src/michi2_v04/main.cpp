@@ -22,8 +22,9 @@
 #include <iostream>     // std::cout, std::endl
 #include <iomanip>      // std::setw
 #include <time.h>
-#include "michi2_Constraint.h"
-#include "michi2_v04.cpp"
+#include "michi2_v04.h" // Constraints,
+#include "currentdatetime.cpp"
+extern const std::string currentDateTime();
 
 using namespace std;
 
@@ -232,7 +233,8 @@ int main(int argc, char **argv)
         std::cout << "                  #     obs-frame wavelength and filter transmission value normalized to 1.\n";
         std::cout << "       \n";
         std::cout << "Version: \n";
-        std::cout << "         michi2_v04 " << "2017-10-01 Heidelberg" << std::endl;
+        std::cout << "         michi2_v04 " << "2018-01-10 Heidelberg" << std::endl;
+        //std::cout << "         michi2_v04 " << "2017-10-01 Heidelberg" << std::endl;
         std::cout << std::endl;
         
         /*

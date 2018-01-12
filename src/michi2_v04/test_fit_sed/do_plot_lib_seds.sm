@@ -1,0 +1,43 @@
+plot_lib_seds
+    # 
+    # usage:
+    #   sm
+    #   macro read do_plot_lib_seds.sm plot_lib_seds
+    # 
+    device x11
+    xtcolours
+    define TeX_strings 1
+    erase
+    expand 1.50
+    limits -1.5 5.5 -8 3
+    ticksize -1 10 -1 10
+    ctype default
+    box
+    expand 2.05
+    xlabel "{\lambda} [{\mu}m]"
+    ctype blue
+    plot_one_sed 0
+    ctype skyblue
+    plot_one_sed 5
+    ctype seagreen
+    plot_one_sed 10
+    ctype yellow
+    plot_one_sed 20
+    ctype orange
+    plot_one_sed 30
+    ctype orangered
+    plot_one_sed 40
+    ctype red
+    plot_one_sed 50
+
+plot_one_sed 01
+    # 
+    data "DL07.HiExCom.SPAH.lib.SED"
+    lines $(19+$1*1001) $(19+$1*1001+1001-1)
+    read {w 1 f 2}
+    set lg_w = lg(w)
+    set lg_f = lg(f)
+    connect lg_w lg_f
+
+
+

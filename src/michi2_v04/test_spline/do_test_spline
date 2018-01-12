@@ -1,0 +1,13 @@
+#!/bin/bash
+# 
+
+if [[ -f test_spline ]]; then rm test_spline; fi
+
+clang++ -I../3rd/epsplot -I../ -Wno-format-security -std=c++11 test_spline.cpp -o test_spline
+
+if [[ -f test_spline ]]; then
+    ./test_spline
+    ls
+fi
+
+

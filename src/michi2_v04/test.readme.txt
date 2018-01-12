@@ -1,0 +1,1 @@
+./michi2_v03 -obs test/flux-co-ngc1068.dat -lib test/lib.lvg test/lib.lvg test/lib.lvg -out test/out.out
