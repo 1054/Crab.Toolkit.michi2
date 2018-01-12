@@ -4,10 +4,10 @@
 import os
 import sys
 
-#sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
-#sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabplot')
-sys.path.insert(1, '/Users/dzliu/Softwares/Python/lib/crab/crabtable')
-sys.path.insert(1, '/Users/dzliu/Softwares/Python/lib/crab/crabplot')
+sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
+sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabplot')
+#sys.path.insert(1, '/Users/dzliu/Softwares/Python/lib/crab/crabtable')
+#sys.path.insert(1, '/Users/dzliu/Softwares/Python/lib/crab/crabplot')
 
 from CrabTable import *
 from CrabPlot import *
