@@ -1,0 +1,12 @@
+#      wavelength_um   filter_curve
+#
+             3.56343    none
+             3.56343    none
+             4.51101    none
+             5.75934    none
+             7.95949    none
+                  24    filters/filter_curve_24um.dat
+                 100    none
+                 160    none
+                 250    none
+                 350    none

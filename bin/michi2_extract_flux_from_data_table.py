@@ -756,13 +756,34 @@ def recognize_Filter(input_str, special_file_name=''):
 #               MAIN PROGRAM             #
 ##########################################
 
-if len(sys.argv) == 1:
+if len(sys.argv) <= 1:
     
     print('Usage: michi2_extract_flux_from_data_table.py catalog_input.fits 23434')
     sys.exit()
 
-else:
 
+# Read input args
+DataFile = ''
+SourceID_Inputs = []
+MaxSNR = numpy.nan
+i = 0
+while i <= (len(sys.argv)-1):
+    if i >= 1:
+        if not sys.argv[i].startswith('-'):
+            if DataFile == '':
+                DataFile = sys.argv[i]
+            else:
+                SourceID_Inputs.append(sys.argv[i])
+        elif sys.argv[i].upper() == '-MAXSNR':
+            i = i + 1
+            if i <= (len(sys.argv)-1) and numpy.isnan(MaxSNR):
+                MaxSNR = float(sys.argv[i])
+                print('# Setting max SNR limit to %s'%(MaxSNR))
+    i = i + 1
+
+
+# Read data file
+if DataFile != '':
     DataFile = sys.argv[1]
     print('# Reading "%s"'%(DataFile))
     DataTable = CrabTable(DataFile, verbose=0)
@@ -812,10 +833,9 @@ else:
     
     SourceID_Match = []
     
-    if len(sys.argv) > 2:
+    if len(SourceID_Inputs) > 0:
         
-        for i in range(len(sys.argv)-2):
-            SourceID_Input = sys.argv[i+2]
+        for SourceID_Input in SourceID_Inputs:
             print('# Getting Source by the input name or id "%s"'%(SourceID_Input))
             # 
             # check the SourceID_Input type (dict or str)
@@ -941,6 +961,10 @@ else:
             FilterFlux = float(SED[k]['Flux'])
             FilterFErr = float(SED[k]['FluxErr'])
             FilterFluxUnit = str(SED[k]['FluxUnit'])
+            # MaxSNR (20180111)
+            if MaxSNR > 0:
+                if (FilterFErr>0) and (FilterFlux>MaxSNR*FilterFErr):
+                    FilterFErr = FilterFlux/MaxSNR
             # print
             if k == 0:
                 print("# %-20s %-18s %-18s %-12s %-s"%('Wave', 'Flux', 'FluxErr', 'FluxUnit', 'FilterName'))

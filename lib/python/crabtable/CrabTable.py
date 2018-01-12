@@ -173,13 +173,21 @@ class CrabTable(object):
     def getColumn(self, ColNameOrNumb):
         if type(ColNameOrNumb) is str or type(ColNameOrNumb) is numpy.string_:
             if ColNameOrNumb in self.TableHeaders:
-                return self.TableData.field(ColNameOrNumb)
+                GotDataColumn = self.TableData.field(ColNameOrNumb)
+                if type(GotDataColumn) is astropy.table.Column:
+                    return GotDataColumn.data
+                else:
+                    return GotDataColumn
             else:
                 print("Error! Column name \"%s\" was not found in the data table!"%(ColNameOrNumb))
                 return []
         else:
             if ColNameOrNumb >= 1 and ColNameOrNumb <= len(self.TableHeaders):
-                return self.TableData.field(self.TableHeaders[int(ColNameOrNumb)-1])
+                GotDataColumn = self.TableData.field(self.TableHeaders[int(ColNameOrNumb)-1])
+                if type(GotDataColumn) is astropy.table.Column:
+                    return GotDataColumn.data
+                else:
+                    return GotDataColumn
             else:
                 print("Error! Column number %d is out of allowed range (1 - %d)!"%(int(ColNameOrNumb),len(self.TableHeaders)))
                 return []
@@ -316,13 +324,23 @@ def CrabTableReadInfo(data_table, fits_extension=0, key_name=[], verbose=1):
         else:
             # open ASCII format data table with astropy.io.ascii
             # http://cxc.harvard.edu/contrib/asciitable/
-            data_table
+            #data_table
             with open(data_table, "r") as data_table_ptr:
                 data_table_lines = data_table_ptr.readlines()
                 for data_table_line in data_table_lines:
                     data_table_line_items = data_table_line.split('=')
                     if len(data_table_line_items)>=2:
-                        InfoDict[data_table_line_items[0].strip()] = data_table_line_items[1].strip()
+                        data_table_line_item_key = data_table_line_items[0].strip()
+                        data_table_line_item_value = data_table_line_items[1].strip()
+                        if verbose>=2:
+                            print('CrabTableReadInfo: data_table_line_item_key = %s'%(data_table_line_item_key))
+                            print('CrabTableReadInfo: data_table_line_item_value = %s'%(data_table_line_item_value))
+                        if data_table_line_item_value.find('#') > 0:
+                            InfoDict[data_table_line_item_key] = data_table_line_item_value.split('#')[0].strip()
+                        else:
+                            InfoDict[data_table_line_item_key] = data_table_line_item_value
+    else:
+        print('CrabTableReadInfo: Error! "%s" was not found!'%(data_table))
     # 
     # return
     return InfoDict

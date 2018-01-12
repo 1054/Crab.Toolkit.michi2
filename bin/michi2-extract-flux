@@ -19,6 +19,7 @@ usage() {
     echo "Usage: "
     echo "  michi2-extract-flux -catalog aaa.fits"
     echo "  michi2-extract-flux -catalog aaa.fits -id 222"
+    echo "  michi2-extract-flux -catalog aaa.fits -maxsnr 10"
     echo ""
 }
 # 
@@ -145,6 +146,7 @@ m_ScriptDir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 # 
 m_Catalogs=()
 m_Sources=()
+m_MaxSNR=""
 m_OutputDir=""
 m_Input_ArgType="N/A"
 
@@ -165,6 +167,10 @@ while [[ $# -gt 0 ]]; do
                     
            "-OUT"*) TempCmd="$1"; shift
                     m_Input_ArgType="OutputDir"
+                    ;;
+                    
+        "-MAXSNR"*) TempCmd="$1"; shift
+                    m_Input_ArgType="MaxSNR"
                     ;;
                     
                  *) #echo "$1"
@@ -204,6 +210,19 @@ while [[ $# -gt 0 ]]; do
                                         # check followed argument
                                         if [[ $# -ge 1 ]]; then
                                             m_OutputDir="$1"
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                               "MaxSNR") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_MaxSNR="$1"
                                         else
                                             echo ""
                                             echo "Error! Input argument $TempCmd should be followed with 1 argument!"
@@ -279,8 +298,13 @@ for (( i=0; i<${#m_Catalogs[@]}; i++ )); do
         cd "$m_OutputDir"
     fi
     
-    echo "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" ">" "extracted_flux.log"
-    "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" | tee "extracted_flux.log"
+    if [[ ! -z "$m_MaxSNR" ]]; then
+        echo "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" -maxsnr "$m_MaxSNR" ">" "extracted_flux.log"
+        "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" -maxsnr "$m_MaxSNR" | tee "extracted_flux.log"
+    else
+        echo "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" ">" "extracted_flux.log"
+        "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" | tee "extracted_flux.log"
+    fi
     
     if [[ ${#m_Catalogs[@]} -gt 1 ]]; then
         if [[ ${#m_Sources[@]} -gt 0 ]]; then

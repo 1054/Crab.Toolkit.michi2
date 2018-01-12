@@ -1,6 +1,7 @@
 makelibSED_DL07
     # 
     # Usage:
+    #     sm # also need "https://github.com/1054/DeepFields.SuperDeblending/Softwares/Supermongo_macro"
     #     macro read makelibSED_DL07.sm makelibSED_DL07
     # 
     # Note:
@@ -10,6 +11,12 @@ makelibSED_DL07
     # data "list_uvista_cosmos.bands.txt"
     # read {tBands 1.s fWaves 2}
     set nWav = 1001 # the DL07spec has 1001 wavelengths
+    # 
+    # 
+    load astroSfig.sm
+    # 
+    # 
+    !ln -s ../01_SED_Models/DL07/DL07spec
     # 
     # 
     getDL07Spec
@@ -23,8 +30,8 @@ makelibSED_DL07
     }
     # 
     # 
-    writeLibHead "DL07.LoExCom.lib.SED"
-    writeLibHead "DL07.HiExCom.lib.SED"
+    writeLibHead "lib.DL07.LoExCom.SED"
+    writeLibHead "lib.DL07.HiExCom.SED"
     # 
     # 
     do iTMP = 0, dimen(fUmn)-1 {
@@ -37,8 +44,10 @@ makelibSED_DL07
             set dimen(fLoExPAH) = dimen(fLoExCom) set fLoExPAH[0,dimen(fLoExPAH)-1]=fPAH[$jTMP]
             set dimen(fHiExPAH) = dimen(fHiExCom) set fHiExPAH[0,dimen(fHiExPAH)-1]=fPAH[$jTMP]
             sort {lambda fLoExCom fLoExUmn fLoExPAH fHiExCom fHiExUmn fHiExPAH}
-            print +"DL07.LoExCom.lib.SED" '%15.6e%15.6e%12.6f%12.6f\n' {lambda fLoExCom fLoExUmn fLoExPAH}
-            print +"DL07.HiExCom.lib.SED" '%15.6e%15.6e%12.6f%12.6f\n' {lambda fHiExCom fHiExUmn fHiExPAH}
+            set fLoExLTIR = lambda*0.0 + lg(calc_ltir(lambda,fLoExCom))
+            set fHiExLTIR = lambda*0.0 + lg(calc_ltir(lambda,fHiExCom))
+            print +"lib.DL07.LoExCom.SED" '%15.6e%15.6e%12.6f%12.6f%12.6f\n' {lambda fLoExCom fLoExUmn fLoExPAH fLoExLTIR}
+            print +"lib.DL07.HiExCom.SED" '%15.6e%15.6e%12.6f%12.6f%12.6f\n' {lambda fHiExCom fHiExUmn fHiExPAH fHiExLTIR}
             undef print_noheader
         }
     }
@@ -125,16 +134,19 @@ writeLibHead 01
     print +$1 '\# CVAR2 = 2 \# the colomn number of VAR2\n' {}
     print +$1 '\# NVAR1 = $(nWav) \# NAXIS1\n' {}
     print +$1 '\# NVAR2 = $(dimen(fPAH)*dimen(fUmn)) \# NAXIS2\n' {}
-    print +$1 '\# NPAR  = 2 \# Parameter 1 2 3 ...\n' {}
+    print +$1 '\# NPAR  = 3 \# Parameter 1 2 3 ...\n' {}
     print +$1 '\# TPAR1 = Umin\n' {}
     print +$1 '\# TPAR2 = qPAH\n' {}
+    print +$1 '\# TPAR3 = lgLTIR \# log of the integrated flux density over rest-frame 8-1000 um\n' {}
     print +$1 '\# NPAR1 = $(dimen(fUmn))\n' {}
     print +$1 '\# NPAR2 = $(dimen(fPAH))\n' {}
+    print +$1 '\# NPAR3 = 1 \# non-indepedent\n' {}
     print +$1 '\# CPAR1 = 3\n' {}
     print +$1 '\# CPAR2 = 4\n' {}
+    print +$1 '\# CPAR3 = 5\n' {}
     print +$1 '\# \n' {}
-    print +$1 '\#        lambda           flux        Umin        qPAH\n' {}
-    print +$1 '\#          [um]          [mJy]                        \n' {}
+    print +$1 '\#        lambda           flux        Umin        qPAH      lgLTIR\n' {}
+    print +$1 '\#          [um]          [mJy]                            [solLum]\n' {}
     return
 
 
