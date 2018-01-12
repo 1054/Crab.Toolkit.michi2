@@ -58,12 +58,12 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     # 
     echo "#!/bin/bash" > "run_fitting_5_components.sh"
     echo "#" >> "run_fitting_5_components.sh"
-    echo "$(dirname ${BASH_SOURCE[0]})/michi2-run-fitting-5-components $@" >> "run_fitting_5_components.sh"
+    echo "$(dirname ${BASH_SOURCE[0]})/michi2-run-fitting-5-components \$@" >> "run_fitting_5_components.sh"
     chmod +x "run_fitting_5_components.sh"
     # 
     echo "#!/bin/bash" > "run_plotting_5_components.sh"
     echo "#" >> "run_plotting_5_components.sh"
-    echo "$(dirname ${BASH_SOURCE[0]})/michi2-plot-results-of-fitting-5-components $@" >> "run_plotting_5_components.sh"
+    echo "$(dirname ${BASH_SOURCE[0]})/michi2-plot-results-of-fitting-5-components \$@" >> "run_plotting_5_components.sh"
     chmod +x "run_plotting_5_components.sh"
     # 
 elif echo "$deploy_type" | grep -q -i "LVG"; then
