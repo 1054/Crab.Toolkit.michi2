@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 
-if [[ $(type michi2_plot_SED_fitting_results.py 2>/dev/null) -eq 0 ]]; then
+if [[ $(type michi2_plot_SED_fitting_results.py 2>/dev/null | wc -l) -eq 0 ]]; then
     if [[ -f "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash" ]]; then
         #echo source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
         source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
