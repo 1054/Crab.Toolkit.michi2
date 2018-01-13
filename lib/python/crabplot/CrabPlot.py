@@ -43,6 +43,7 @@ import inspect
 import math
 import numpy
 import scipy
+import scipy.interpolate
 from scipy.interpolate import interp1d
 from scipy.interpolate import UnivariateSpline
 import astropy
@@ -185,36 +186,59 @@ class CrabPlot(object):
     def get_grid_position_in_gridspec(self):
         # 
         # override gridspec.py get_grid_position()
+        # see https://github.com/Goldcap/Constellation/blob/master/trunk/testing/matplotlib-1.0.1/build/lib.linux-x86_64-2.6/matplotlib/gridspec.py
+        # 
+        debug = 0
         # 
         nrows, ncols = self.Plot_grids.get_geometry()
         #nrows = long(nrows)
         #ncols = long(ncols)
         nrows = int(nrows) # Python 3 has no 'long' type anymore
         ncols = int(ncols) # Python 3 has no 'long' type anymore
-        
+        # 
         subplot_params = self.Plot_grids.get_subplot_params(self.Plot_device)
-        left = subplot_params.left
-        right = subplot_params.right
-        bottom = subplot_params.bottom
-        top = subplot_params.top
-        wspace = subplot_params.wspace
-        hspace = subplot_params.hspace
-        totWidth = right-left
-        totHeight = top-bottom
-        
+        left = subplot_params.left # the full image left,right,top,bottom margin
+        right = subplot_params.right # the full image left,right,top,bottom margin
+        top = subplot_params.top # the full image left,right,top,bottom margin
+        bottom = subplot_params.bottom # the full image left,right,top,bottom margin
+        wspace = subplot_params.wspace # horizontal cell spacing
+        hspace = subplot_params.hspace # vertical cell spacing
+        totWidth = right-left # all-panel width
+        totHeight = top-bottom # all-panel height
+        # 
         # calculate accumulated heights of columns
-        cellH = totHeight/(nrows + hspace*(nrows-1))
-        sepH = hspace*cellH
-        
+        cellH = totHeight/(nrows+hspace*(nrows-1)) # assuming panels are uniformly distributed
+        sepH = hspace*cellH # hspace is relative to each cell height
+        # 
         if self.Plot_grids._row_height_ratios is not None:
             netHeight = cellH * nrows
             tr = float(sum(self.Plot_grids._row_height_ratios))
             cellHeights = [netHeight*r/tr for r in self.Plot_grids._row_height_ratios]
         else:
             cellHeights = [cellH] * nrows
-            
+        
         sepHeights = [0] + ([sepH] * (nrows-1))
+        
         cellHs = numpy.add.accumulate(numpy.ravel(list(zip(sepHeights, cellHeights))))
+        # 20180112 dzliu - adding margins (the margins are also relative to the size of each cell, similar to hspace and wspace)
+        margin_top_of_current_row = 0.0
+        margin_bottom_of_current_row= 0.0
+        for j in range(nrows):
+            margin_top_of_cells_in_a_row = [0.0]
+            margin_bottom_of_cells_in_a_row = [0.0]
+            for k in range(ncols):
+                i = j * ncols + k
+                if i < len(self.Plot_panels):
+                    margin_top_of_cells_in_a_row.append(self.Plot_panels[i]['margin-top'])
+                    margin_bottom_of_cells_in_a_row.append(self.Plot_panels[i]['margin-bottom'])
+            margin_top_of_current_row = numpy.nanmax(numpy.array(margin_top_of_cells_in_a_row))
+            margin_bottom_of_current_row = numpy.nanmax(numpy.array(margin_bottom_of_cells_in_a_row))
+            if debug>=1:
+                print('CrabPlot::get_grid_position_in_gridspec() adding vertical margins for cell at col %d row %d: top = %s, bottom = %s'%(k+1, j+1, margin_top_of_current_row, margin_bottom_of_current_row))
+            # now we consider the margin-top/bottom of each cell
+            cellHs[2*j+0] = cellHs[2*j+0] + margin_top_of_current_row*cellH
+            cellHs[2*j+1] = cellHs[2*j+1] - margin_bottom_of_current_row*cellH
+        # -- dzliu -- now added margins
         
         # calculate accumulated widths of rows
         cellW = totWidth/(ncols + wspace*(ncols-1))
@@ -228,12 +252,46 @@ class CrabPlot(object):
             cellWidths = [cellW] * ncols
         
         sepWidths = [0] + ([sepW] * (ncols-1))
+        
         cellWs = numpy.add.accumulate(numpy.ravel(list(zip(sepWidths, cellWidths))))
+        # 20180112 dzliu - adding margins (the margins are also relative to the size of each cell, similar to hspace and wspace)
+        margin_left_of_current_col = 0.0
+        margin_right_of_current_col= 0.0
+        for k in range(ncols):
+            margin_left_of_cells_in_a_col = [0.0]
+            margin_right_of_cells_in_a_col = [0.0]
+            for j in range(nrows):
+                i = j * ncols + k
+                if i < len(self.Plot_panels):
+                    margin_left_of_cells_in_a_col.append(self.Plot_panels[i]['margin-left'])
+                    margin_right_of_cells_in_a_col.append(self.Plot_panels[i]['margin-right'])
+            margin_left_of_current_col = numpy.nanmax(numpy.array(margin_left_of_cells_in_a_col))
+            margin_right_of_current_col = numpy.nanmax(numpy.array(margin_right_of_cells_in_a_col))
+            if debug>=1:
+                print('CrabPlot::get_grid_position_in_gridspec() adding horizontal margins for cell at col %d row %d: left = %s, right = %s'%(k+1, j+1, margin_left_of_current_col, margin_right_of_current_col))
+            # now we consider the margin-left/right of each cell
+            cellWs[2*k+0] = cellWs[2*k+0] + margin_left_of_current_col*cellW
+            cellWs[2*k+1] = cellWs[2*k+1] - margin_right_of_current_col*cellW
+        # -- dzliu -- now added margins
+        
+        # 
+        # debug
+        if debug>=1:
+            print('CrabPlot::get_grid_position_in_gridspec() cell position x coordinates (lower, upper) pairs: ', cellHs)
+            print('CrabPlot::get_grid_position_in_gridspec() cell position y coordinates (lower, upper) pairs: ', cellWs)
         
         figTops = [top - cellHs[2*rowNum] for rowNum in range(nrows)]
         figBottoms = [top - cellHs[2*rowNum+1] for rowNum in range(nrows)]
         figLefts = [left + cellWs[2*colNum] for colNum in range(ncols)]
         figRights = [left + cellWs[2*colNum+1] for colNum in range(ncols)]
+        
+        # 
+        # debug
+        if debug>=1:
+            print('CrabPlot::get_grid_position_in_gridspec() figBottoms: ', figBottoms)
+            print('CrabPlot::get_grid_position_in_gridspec() figTops: ', figTops)
+            print('CrabPlot::get_grid_position_in_gridspec() figLefts: ', figLefts)
+            print('CrabPlot::get_grid_position_in_gridspec() figRights: ', figRights)
         
         return figBottoms, figTops, figLefts, figRights
     # 
@@ -248,6 +306,7 @@ class CrabPlot(object):
         nrows = int(nrows) # Python 3 has no 'long' type anymore
         ncols = int(ncols) # Python 3 has no 'long' type anymore
         
+        #print('CrabPlot::get_panel_position_in_gridspec() left, bottom, top, right', left, bottom, top, right)
         figBottoms, figTops, figLefts, figRights = self.get_grid_position_in_gridspec()
         rowNum, colNum =  divmod(num1, ncols)
         figBottom = figBottoms[rowNum]
@@ -274,6 +333,62 @@ class CrabPlot(object):
             return figbox, rowNum, colNum, nrows, ncols
         else:
             return figbox
+    # 
+    #def get_left_right_top_bottom_margins(self, i):
+    #    # 20180112 load left, right, top, bottom margins for the panel i.
+    #    if i < len(self.Plot_panels):
+    #        if left is not None:
+    #            if not numpy.isnan(left):
+    #                self.Plot_panels[i]['margin-left'] = left
+    #                print('CrabPlot::get_left_right_top_bottom_margins() Setting left margin to %s for panel index %d'%(left, i))
+    #            else:
+    #                del self.Plot_panels[i]['margin-left']
+    #                left = None
+    #        else:
+    #            if 'margin-left' in self.Plot_panels[i]:
+    #                left = self.Plot_panels[i]['margin-left']
+    #            else:
+    #                left = None
+    #        # 
+    #        if right is not None:
+    #            if not numpy.isnan(right):
+    #                self.Plot_panels[i]['margin-right'] = right
+    #                print('CrabPlot::get_left_right_top_bottom_margins() Setting right margin to %s for panel index %d'%(right, i))
+    #            else:
+    #                del self.Plot_panels[i]['margin-right']
+    #                right = None
+    #        else:
+    #            if 'margin-right' in self.Plot_panels[i]:
+    #                right = self.Plot_panels[i]['margin-right']
+    #            else:
+    #                right = None
+    #        # 
+    #        if top is not None:
+    #            if not numpy.isnan(top):
+    #                self.Plot_panels[i]['margin-top'] = top
+    #                print('CrabPlot::get_left_right_top_bottom_margins() Setting top margin to %s for panel index %d'%(top, i))
+    #            else:
+    #                del self.Plot_panels[i]['margin-top']
+    #                top = None
+    #        else:
+    #            if 'margin-top' in self.Plot_panels[i]:
+    #                top = self.Plot_panels[i]['margin-top']
+    #            else:
+    #                top = None
+    #        # 
+    #        if bottom is not None:
+    #            if not numpy.isnan(bottom):
+    #                self.Plot_panels[i]['margin-bottom'] = bottom
+    #                print('CrabPlot::get_left_right_top_bottom_margins() Setting bottom margin to %s for panel index %d'%(bottom, i))
+    #            else:
+    #                del self.Plot_panels[i]['margin-bottom']
+    #                bottom = None
+    #        else:
+    #            if 'margin-bottom' in self.Plot_panels[i]:
+    #                bottom = self.Plot_panels[i]['margin-bottom']
+    #            else:
+    #                bottom = None
+    #    return left, right, top, bottom
     # 
     def add_panel(self, position = None, label = None, projection = None, debug = False):
         # aim: 
@@ -308,7 +423,8 @@ class CrabPlot(object):
                     #<2># self.Plot_panels[i]['panel'].change_geometry(grid_nx, grid_ny, i+1) # see -- http://stackoverflow.com/questions/22881301/changing-matplotlib-subplot-size-position-after-axes-creation
                     # 
                     # dzliu overriding gridspec.py get_position()
-                    self.Plot_panels[i]['panel'].set_position(self.get_panel_position_in_gridspec(i)) # see -- http://stackoverflow.com/questions/22881301/changing-matplotlib-subplot-size-position-after-axes-creation
+                    prev_position_in_gridspec = self.get_panel_position_in_gridspec(i)
+                    self.Plot_panels[i]['panel'].set_position(prev_position_in_gridspec) # see -- http://stackoverflow.com/questions/22881301/changing-matplotlib-subplot-size-position-after-axes-creation
                     self.Plot_panels[i]['panel'].set_subplotspec(self.Plot_grids[i])
                     
             # add new panel
@@ -322,10 +438,17 @@ class CrabPlot(object):
         # append to self.Plot_panels
         self.Plot_panels.append( { 'label': label, 'panel': panel, 'position': position, 
                                    'x': None, 'y': None, 'xerr': None, 'yerr': None, 'xlog': False, 'ylog': False, 'xrange': [], 'yrange': [], 
-                                   'image_data': None, 'image_wcs': None } )
+                                   'image_data': None, 'image_wcs': None, 
+                                   'margin-left':0.0, 'margin-bottom':0.0, 'margin-right':0.0, 'margin-top':0.0 } )
         # set ticks
         self.set_xticksize(panel=len(self.Plot_panels))
         self.set_yticksize(panel=len(self.Plot_panels))
+        # 
+        # dzliu overriding gridspec.py get_position()
+        i = len(self.Plot_panels)-1
+        current_position_in_gridspec = self.get_panel_position_in_gridspec(i)
+        self.Plot_panels[i]['panel'].set_position(current_position_in_gridspec)
+        self.Plot_panels[i]['panel'].set_subplotspec(self.Plot_grids[i])
         # return
         return self.Plot_panels[-1]
     # 
@@ -339,7 +462,7 @@ class CrabPlot(object):
         return ['NGC','Helvetica','sans-serif']
     # 
     def default_fontsize_for_axis_ticks(self):
-        return 13
+        return 12.5
     # 
     # def set_xrange
     def set_xrange(self, xrange, ax=None, panel=None):
@@ -505,6 +628,68 @@ class CrabPlot(object):
             ax.tick_params(axis='y', which='major', direction=majordirection, length=majorsize, width=majorwidth)
             ax.tick_params(axis='y', which='minor', direction=minordirection, length=minorsize, width=minorwidth)
     # 
+    # def set_grid_hspace
+    def set_grid_hspace(self, hspace = 0.05):
+        if len(self.Plot_panels)>0:
+            self.Plot_grids.update(hspace=hspace)
+    # 
+    # def set_grid_vspace
+    def set_grid_wspace(self, wspace = 0.05):
+        if len(self.Plot_panels)>0:
+            self.Plot_grids.update(wspace=wspace)
+    # 
+    # def set_figure_margin
+    def set_figure_margin(self, left=None, bottom=None, right=None, top=None):
+        # set the margin to the full image
+        self.Plot_device.subplots_adjust(left=left, bottom=bottom, right=right, top=top)
+        print('CrabPlot::set_figure_margin() left=, bottom, right, top', left, bottom, right, top)
+    # 
+    # def set_panel_margin
+    def set_panel_margin(self, i, left=None, bottom=None, right=None, top=None):
+        if i >= 0 and i < len(self.Plot_panels):
+            if left is not None:
+                self.Plot_panels[i]['margin-left'] = float(left)
+            if bottom is not None:
+                self.Plot_panels[i]['margin-bottom'] = float(bottom)
+            if right is not None:
+                self.Plot_panels[i]['margin-right'] = float(right)
+            if top is not None:
+                self.Plot_panels[i]['margin-top'] = float(top)
+        # then the figure will be updated only when called get_panel_position_in_gridspec
+        ## dzliu overriding gridspec.py get_position()
+        #current_position_in_gridspec = self.get_panel_position_in_gridspec(i)
+        #self.Plot_panels[i]['panel'].set_position(current_position_in_gridspec)
+        #self.Plot_panels[i]['panel'].set_subplotspec(self.Plot_grids[i])
+    # 
+    # def set_margin
+    def set_margin(self, ax=None, panel=None, left=None, bottom=None, right=None, top=None):
+        # if ax is not None, then get panel number and set margin for it
+        # in this case, we must need len(self.Plot_panels)>0
+        if ax is not None and len(self.Plot_panels)>0:
+            panel = None
+            if panel is None:
+                for i in range(len(self.Plot_panels)):
+                    if ax == self.Plot_panels[i]:
+                        panel = i+1
+            if panel is None:
+                raise Exception('Error! CrabPlot::set_margin() failed to set margin for ax = %s! It is not in self.Plot_panels?'%(ax))
+                return
+        # else if panel number is given
+        elif panel is not None and len(self.Plot_panels)>0:
+            # and if panel>0, then set panel margin
+            if panel>0:
+                self.set_panel_margin(panel-1, left=left, bottom=bottom, right=right, top=top)
+            # otherwise if panel<=0, set figure margin
+            else:
+                self.set_figure_margin(left=left, bottom=bottom, right=right, top=top)
+        # else if nothing is given, set margins to the last panel
+        # in this case, we must also need len(self.Plot_panels)>0
+        elif len(self.Plot_panels)>0:
+            self.set_panel_margin(len(self.Plot_panels)-1, left=left, bottom=bottom, right=right, top=top)
+        # otherwise set figure margin
+        else:
+            self.set_figure_margin(left=left, bottom=bottom, right=right, top=top)
+    # 
     # def totuple
     def convert_array_to_tuple(self,a):
         try:
@@ -598,7 +783,7 @@ class CrabPlot(object):
         vertices.append((+0.0,+0.0)) ; codes.append(matplotlib.path.Path.STOP)
         return matplotlib.path.Path(vertices, codes)
     # 
-    def plot_xy(self, x, y, xerr = None, yerr = None, xlog = None, ylog = None, xrange = [], yrange = [], 
+    def plot_xy(self, x, y, xerr = None, yerr = None, xlog = None, ylog = None, xrange = None, yrange = None, 
                 ax = None, NormalizedCoordinate = False, overplot = False, current = 0, 
                 position = None, label = None, 
                 dataname = '', 
@@ -607,8 +792,9 @@ class CrabPlot(object):
                 symbol = 'o', symsize = 3, thick = 2, 
                 marker = None, size = None, color = 'blue', fillstyle = None, 
                 linestyle = 'None', linewidth = None, drawstyle = None, 
-                facecolor = None, edgecolor = None, edgewidth = None, alpha = 1.0, zorder = None, 
+                facecolor = None, edgecolor = None, edgewidth = None, alpha = 1.0, zorder = 5, 
                 uplims = None, lolims = None, 
+                margin = None, 
                 **kwargs):
         # inputs
         # -- ax is a direct 
@@ -628,6 +814,11 @@ class CrabPlot(object):
         plot_panel_ax, current, overplot = self.get_panel_ax(ax, current, overplot)
         # set grid
         plot_panel_ax.grid(False)
+        # set margin if x y title are given
+        if xtitle is not None:
+            self.set_margin(bottom=0.23)
+        if ytitle is not None:
+            self.set_margin(left=0.18)
         # check xlog ylog
         if xlog is not None:
             if type(xlog) is bool:
@@ -643,6 +834,8 @@ class CrabPlot(object):
         if symbol is not None and marker is None:
             if symbol == 'square':
                 marker = 's'
+            elif symbol == 'cross':
+                marker = 'x'
             elif symbol == 'open square' or symbol == 'open squares':
                 marker = 's'
                 facecolor = 'none'
@@ -743,6 +936,7 @@ class CrabPlot(object):
                     xtitle = None, ytitle = None, 
                     xtitlefontsize = 14, ytitlefontsize = 14, 
                     linestyle = 'solid', 
+                    margin = None, 
                     **kwargs):
         # get panel ax
         plot_panel_ax, current, overplot = self.get_panel_ax(ax, current, overplot)
@@ -868,19 +1062,49 @@ class CrabPlot(object):
         ax, current, overplot = self.get_panel_ax(ax, current, overplot)
         self.plot_text(x0, y0, text_input, ax = ax, NormalizedCoordinate = NormalizedCoordinate, **kwargs)
     # 
-    def plot_hist(self, x, y, ax = None, current = None, overplot = True, xtitle = None, ytitle = None, useTex = None, **kwargs):
+    def plot_hist(self, x, y, ax = None, current = None, overplot = True, xtitle = None, ytitle = None, xlog = None, ylog = None, useTex = None, 
+                    margin = None, xrange = None, yrange = None, 
+                    **kwargs):
+        # get panel ax
         plot_panel_ax, current, overplot = self.get_panel_ax(ax, current, overplot)
-        plot_panel_ax.bar(x, y, **kwargs)
+        # set margin if x y title are given
+        if xtitle is not None:
+            self.set_margin(bottom=0.2)
+        if ytitle is not None:
+            self.set_margin(left=0.15)
+        # set log
+        log = False
+        if xlog is not None:
+            if xlog > 0:
+                plot_panel_ax.set_xscale('log')
+                if current>0: self.Plot_panels[current-1]['xlog'] = xlog
+        if ylog is not None:
+            if ylog > 0:
+                plot_panel_ax.set_yscale('log')
+                if current>0: self.Plot_panels[current-1]['ylog'] = ylog
+                log = True
+        # plot histogram using the matplotlib bar() function
+        plot_panel_ax.bar(x, y, log=log, **kwargs)
+        # set titles
         if xtitle is not None:
             if xtitle != '':
                 #plot_panel_ax.set_xlabel(xtitle, fontsize=xtitlefontsize)
-                self.set_xtitle(xtitle, ax=plot_panel_ax, useTex=useTex)
+                self.set_xtitle(xtitle, ax=plot_panel_ax)
                 if current>0: self.Plot_panels[current-1]['xtitle'] = xtitle
         if ytitle is not None:
             if ytitle != '':
                 #plot_panel_ax.set_ylabel(ytitle, fontsize=ytitlefontsize)
-                self.set_ytitle(ytitle, ax=plot_panel_ax, useTex=useTex)
+                self.set_ytitle(ytitle, ax=plot_panel_ax)
                 if current>0: self.Plot_panels[current-1]['ytitle'] = ytitle
+        # set ranges
+        if xrange is not None:
+            if len(xrange) >= 2:
+                plot_panel_ax.set_xlim(xrange)
+                if current>0: self.Plot_panels[current-1]['xrange'] = xrange
+        if yrange is not None:
+            if len(yrange) >= 2:
+                plot_panel_ax.set_ylim(yrange)
+                if current>0: self.Plot_panels[current-1]['yrange'] = yrange
     # 
     def plot_image(self, image_data, image_wcs = None, position = None, label = None):
         # check image_data type

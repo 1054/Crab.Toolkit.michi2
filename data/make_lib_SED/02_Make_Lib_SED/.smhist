@@ -5,3 +5,5 @@ QUIT
 macro read make_Calzetti2000law.sm make_Calzetti2000law_FSPSlib
 QUIT
 quit
+macro read makelibSED_MullaneyAGN.sm makelibSED_MullaneyAGN
+quit

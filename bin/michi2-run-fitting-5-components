@@ -61,7 +61,7 @@ fi
 michi2_v04 -obs flux_obsframe.dat \
              -redshift $Redshift \
              -lib lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED \
-                  MullaneyAGN.Single.lib.SED \
+                  lib.MullaneyAGN.SED \
                   lib.DL07.HiExCom.SED \
                   lib.DL07.LoExCom.SED \
                   RadioPowerlaw.Single.lib.SED \

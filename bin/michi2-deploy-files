@@ -53,7 +53,9 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     #unzip -o "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
     #unzip -o "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.lib.zip"
     unzip -o "${deploy_upper_dir}/data/lib_SED/lib.DL07.DuoCom.SED.zip"
-    unzip -o "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.Single.lib.SED.zip"
+    #unzip -o "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.Single.lib.SED.zip"
+    #unzip -o "${deploy_upper_dir}/data/lib_SED/MullaneyAGN.lib.SED.zip"
+    unzip -o "${deploy_upper_dir}/data/lib_SED/lib.MullaneyAGN.SED.zip"
     unzip -o "${deploy_upper_dir}/data/lib_SED/RadioPowerlaw.Single.lib.SED.zip"
     # 
     echo "#!/bin/bash" > "run_fitting_5_components.sh"
