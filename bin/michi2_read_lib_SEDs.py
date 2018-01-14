@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 # 
 # Aim: 
 #      This code reads one solution of the michi2 SED fitting from the chisq table file, 
