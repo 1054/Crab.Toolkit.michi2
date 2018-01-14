@@ -68,8 +68,10 @@ michi2_v04 -obs flux_obsframe.dat \
              -out fit_5.out \
              -parallel $Parallel \
              -constraint LIB3 INDEX EQ LIB4 INDEX \
-             -constraint LIB5 NORM EQ SED "vLv(8,1000)*1.061619121e-06" \
              -filter filter.list
+             
+             # -constraint LIB5 NORM EQ SED "LIR(8,1000)*1.061619121e-06" \
+             # calc 1/3750/10**2.4 = 1.061619121e-06, qIR = 2.4. 
 
 
 

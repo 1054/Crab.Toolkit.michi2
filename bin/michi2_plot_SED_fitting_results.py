@@ -31,6 +31,16 @@ from copy import copy
 
 
 #########################################
+#               Constants               #
+#########################################
+
+Delta_chisq_of_interest = 5.89
+
+
+
+
+
+#########################################
 #               Functions               #
 #########################################
 
@@ -146,7 +156,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                                 size = 0.12, symbol = 'cross', xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
         # Plot Cut_chi2
-        Plot_engine.plot_line(param_min, 1/(chisq_min+5.89), param_max, 1/(chisq_min+5.89), overplot = True, linestyle = 'dashed')
+        Plot_engine.plot_line(param_min, 1/(chisq_min+Delta_chisq_of_interest), param_max, 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
         # 
         # Plot histogram
         Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step, align = 'edge', overplot = False, 
@@ -154,7 +164,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                                 xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
         # Plot Cut_chi2
-        Plot_engine.plot_line(param_min, 1/(chisq_min+5.89), param_max, 1/(chisq_min+5.89), overplot = True, linestyle = 'dashed')
+        Plot_engine.plot_line(param_min, 1/(chisq_min+Delta_chisq_of_interest), param_max, 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
         # 
     else:
         print('Error! analyze_chisq_distribution() got unaccepted inputs!')
@@ -243,15 +253,20 @@ else:
     #print(DataTable.TableHeaders)
     #print(DataArray['chi2'])
     SortedIndex = numpy.argsort(DataArray['chi2'])
-    SelectNumber = 10 #<TODO># how many SEDs to show?
-    SelectIndex = SortedIndex[0:(len(SortedIndex) if len(SortedIndex)<SelectNumber else SelectNumber)]
-    #print(DataTable.TableData[SelectIndex])
-    Arr_chi2 = DataArray['chi2'][SortedIndex]
-    Min_chi2 = numpy.nanmin(Arr_chi2[0:SelectNumber-1])
-    Max_chi2 = numpy.nanmax(Arr_chi2[0:SelectNumber-1])
-    Cut_chi2 = Min_chi2 + 5.89 # 5 parameter, 68% confidence
-    SelectNumber = len(numpy.argwhere(DataArray['chi2'][SortedIndex]<=Cut_chi2))
-    SelectIndex = SortedIndex[0:(len(SortedIndex) if len(SortedIndex)<SelectNumber else SelectNumber)]
+    #SelectNumber = 10 #<TODO># how many SEDs to show?
+    #SelectNumber = len(SortedIndex) if len(SortedIndex)<SelectNumber else SelectNumber
+    #SelectIndex = SortedIndex[0:SelectNumber-1]
+    ##print(DataTable.TableData[SelectIndex])
+    #Arr_chi2 = DataArray['chi2'][SortedIndex] # the sorted chi2 array
+    #Min_chi2 = numpy.nanmin(Arr_chi2[0:SelectNumber-1])
+    #Max_chi2 = numpy.nanmax(Arr_chi2[0:SelectNumber-1])
+    Cut_chi2 = numpy.nanmin(DataArray['chi2']) + Delta_chisq_of_interest # 5 parameter, 68% confidence
+    SelectNumber = len(numpy.argwhere(DataArray['chi2']<=Cut_chi2))
+    SelectNumber = len(SortedIndex) if len(SortedIndex)<SelectNumber else SelectNumber # do not exceed the total number of chi2
+    Arr_chi2 = DataArray['chi2'][SortedIndex[0:SelectNumber]] # the sorted chi2 array, note that when selecting subscript/index with :, the upper index is not included.
+    Min_chi2 = numpy.nanmin(Arr_chi2)
+    Max_chi2 = numpy.nanmax(Arr_chi2)
+    print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(SelectNumber, Delta_chisq_of_interest))
     # 
     # 
     # 
@@ -268,7 +283,7 @@ else:
     if True:
         # 
         # Get SED
-        for i in range(len(SelectIndex)):
+        for i in range(SelectNumber):
             for j in range(int(InfoDict['NLIB'])):
                 if not os.path.isdir('obj_%d'%(i+1)):
                     os.mkdir('obj_%d'%(i+1))
@@ -277,8 +292,8 @@ else:
                     #BashCommand = 'cd obj_%d/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../%s %d %s SED_LIB%d'%\
                     #                    (i+1, \
                     #                        InfoDict['LIB%d'%(j+1)], \
-                    #                            DataArray['i%d'%(j+1)][SelectIndex[i]], \
-                    #                                DataArray['a%d'%(j+1)][SelectIndex[i]], \
+                    #                            DataArray['i%d'%(j+1)][SortedIndex[i]], \
+                    #                                DataArray['a%d'%(j+1)][SortedIndex[i]], \
                     #                                    j+1)
                     #print(BashCommand)
                     #os.system(BashCommand)
@@ -287,18 +302,18 @@ else:
                     BashCommand = '%s/michi2_read_lib_SEDs.py %s %d obj_%d | tee obj_%d/log.txt'%\
                                     (os.path.dirname(os.path.realpath(__file__)), \
                                         DataFile, \
-                                            SelectIndex[i]+1, \
+                                            SortedIndex[i]+1, \
                                                 i+1, \
                                                     i+1)
                     print(BashCommand)
                     os.system(BashCommand)
                     BashCommand = 'echo "%s" > obj_%d/chi2.txt'%\
-                                    (DataArray['chi2'][SelectIndex[i]], \
+                                    (DataArray['chi2'][SortedIndex[i]], \
                                                 i+1)
                     print(BashCommand)
                     os.system(BashCommand)
                     BashCommand = 'echo "%s" > obj_%d/line_number.txt'%\
-                                    (SelectIndex[i]+1, \
+                                    (SortedIndex[i]+1, \
                                                 i+1)
                     print(BashCommand)
                     os.system(BashCommand)
@@ -325,7 +340,7 @@ else:
         Redshift = float(InfoDict['REDSHIFT'])
         Color_list = ['cyan', 'gold', 'red', 'blue', 'purple']
         Plot_engine = CrabPlot(figure_size=(9.0,5.0))
-        for i in range(len(SelectIndex)-1,-1,-1):
+        for i in range(SelectNumber-1,-1,-1):
             # 
             # alpha by chi2
             print('Plotting chi2=%s obj_%d'%(Arr_chi2[i], i+1))
@@ -373,14 +388,16 @@ else:
             Plot_engine.plot_line(obj_SED_sum_x, obj_SED_sum_y, current=1, color=Color_chi2)
             # 
             # show chi2 on the figure
-            if i == len(SelectIndex)-1:
+            if i == SelectNumber-1:
                 Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
-                Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
-            if i >= len(SelectIndex)-6:
-                Plot_engine.xyouts(0.09, 0.95-0.03*(len(SelectIndex)-1-i), '%.1f'%(Arr_chi2[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
+            if i >= SelectNumber-6:
+                print(0.09, 0.95-0.03*(SelectNumber-1-i), '%.1f'%(Arr_chi2[i]))
+                Plot_engine.xyouts(0.09, 0.95-0.03*(SelectNumber-1-i), '%.1f'%(Arr_chi2[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
             if i == 0:
                 Plot_engine.xyouts(0.09, 0.95-0.03*(6), '......', NormalizedCoordinate=True, color=Color_chi2)
                 Plot_engine.xyouts(0.09, 0.95-0.03*(7), '%.1f'%(Arr_chi2[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
+            if i == SelectNumber-1:
+                Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
             #break
         # 
         # Then plot OBS data points
