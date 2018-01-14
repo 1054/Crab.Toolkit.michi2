@@ -1,5 +1,17 @@
 #!/usr/bin/env python3.6
 # 
+# Aim: 
+#      This code reads one solution of the michi2 SED fitting from the chisq table file, 
+#      then goes to each SED library file which is used for the fitting, 
+#      then extract all SED templates used for that fitting solution and also 
+#      add all SED components together to make a total SED, 
+#      and output to the specific directory given by the user. 
+# Inputs:
+#      First input is the michi2 SED fitting output chisq table file name. 
+#      The second input should be a line number corresponding to the data rows (non-commented lines) in the first input chisq table. 
+#      The third input is the output directory name. 
+# 
+# 
 
 import os
 import sys
@@ -210,6 +222,9 @@ for iLib in range(Lib_number):
     print(Lib_istr, Lib_i[line_number-1])
     print(Lib_astr, Lib_a[line_number-1])
     #print(chisq_table.getColumn(Lib_icol))
+    os.system('echo "%s" > "%s/line_number"'%(line_number, output_dir))
+    os.system('echo "%s" > "%s/%s"'%(Lib_i[line_number-1], output_dir, Lib_istr))
+    os.system('echo "%s" > "%s/%s"'%(Lib_a[line_number-1], output_dir, Lib_astr))
     # 
     # read lib data block from line file, starting from the data line index 'Lib_i[line_number-1]'
     Lib_arr = lib_file_get_data_block(Lib_file, Lib_i[line_number-1])
@@ -225,15 +240,16 @@ for iLib in range(Lib_number):
     os.system('sed -i.bak -e "2s/^[ -]*/#/" "%s"'%(Out_file))
     print('Output to "%s"'%(Out_file))
     # 
-    # sum to make total SED
-    Lib_array['LIB%d'%(iLib+1)] = {}
-    Lib_array['LIB%d'%(iLib+1)]['X'] = Lib_x
-    Lib_array['LIB%d'%(iLib+1)]['Y'] = Lib_y
-    Lib_array['LIB%d'%(iLib+1)]['log_X'] = numpy.log10(Lib_x)
-    Lib_array['LIB%d'%(iLib+1)]['log_Y'] = numpy.log10(Lib_y)
-    #print(Lib_array['LIB%d'%(iLib+1)]['log_X'])
-    #print(Lib_array['LIB%d'%(iLib+1)]['log_Y'])
-    Lib_array['TOT']['Y'] = Lib_array['TOT']['Y'] + spline(Lib_array['LIB%d'%(iLib+1)]['X'], Lib_array['LIB%d'%(iLib+1)]['Y'], Lib_array['TOT']['X'], xlog=1, ylog=1, fill=0.0)
+    # sum to make total SED (only when a>0.0)
+    if Lib_a[line_number-1] > 0.0:
+        Lib_array['LIB%d'%(iLib+1)] = {}
+        Lib_array['LIB%d'%(iLib+1)]['X'] = Lib_x
+        Lib_array['LIB%d'%(iLib+1)]['Y'] = Lib_y
+        Lib_array['LIB%d'%(iLib+1)]['log_X'] = numpy.log10(Lib_x)
+        Lib_array['LIB%d'%(iLib+1)]['log_Y'] = numpy.log10(Lib_y)
+        #print(Lib_array['LIB%d'%(iLib+1)]['log_X'])
+        #print(Lib_array['LIB%d'%(iLib+1)]['log_Y'])
+        Lib_array['TOT']['Y'] = Lib_array['TOT']['Y'] + spline(Lib_array['LIB%d'%(iLib+1)]['X'], Lib_array['LIB%d'%(iLib+1)]['Y'], Lib_array['TOT']['X'], xlog=1, ylog=1, fill=0.0)
 
 Out_file = output_dir+os.sep+'SED_SUM'
 asciitable.write(numpy.column_stack((Lib_array['TOT']['X'],Lib_array['TOT']['Y'])), 

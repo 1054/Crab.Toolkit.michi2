@@ -34,7 +34,7 @@ from copy import copy
 #               Functions               #
 #########################################
 
-def analyze_chisq_distribution(param_dict, verbose = 2, Plot_engine = None):
+def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
     # Plot_engine must be the CrabPlot class
     if 'Lib_file' in param_dict and \
         'Lib_name' in param_dict and \
@@ -274,14 +274,50 @@ else:
                     os.mkdir('obj_%d'%(i+1))
                 # 
                 if not os.path.isfile('obj_%d/SED_LIB%d'%(i+1,j+1)):
-                    BashCommand = 'cd obj_%d/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../%s %d %s SED_LIB%d'%\
-                                        (i+1, \
-                                            InfoDict['LIB%d'%(j+1)], \
-                                                DataArray['i%d'%(j+1)][SelectIndex[i]], \
-                                                    DataArray['a%d'%(j+1)][SelectIndex[i]], \
-                                                        j+1)
+                    #BashCommand = 'cd obj_%d/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../%s %d %s SED_LIB%d'%\
+                    #                    (i+1, \
+                    #                        InfoDict['LIB%d'%(j+1)], \
+                    #                            DataArray['i%d'%(j+1)][SelectIndex[i]], \
+                    #                                DataArray['a%d'%(j+1)][SelectIndex[i]], \
+                    #                                    j+1)
+                    #print(BashCommand)
+                    #os.system(BashCommand)
+                    # 
+                    # do python way 20180113
+                    BashCommand = '%s/michi2_read_lib_SEDs.py %s %d obj_%d | tee obj_%d/log.txt'%\
+                                    (os.path.dirname(os.path.realpath(__file__)), \
+                                        DataFile, \
+                                            SelectIndex[i]+1, \
+                                                i+1, \
+                                                    i+1)
                     print(BashCommand)
                     os.system(BashCommand)
+                    BashCommand = 'echo "%s" > obj_%d/chi2.txt'%\
+                                    (DataArray['chi2'][SelectIndex[i]], \
+                                                i+1)
+                    print(BashCommand)
+                    os.system(BashCommand)
+                    BashCommand = 'echo "%s" > obj_%d/line_number.txt'%\
+                                    (SelectIndex[i]+1, \
+                                                i+1)
+                    print(BashCommand)
+                    os.system(BashCommand)
+                    # 
+                    # check
+                    #cd obj_8/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../lib.DL07.LoExCom.SED 140140 16.1932 SED_LIB4
+                    #/Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SEDs.py fit_5.out 2451 c_2451
+                    #topcat -f ASCII c_2451/SED_LIB4 obj_8/SED_LIB4 &
+                    #checked that the two code give exactly the same result!
+                    #
+                    # how about the integrated IR luminosity?
+                    #cat obj_8/SED_LIB4.vLv_8_1000 # 8.8442327616e+03
+                    #cd obj_8
+                    #sm
+                    #load astroSfig.sm
+                    #data SED_LIB4 read {x 1 y 2}
+                    #calc_ltir x y # 3536.147921
+                    #calc 10**2.339198 * 16.1932 # 3536.150006 -- 2.339198 is the PAR3 in lib file, agreed with our manual integration! 
+                    # 
         # 
         # Wait for a long time
         # 
