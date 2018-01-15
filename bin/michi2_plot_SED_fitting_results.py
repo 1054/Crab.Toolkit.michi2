@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python
 # 
 
 import os
@@ -106,7 +106,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                     param_max = numpy.log10(param_max)
                 xrange = [param_min, param_max]
         # 
-        yrange = None # [1/(chisq_min+5.89*3.0), 1/(chisq_min-5.89*2.0)]
+        yrange = [1/(chisq_min+Delta_chisq_of_interest), 1/(chisq_min)]
+        yrange = [yrange[0]-(yrange[1]-yrange[0])*0.15, yrange[1]+(yrange[1]-yrange[0])*0.25]
         # 
         xlog = None
         #if 'Log_plot' in param_dict:
@@ -360,22 +361,23 @@ else:
                                     dataname='obj_%d_SED_LIB%d'%(i+1,j+1), 
                                     redshift = Redshift, 
                                     linestyle='dashed', linewidth=linewidth, color=Color_list[j], alpha=Alpha_chi2)
-            obj_SED_1 = Plot_engine.Plot_data['obj_%d_SED_LIB1'%(i+1)]
-            obj_SED_2 = Plot_engine.Plot_data['obj_%d_SED_LIB2'%(i+1)]
-            obj_SED_3 = Plot_engine.Plot_data['obj_%d_SED_LIB3'%(i+1)]
-            obj_SED_4 = Plot_engine.Plot_data['obj_%d_SED_LIB4'%(i+1)]
-            obj_SED_5 = Plot_engine.Plot_data['obj_%d_SED_LIB5'%(i+1)]
-            obj_SED_sum_x_lg = numpy.arange(-2,6,0.001) # wavelength_um grid
-            obj_SED_sum_x = numpy.power(10, obj_SED_sum_x_lg) # make it in linear space
-            obj_SED_sum_y = []
-            for j in range(int(InfoDict['NLIB'])):
-                obj_SED_single_x = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,0]
-                obj_SED_single_y = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,1]
-                obj_SED_spline_y = Plot_engine.spline(obj_SED_single_x, obj_SED_single_y, obj_SED_sum_x_lg, xlog=1, ylog=1, outputxlog=0)
-                if j == 0:
-                    obj_SED_sum_y = obj_SED_spline_y
-                else:
-                    obj_SED_sum_y = obj_SED_sum_y + obj_SED_spline_y
+            # 
+            #<20180114><splined else where># obj_SED_1 = Plot_engine.Plot_data['obj_%d_SED_LIB1'%(i+1)]
+            #<20180114><splined else where># obj_SED_2 = Plot_engine.Plot_data['obj_%d_SED_LIB2'%(i+1)]
+            #<20180114><splined else where># obj_SED_3 = Plot_engine.Plot_data['obj_%d_SED_LIB3'%(i+1)]
+            #<20180114><splined else where># obj_SED_4 = Plot_engine.Plot_data['obj_%d_SED_LIB4'%(i+1)]
+            #<20180114><splined else where># obj_SED_5 = Plot_engine.Plot_data['obj_%d_SED_LIB5'%(i+1)]
+            #<20180114><splined else where># obj_SED_sum_x_lg = numpy.arange(-2,6,0.001) # wavelength_um grid
+            #<20180114><splined else where># obj_SED_sum_x = numpy.power(10, obj_SED_sum_x_lg) # make it in linear space
+            #<20180114><splined else where># obj_SED_sum_y = []
+            #<20180114><splined else where># for j in range(int(InfoDict['NLIB'])):
+            #<20180114><splined else where>#     obj_SED_single_x = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,0]
+            #<20180114><splined else where>#     obj_SED_single_y = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,1]
+            #<20180114><splined else where>#     obj_SED_spline_y = Plot_engine.spline(obj_SED_single_x, obj_SED_single_y, obj_SED_sum_x_lg, xlog=1, ylog=1, outputxlog=0)
+            #<20180114><splined else where>#     if j == 0:
+            #<20180114><splined else where>#         obj_SED_sum_y = obj_SED_spline_y
+            #<20180114><splined else where>#     else:
+            #<20180114><splined else where>#         obj_SED_sum_y = obj_SED_sum_y + obj_SED_spline_y
             # 
             #pprint(obj_SED_sum_y)
             #print(numpy.column_stack((obj_SED_sum_x, obj_SED_sum_y)))
@@ -385,7 +387,11 @@ else:
                                                         log=1, 
                                                         cmap=matplotlib.cm.get_cmap('gray'))
             #print('Color_chi2: ', Color_chi2)
-            Plot_engine.plot_line(obj_SED_sum_x, obj_SED_sum_y, current=1, color=Color_chi2)
+            #Plot_engine.plot_line(obj_SED_sum_x, obj_SED_sum_y, current=1, color=Color_chi2)
+            Plot_engine.plot_data_file('obj_%d/SED_SUM'%(i+1), xlog=1, ylog=1, current=1, \
+                                dataname='obj_%d_SED_SUM'%(i+1), 
+                                redshift = Redshift, 
+                                linestyle='solid', linewidth=1.0, color=Color_chi2, alpha=Alpha_chi2)
             # 
             # show chi2 on the figure
             if i == SelectNumber-1:
