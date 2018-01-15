@@ -23,6 +23,15 @@ topcat -stilts plot2plane \
                 x0="\$1" \
                 y0="\$2" \
                 \
+                layer0u=xyerror \
+                errorbar0u=capped_lines \
+                color0u="#222222" \
+                in0u='../flux_obsframe.dat' \
+                ifmt0u=ascii \
+                x0u="\$1" \
+                y0u="\$2" \
+                yerrhi0u="\$3" \
+                \
                 layer1=line \
                 thick1=1 \
                 dash1=dot \
@@ -90,7 +99,7 @@ topcat -stilts plot2plane \
                 y6="\$2" \
                 \
                 legpos=0.08,0.94 \
-                seq="6,5,4,3,2,1,0" \
+                seq="6,5,4,3,2,1,0u,0" \
                 fontsize=15 \
                 texttype=latex \
                 omode=out \
@@ -99,5 +108,5 @@ topcat -stilts plot2plane \
                 # http://www.star.bristol.ac.uk/~mbt/stilts/sun256/plot2plane-examples.html
                 # omode=swing
 
-open 'Plot_lib_SEDs.pdf'
+echo "Output to \"$(pwd)/Plot_lib_SEDs.pdf\"!"
 
