@@ -96,6 +96,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         param_min = numpy.nanmin(param_array)
         param_max = numpy.nanmax(param_array)
         # 
+        # set xrange to the user-specified values
         xrange = None
         if 'range' in param_dict:
             if len(param_dict['range'])>=2:
@@ -106,8 +107,24 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                     param_max = numpy.log10(param_max)
                 xrange = [param_min, param_max]
         # 
+        param_bin_numb = 50 #<TODO># 
+        param_bin_step = (param_max-param_min)/param_bin_numb
+        print('Param value min max are %s %s'%(param_min, param_max))
+        # 
+        # optimize xrange
+        xclip_mask = (chisq_array <= chisq_min+Delta_chisq_of_interest)
+        if len(numpy.argwhere(xclip_mask)) > 0:
+            xclip_min = numpy.nanmin(param_array[xclip_mask])
+            xclip_max = numpy.nanmax(param_array[xclip_mask])
+            if xclip_max > xclip_min:
+                xrange = [xclip_min, xclip_max]
+                xrange = [xrange[0]-(xrange[1]-xrange[0])*1.0, xrange[1]+(xrange[1]-xrange[0])*1.0]
+                param_bin_step = (xclip_max - xclip_min) / 15.0 #<TODO># bin step
+                param_bin_numb = int((param_max-param_min)/param_bin_step)+1
+        # 
+        # optimize yrange
         yrange = [1/(chisq_min+Delta_chisq_of_interest), 1/(chisq_min)]
-        yrange = [yrange[0]-(yrange[1]-yrange[0])*0.15, yrange[1]+(yrange[1]-yrange[0])*0.25]
+        yrange = [yrange[0]-(yrange[1]-yrange[0])*0.25, yrange[1]+(yrange[1]-yrange[0])*0.35]
         # 
         xlog = None
         #if 'Log_plot' in param_dict:
@@ -115,11 +132,6 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         #        xlog = 1 # not working for matplotlib bar plot (i.e., CrabPlot plot_hist)!
         # 
         ylog = None
-        # 
-        # 
-        param_bin_numb = 50 #<TODO># 
-        param_bin_step = (param_max-param_min)/param_bin_numb
-        print('Param value min max are %s %s'%(param_min, param_max))
         # 
         # compute minimum chisq in each parameter bin
         param_bin_x = []
@@ -129,8 +141,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
             param_bin_upper = numpy.nan
             if i == param_bin_numb-1:
                 param_bin_lower = param_min+float(i)*param_bin_step
-                param_bin_upper = param_max
-                param_bin_mask = (param_array_nonan>=param_bin_lower) & (param_array_nonan<=param_max)
+                param_bin_upper = param_min+float(i+1)*param_bin_step # param_max
+                param_bin_mask = (param_array_nonan>=param_bin_lower) & (param_array_nonan<=param_bin_upper)
             else:
                 param_bin_lower = param_min+float(i)*param_bin_step
                 param_bin_upper = param_min+float(i+1)*param_bin_step
