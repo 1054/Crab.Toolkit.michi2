@@ -81,12 +81,13 @@ if len(isel) > 0:
 
 # output
 out_file = sys.argv[2]
-asciitable.write(data_table, out_file, Writer=asciitable.FixedWidthTwoLine, overwrite=True)
+asciitable.write(data_table, out_file, Writer=asciitable.Ipac, delimiter='    ', overwrite=True)
+#asciitable.write(data_table, sys.stdout, Writer=asciitable.Ipac, delimiter='  ')
 os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(out_file))
-os.system('sed -i.bak -e "2d" "%s"'%(out_file))
+os.system('sed -i.bak -e "2d;3d;4d" "%s"'%(out_file))
 if os.path.isfile(out_file+'.bak'):
     os.system('rm "%s"'%(out_file+'.bak'))
-print('')
+print('Output to "%s"!'%(out_file))
 
 
 

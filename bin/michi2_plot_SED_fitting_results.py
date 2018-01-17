@@ -169,7 +169,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                                 size = 0.12, symbol = 'cross', xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
         # Plot Cut_chi2
-        Plot_engine.plot_line(param_min, 1/(chisq_min+Delta_chisq_of_interest), param_max, 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
+        Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
         # 
         # Plot histogram
         Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step, align = 'edge', overplot = False, 
@@ -177,7 +177,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                                 xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
         # Plot Cut_chi2
-        Plot_engine.plot_line(param_min, 1/(chisq_min+Delta_chisq_of_interest), param_max, 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
+        Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
         # 
     else:
         print('Error! analyze_chisq_distribution() got unaccepted inputs!')
@@ -281,6 +281,8 @@ else:
     Max_chi2 = numpy.nanmax(Arr_chi2)
     print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(SelectNumber, Delta_chisq_of_interest))
     # 
+    MaxPlotNumber = 50 # Max chi2 solutions to plot, we plot the first MaxPlotNumber/2 and the last MaxPlotNumber/2 solutions, skip solutions in the middle.
+    # 
     # 
     # 
     # 
@@ -297,6 +299,12 @@ else:
         # 
         # Get SED
         for i in range(SelectNumber):
+            # 
+            # skip solutions between 11th to last 11th.
+            if i > MaxPlotNumber/2 and i<(SelectNumber-1-MaxPlotNumber/2):
+                continue
+            # 
+            # Read SED_LIB
             for j in range(int(InfoDict['NLIB'])):
                 if not os.path.isdir('obj_%d'%(i+1)):
                     os.mkdir('obj_%d'%(i+1))
@@ -354,6 +362,10 @@ else:
         Color_list = ['cyan', 'gold', 'red', 'blue', 'purple']
         Plot_engine = CrabPlot(figure_size=(9.0,5.0))
         for i in range(SelectNumber-1,-1,-1):
+            # 
+            # skip solutions between 11th to last 11th.
+            if i > MaxPlotNumber/2 and i<(SelectNumber-1-MaxPlotNumber/2):
+                continue
             # 
             # alpha by chi2
             print('Plotting chi2=%s obj_%d'%(Arr_chi2[i], i+1))
@@ -437,9 +449,10 @@ else:
         Plot_engine.set_yrange([1e-6,1e4])
         Plot_engine.set_xtitle('Wavelength [um]')
         Plot_engine.set_ytitle('Flux Density [mJy]')
-        Plot_engine.show()
         Plot_engine.savepdf(Output_name+'.pdf')
+        #Plot_engine.show()
         Plot_engine.close()
+        print('Output to "%s"!'%(Output_name+'.pdf'))
     # 
     # 
     # 
@@ -670,7 +683,9 @@ else:
     analyze_chisq_distribution(fPDR_total_dust_dict, Plot_engine = Plot_engine)
     analyze_chisq_distribution(Umean_total_dust_dict, Plot_engine = Plot_engine)
     Plot_engine.savepdf(Output_name+'.chisq.pdf')
-    Plot_engine.show()
+    #Plot_engine.show()
+    Plot_engine.close()
+    print('Output to "%s"!'%(Output_name+'.chisq.pdf'))
     # 
     
 
