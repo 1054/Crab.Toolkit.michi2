@@ -110,6 +110,9 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
         Pattern = re.compile("^[_]*(f)(ch[0-9]+)")
         if Pattern.match(input_str2):
             recognized_list.append(input_str)
+        Pattern = re.compile("^[_]*(f)(K)")
+        if Pattern.match(input_str2):
+            recognized_list.append(input_str)
     # 
     if special_file_name.find('Laigle')>=0:
         special_remove_list = ['FLUX_RADIUS', 'FLUX_814W', 'FLUX_XMM_0.5_2', 'FLUX_XMM_2_10', 'FLUX_XMM_5_10', 'FLUX_CHANDRA_0.5_2', 'FLUX_CHANDRA_2_10', 'FLUX_CHANDRA_0.5_10', 'FLUX_NUSTAR_3_24', 'FLUX_NUSTAR_3_8', 'FLUX_NUSTAR_8_24']
@@ -157,6 +160,9 @@ def recognize_Col_FLUXERR(input_list, special_file_name=''):
         if Pattern.match(input_str2):
             recognized_list.append(input_str)
         Pattern = re.compile("^[_]*(df)(ch[0-9]+)")
+        if Pattern.match(input_str2):
+            recognized_list.append(input_str)
+        Pattern = re.compile("^[_]*(df)(K)")
         if Pattern.match(input_str2):
             recognized_list.append(input_str)
     # 
@@ -563,16 +569,16 @@ def recognize_Filter(input_str, special_file_name=''):
         #    Filter_Name = 'Spitzer IRAC ch4'
         #    Filter_Wave = 79594.9 * 1e-4 # um
         # 
-        elif input_str == 'FLUX_IRAC1' or input_str == 'FLUXERR_IRAC1' or input_str.startswith('FLUX_IRAC1_') or input_str.startswith('FLUXERR_IRAC1_'): 
+        elif input_str == 'FLUX_IRAC1' or input_str == 'FLUXERR_IRAC1' or input_str.startswith('FLUX_IRAC1_') or input_str.startswith('FLUXERR_IRAC1_') or input_str=='fch1' or input_str=='dfch1': 
             Filter_Name = 'Spitzer IRAC ch1'
             Filter_Wave = 35634.3 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC2' or input_str == 'FLUXERR_IRAC2' or input_str.startswith('FLUX_IRAC2_') or input_str.startswith('FLUXERR_IRAC2_'): 
+        elif input_str == 'FLUX_IRAC2' or input_str == 'FLUXERR_IRAC2' or input_str.startswith('FLUX_IRAC2_') or input_str.startswith('FLUXERR_IRAC2_') or input_str=='fch2' or input_str=='dfch2': 
             Filter_Name = 'Spitzer IRAC ch2'
             Filter_Wave = 45110.1 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC3' or input_str == 'FLUXERR_IRAC3' or input_str.startswith('FLUX_IRAC3_') or input_str.startswith('FLUXERR_IRAC3_'): 
+        elif input_str == 'FLUX_IRAC3' or input_str == 'FLUXERR_IRAC3' or input_str.startswith('FLUX_IRAC3_') or input_str.startswith('FLUXERR_IRAC3_') or input_str=='fch3' or input_str=='dfch3': 
             Filter_Name = 'Spitzer IRAC ch3'
             Filter_Wave = 57593.4 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC4' or input_str == 'FLUXERR_IRAC4' or input_str.startswith('FLUX_IRAC4_') or input_str.startswith('FLUXERR_IRAC4_'): 
+        elif input_str == 'FLUX_IRAC4' or input_str == 'FLUXERR_IRAC4' or input_str.startswith('FLUX_IRAC4_') or input_str.startswith('FLUXERR_IRAC4_') or input_str=='fch4' or input_str=='dfch4': 
             Filter_Name = 'Spitzer IRAC ch4'
             Filter_Wave = 79594.9 * 1e-4 # um
         # 
@@ -588,9 +594,9 @@ def recognize_Filter(input_str, special_file_name=''):
         #    Filter_Name = 'Spitzer IRS PUI 16'
         #    Filter_Wave = 16.0 # um
         # 
-        #elif input_str == 'FLUX_K' or input_str == 'FLUXERR_K' or input_str == 'fK' or input_str == 'dfK' or input_str == 'f_K' or input_str == 'df_K': 
-        #    Filter_Name = 'unknown K band'
-        #    Filter_Wave = 2.15 # um
+        elif input_str == 'FLUX_K' or input_str == 'FLUXERR_K' or input_str == 'fK' or input_str == 'dfK' or input_str == 'f_K' or input_str == 'df_K': 
+            Filter_Name = 'unknown K band'
+            Filter_Wave = 2.15 # um
         # 
         #elif input_str.startswith('FLUX_K_') or input_str.startswith('FLUXERR_K_') or input_str.startswith('fK_') or input_str.startswith('dfK_') or input_str.startswith('f_K_') or input_str.startswith('df_K_'): 
         #    search_str = re.search(input_str,'.*K_([^_]*).*')
@@ -766,6 +772,7 @@ if len(sys.argv) <= 1:
 DataFile = ''
 SourceID_Inputs = []
 MaxSNR = numpy.nan
+CatID = numpy.nan
 i = 0
 while i <= (len(sys.argv)-1):
     if i >= 1:
@@ -779,6 +786,11 @@ while i <= (len(sys.argv)-1):
             if i <= (len(sys.argv)-1) and numpy.isnan(MaxSNR):
                 MaxSNR = float(sys.argv[i])
                 print('# Setting max SNR limit to %s'%(MaxSNR))
+        elif sys.argv[i].upper() == '-CATID':
+            i = i + 1
+            if i <= (len(sys.argv)-1) and numpy.isnan(CatID):
+                CatID = int(sys.argv[i])
+                print('# Setting catalog ID to %s'%(CatID)) # if set, then we will append "_from_cat_%d" to the output file name.
     i = i + 1
 
 
@@ -795,11 +807,11 @@ if DataFile != '':
     
     # special treatment
     
-    if 1 == 0:
-        print('Col_Source = %s'%Col_Source)
-        print('Col_ID = %s'%Col_ID)
-        print('Col_FLUX = %s'%Col_FLUX)
-        print('Col_FLUXERR = %s'%Col_FLUXERR)
+    if 1 == 1:
+        print('# Col_Source = %s'%Col_Source)
+        print('# Col_ID = %s'%Col_ID)
+        print('# Col_FLUX = %s'%Col_FLUX)
+        print('# Col_FLUXERR = %s'%Col_FLUXERR)
     
     if Col_Source:
         if Col_ID:
@@ -831,12 +843,12 @@ if DataFile != '':
                 print('        %-30s %-30s'%(' ', Col_FLUXERR[k]))
         sys.exit()
     
-    SourceID_Match = []
+    SourceID_Matchs = [] # an array of dict
     
     if len(SourceID_Inputs) > 0:
         
         for SourceID_Input in SourceID_Inputs:
-            print('# Getting Source by the input name or id "%s"'%(SourceID_Input))
+            print('# Finding source by the input name or id "%s"'%(SourceID_Input))
             # 
             # check the SourceID_Input type (dict or str)
             if SourceID_Input.startswith('{') and SourceID_Input.endswith('}'):
@@ -845,57 +857,74 @@ if DataFile != '':
                 #print(SourceID_Dict)
             else:
                 SourceID_Dict = {}
-                for j in range(len(Col_Source)):
-                    SourceID_Dict[Col_Source[j]] = SourceID_Input
+                for icol in Col_Source:
+                    SourceID_Dict[icol] = SourceID_Input
                 #print(SourceID_Dict)
             # 
             # loop SOURCE Table Headers and match SourceID_Input
             SourceID_Match = []
-            for j in range(len(Col_Source)):
-                if Col_Source[j] in SourceID_Dict:
-                    #print(Col_Source[j])
-                    SourceID_Where = numpy.argwhere(DataTable.getColumn(Col_Source[j]).astype(str) == str(SourceID_Dict[Col_Source[j]])).T # do a transpose to numpy.argwhere(), see http://stackoverflow.com/questions/33747908/output-of-numpy-wherecondition-is-not-an-array-but-a-tuple-of-arrays-why
+            for icol in Col_Source:
+                if icol in SourceID_Dict:
+                    SourceID_Where = numpy.argwhere(DataTable.getColumn(icol).astype(str) == str(SourceID_Dict[icol])).T # do a transpose to numpy.argwhere(), see http://stackoverflow.com/questions/33747908/output-of-numpy-wherecondition-is-not-an-array-but-a-tuple-of-arrays-why
                     if len(SourceID_Where) > 0:
                         SourceID_Where = SourceID_Where[0]
                         if len(SourceID_Match) > 0:
-                            SourceID_Match = numpy.intersect1d(SourceID_Match, SourceID_Where)
+                            SourceID_Match = numpy.intersect1d(SourceID_Match, SourceID_Where) # solve multiplicity <TODO>
                         else:
                             SourceID_Match = SourceID_Where
                     #print SourceID_Where
                     #print SourceID_Match
-        # 
-        # check whether we found any source according to the input SourceID_Input
-        if len(SourceID_Match) == 0:
-            print('# Warning! Could not find source according to the input name or id "%s"!'%(SourceID_Input))
+            # 
+            # check whether we found any source according to the input SourceID_Input
+            if len(SourceID_Match) == 0:
+                print('***********')
+                print('# Warning! Could not find source according to the input name or id "%s"!'%(SourceID_Input))
+                print('***********')
+                # do not append anything if the source was not found.
+            else:
+                SourceID_Dict['row'] = SourceID_Match[0]
+                SourceID_Dict['source id input'] = SourceID_Input
+                for icol in Col_Source:
+                    SourceID_Dict[icol] = DataTable.getColumn(icol)[SourceID_Dict['row']]
+                SourceID_Matchs.append(SourceID_Dict)
         
     else:
         
         # if no SourceID_Input is given by the user, we will output flux for each object
-        SourceID_Match = range(DataTable.getRowNumber())
-        SourceID_Dict = {}
+        for irow in range(DataTable.getRowNumber()):
+            SourceID_Dict = {}
+            SourceID_Dict['row'] = irow
+            SourceID_Dict['source id input'] = 'at_row_%d'%(irow+1)
+            for icol in Col_Source:
+                SourceID_Dict[icol] = DataTable.getColumn(icol)[SourceID_Dict['row']]
+            SourceID_Matchs.append(SourceID_Dict)
+        
+        print('# Getting all %d sources in the data table'%(len(SourceID_Matchs)))
+    
+    print('')
     
     # 
     # found Source matched by SourceID_Input
     # 
-    #print(len(SourceID_Match))
-    for j in range(len(SourceID_Match)):
+    for j in range(len(SourceID_Matchs)):
         #print("# -------------------------------------------------")
-        print("# Found Source at row number %s (starting from 1)."%(SourceID_Match[j]+1))
+        print("# Matched source \"%s\"."%(SourceID_Matchs[j]))
         
         # prepare SED data structure
         SED = []
         
         # loop SOURCE Table Headers and print
-        for k in range(len(Col_Source)):
-            if Col_Source[k] in SourceID_Dict:
-                print('# Matched with Column "%s" "%s"'%(str(Col_Source[k]), DataTable.getColumn(str(Col_Source[k]))[SourceID_Match[j]]))
+        #for k in range(len(Col_Source)):
+        #    if Col_Source[k] in SourceID_Dict:
+        #        print('# Matched with column "%s" row %d "%s"'%(str(Col_Source[k]), SourceID_Matchs[j]['row'], DataTable.getColumn(str(Col_Source[k]))[SourceID_Matchs[j]['row']]))
         
         # loop SED Data Array and convert flux
         for k in range(len(Col_FLUX)):
             FilterHead = Col_FLUX[k]
+            #print('Debug', 'recognize_Filter', Col_FLUX[k], 'special_file_name='+DataFile)
             FilterName, FilterWave = recognize_Filter(Col_FLUX[k], special_file_name=DataFile)
-            FilterFlux = DataTable.getColumn(Col_FLUX[k])[SourceID_Match[j]]
-            FilterFluxErr = DataTable.getColumn(Col_FLUXERR[k])[SourceID_Match[j]]
+            FilterFlux = DataTable.getColumn(Col_FLUX[k])[SourceID_Matchs[j]['row']]
+            FilterFluxErr = DataTable.getColumn(Col_FLUXERR[k])[SourceID_Matchs[j]['row']]
             FilterType = 'FLUX'
             FilterFluxUnit = 'mJy'
             FilterWaveUnit = 'um'
@@ -950,32 +979,50 @@ if DataFile != '':
         SED = SED_sorted
         
         # loop SED (sorted) and output to file
-        fout = 'extracted_flux.txt'
-        if len(SourceID_Match)>1:
-            #fout = 'extracted_flux_at_row_%s.txt'%(SourceID_Match[j]+1)
-            fout = 'extracted_flux_for_obj_%d.txt'%(j)
-        fp = open(fout,'w')
-        for k in range(len(SED)):
-            FilterName = str(SED[k]['Filter'])
-            FilterWave = float(SED[k]['Wave'])
-            FilterFlux = float(SED[k]['Flux'])
-            FilterFErr = float(SED[k]['FluxErr'])
-            FilterFluxUnit = str(SED[k]['FluxUnit'])
-            # MaxSNR (20180111)
-            if MaxSNR > 0:
-                if (FilterFErr>0) and (FilterFlux>MaxSNR*FilterFErr):
-                    FilterFErr = FilterFlux/MaxSNR
-            # print
-            if k == 0:
-                print("# %-20s %-18s %-18s %-12s %-s"%('Wave', 'Flux', 'FluxErr', 'FluxUnit', 'FilterName'))
-                fp.write("# %-20s %-18s %-18s %-12s %-s\n"%('Wave', 'Flux', 'FluxErr', 'FluxUnit', 'FilterName'))
-            #<20180110># if FilterWave > 0 and FilterFlux > 0 and FilterFErr > 0
-            if FilterFlux > 0 and FilterFErr > 0:
-                #print("                 %-20s Wave %-15.6e Flux %-15.6e FluxError %-15.6e FluxUnit %s"%(FilterName, FilterWave, FilterFlux, FilterFErr, FilterFluxUnit))
-                print("  %-20.8g %-18.8g %-18.8g %-12s %-s"%(FilterWave, FilterFlux, FilterFErr, FilterFluxUnit, FilterName.replace(' ','_')))
-                fp.write("  %-20.8g %-18.8g %-18.8g %-12s %-s\n"%(FilterWave, FilterFlux, FilterFErr, FilterFluxUnit, FilterName.replace(' ','_')))
-        fp.close()
+        out_name = 'extracted_flux'
+        out_name_for_obj = 'extracted_flux_for_obj_%s'%(re.sub(r'\W+', ' ', SourceID_Matchs[j]['source id input']).strip().replace(' ','_'))
+        if not numpy.isnan(CatID):
+            out_name_for_obj = out_name_for_obj + '_from_cat_%d'%(CatID)
+        fout = out_name+'.txt'
+        fout_obj = out_name_for_obj+'.txt'
+        fout_info = out_name+'.info'
+        fout_info_obj = out_name_for_obj+'.info'
+        with open(fout_info,'w') as fp:
+            fp.write('cat = "%s"  # the input catalog name\n'%(DataFile))
+            fp.write('row = %d  # index starting from 0\n'%(SourceID_Matchs[j]['row']))
+            for icol in Col_Source:
+                fp.write('%s = %s\n'%(icol, SourceID_Matchs[j][icol]))
+            fp.close()
+        # 
+        with open(fout,'w') as fp:
+            for k in range(len(SED)):
+                FilterName = str(SED[k]['Filter'])
+                FilterWave = float(SED[k]['Wave'])
+                FilterFlux = float(SED[k]['Flux'])
+                FilterFErr = float(SED[k]['FluxErr'])
+                FilterFluxUnit = str(SED[k]['FluxUnit'])
+                # MaxSNR (20180111)
+                if MaxSNR > 0:
+                    if (FilterFErr>0) and (FilterFlux>MaxSNR*FilterFErr):
+                        FilterFErr = FilterFlux/MaxSNR
+                # print
+                if k == 0:
+                    print("# %-20s %-18s %-18s %-12s %-s"%('Wave', 'Flux', 'FluxErr', 'FluxUnit', 'FilterName'))
+                    fp.write("# %-20s %-18s %-18s %-12s %-s\n"%('Wave', 'Flux', 'FluxErr', 'FluxUnit', 'FilterName'))
+                #<20180110># if FilterWave > 0 and FilterFlux > 0 and FilterFErr > 0
+                if FilterFlux > 0 and FilterFErr > 0:
+                    #print("                 %-20s Wave %-15.6e Flux %-15.6e FluxError %-15.6e FluxUnit %s"%(FilterName, FilterWave, FilterFlux, FilterFErr, FilterFluxUnit))
+                    print("  %-20.8g %-18.8g %-18.8g %-12s %-s"%(FilterWave, FilterFlux, FilterFErr, FilterFluxUnit, FilterName.replace(' ','_')))
+                    fp.write("  %-20.8g %-18.8g %-18.8g %-12s %-s\n"%(FilterWave, FilterFlux, FilterFErr, FilterFluxUnit, FilterName.replace(' ','_')))
+            fp.close()
+        # 
+        os.system('cp "%s" "%s"'%(fout, fout_obj))
+        os.system('cp "%s" "%s"'%(fout_info, fout_info_obj))
         print('Output to "%s"!'%(fout))
+        print('Output to "%s"!'%(fout_info))
+        print('Output to "%s"!'%(fout_obj))
+        print('Output to "%s"!'%(fout_info_obj))
+        print('')
         # 
         #break
 

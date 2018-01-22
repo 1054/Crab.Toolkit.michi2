@@ -21,7 +21,7 @@
 # or 
 # srun -N1 -n20 --pty bash
 # or
-# sbatch --array=1-11%4 a_dzliu_code_for_running_SED_fitting_michi2_on_ISAAC.sh
+# sbatch --array=1-6%2 a_dzliu_code_step_2_run_michi2_task_3_run_sbatch_on_isaac.sh
 # 
 
 
@@ -32,13 +32,24 @@
 # 
 echo "Hostname: "$(/bin/hostname)
 echo "PWD: "$(/bin/pwd)
-echo "SLURM_JOBID: "$SLURM_JOBID
-echo "SLURM_JOB_NODELIST: "$SLURM_JOB_NODELIST
-echo "SLURM_NNODES: "$SLURM_NNODES
-echo "SLURM_ARRAY_TASK_ID: "$SLURM_ARRAY_TASK_ID
-echo "SLURM_ARRAY_JOB_ID: "$SLURM_ARRAY_JOB_ID
-echo "SLURMTMPDIR: "$SLURMTMPDIR
-echo "SLURM_SUBMIT_DIR: "$SLURM_SUBMIT_DIR
+#echo "SLURM_JOBID: "$SLURM_JOBID
+#echo "SLURM_JOB_NODELIST: "$SLURM_JOB_NODELIST
+#echo "SLURM_NNODES: "$SLURM_NNODES
+#echo "SLURM_ARRAY_TASK_ID: "$SLURM_ARRAY_TASK_ID
+#echo "SLURM_ARRAY_JOB_ID: "$SLURM_ARRAY_JOB_ID
+#echo "SLURMTMPDIR: "$SLURMTMPDIR
+#echo "SLURM_SUBMIT_DIR: "$SLURM_SUBMIT_DIR
+
+
+# 
+# Check user input
+# 
+if [[ $# -eq 0 ]]; then
+    echo "Usage: "
+    echo "    Please input source name! E.g., \"ID_1234\""
+    echo ""
+    exit
+fi
 
 
 # 
@@ -91,35 +102,51 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     
     itask=$((i+1))
     
-    if [[ x"$SLURM_ARRAY_TASK_ID" != x"" ]]; then
-        if [[ $itask -ne $SLURM_ARRAY_TASK_ID ]]; then
-            continue
-        fi
+    if [[ x"${list_of_source_names[i]}" == x"" ]]; then
+        continue
     fi
     
+    # check user input, only run for sources input by the user.
+    imatch=0
+    for iargs in "$@"; do
+        if [[ "${list_of_source_names[i]}" == "${iargs}" ]]; then
+            imatch=1
+            break
+        fi
+    done
+    if [[ imatch -eq 0 ]]; then
+        continue
+    fi
+    
+    
     if [[ ! -d "${list_of_source_names[i]}" ]]; then
-        echo "Warning! \"${list_of_source_names[i]}\" was not found!"
+        echo "Warning! \"${list_of_source_names[i]}\" was not found! Will skip this source!"
         continue
     fi
     
     cd "${list_of_source_names[i]}"
     
-    if [[ ! -f "flux_obsframe.dat" ]] || [[ ! -f "source_id_ra_dec_zspec.txt" ]]; then
-        echo "Warning! \"flux_obsframe.dat\" or \"source_id_ra_dec_zspec.txt\" was not found!"
-        continue
+    if [[ ! -f "flux_obsframe.dat" ]]; then
+        if [[ -f "extracted_flux.txt" ]]; then
+            michi2_filter_flux_2sigma_no_radio.py extracted_flux.txt flux_obsframe.dat
+        fi
+        if [[ ! -f "flux_obsframe.dat" ]]; then
+            echo "Warning! \"flux_obsframe.dat\" was not found!"
+            continue
+        fi
     fi
     
     if [[ ! -f "fit_5.out" ]]; then
         
         michi2-deploy-files
         
-        ./run_fitting_5_components.sh ${list_of_source_redshifts[i]} -parallel 30
-
-    sleep 3
+        ./run_fitting_5_components.sh ${list_of_source_redshifts[i]} -parallel 20
+        
+	sleep 3
     
     else
         
-    echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
+	echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
 	
     fi
 

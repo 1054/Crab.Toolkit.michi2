@@ -100,6 +100,21 @@ function append_sed_data() {
         echo "${m_SED[@]}"
     fi
 }
+# 
+# Clean source str
+# 
+function clean_source_str() {
+    if [[ $# -gt 0 ]]; then
+        if [[ $(echo "$1" | grep "{" | wc -l) -eq 1 ]]; then
+            # if the input is a dict
+            m_Source_Char=($(echo "${m_Sources[j]}" | tr -c '[[:alnum:]]' ' ')) # tr -c '[[:alnum:]]._-' ' '
+            m_Source_Name="${m_Source_Char[@]}"
+        else
+            m_Source_Name="${m_Sources[j]}"
+        fi
+        echo "$m_Source_Name" | perl -p -e 's/ +/_/g'
+    fi
+}
 
 
 
@@ -298,29 +313,47 @@ for (( i=0; i<${#m_Catalogs[@]}; i++ )); do
         cd "$m_OutputDir"
     fi
     
-    if [[ ! -z "$m_MaxSNR" ]]; then
-        echo "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" -maxsnr "$m_MaxSNR" ">" "extracted_flux.log"
-        "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" -maxsnr "$m_MaxSNR" | tee "extracted_flux.log"
+    # if no source id is given, we extract all sources in a catalog
+    # so we need to check existing files and do some backup
+    if [[ ${#m_Sources[@]} -eq 0 ]]; then
+        if [[ $(find . -maxdepth 1 -type f -name "extracted_flux_for_obj_at_row_*.txt" | grep -v "from_cat_*.txt" | wc -l) -gt 0 ]]; then
+            m_BackupDir=$(date +"backup_extracted_flux_for_objects_%Y%m%d_%Hh%Mm%Ss")
+            echo "Warning! Found existing \"extracted_flux_for_obj_at_row_*.txt\"! Backing-up them into \"$m_BackupDir\"!"
+            mkdir "$m_BackupDir"
+            mv extracted_flux_for_obj_at_row_*.txt "$m_BackupDir/"
+        fi
+        m_CatalogId=(-catid $((i+1)))
     else
-        echo "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" ">" "extracted_flux.log"
-        "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" | tee "extracted_flux.log"
+        m_CatalogId=()
     fi
     
-    if [[ ${#m_Catalogs[@]} -gt 1 ]]; then
-        if [[ ${#m_Sources[@]} -gt 0 ]]; then
-            for (( j=0; j<${#m_Sources[@]}; j++ )); do
-                if [[ -f "extracted_flux.txt" ]]; then
-                    mv "extracted_flux_for_obj_$j.txt" "extracted_flux_for_source_${m_Sources[j]}_from_cat_${i}.txt"
-                    mv "extracted_flux_for_obj_$j.log" "extracted_flux_for_source_${m_Sources[j]}_from_cat_${i}.log"
-                fi
-            done
-        else
-            if [[ -f "extracted_flux.txt" ]]; then
-                mv "extracted_flux.txt" "extracted_flux_from_cat_${i}.txt"
-                mv "extracted_flux.log" "extracted_flux_from_cat_${i}.log"
-            fi
-        fi
+    if [[ ! -z "$m_MaxSNR" ]]; then
+        echo "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" -maxsnr "$m_MaxSNR" ${m_CatalogId[@]} ">" "extracted_flux.log"
+        "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" -maxsnr "$m_MaxSNR" ${m_CatalogId[@]} | tee "extracted_flux.log"
+    else
+        echo "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" ${m_CatalogId[@]} ">" "extracted_flux.log"
+        "$m_ScriptDir/michi2_extract_flux_from_data_table.py" "${m_CatalogUrl}" "${m_Sources[@]}" ${m_CatalogId[@]} | tee "extracted_flux.log"
     fi
+    
+    #if [[ ${#m_Catalogs[@]} -ge 1 ]]; then
+    #    if [[ ${#m_Sources[@]} -gt 0 ]]; then
+    #        for (( j=0; j<${#m_Sources[@]}; j++ )); do
+    #            m_Source_Name=$(clean_source_str "${m_Sources[j]}")
+    #            if [[ -f "extracted_flux_for_obj_$j.txt" ]]; then
+    #                cp "extracted_flux_for_obj_$j.txt" "extracted_flux_for_source_${m_Source_Name}_from_cat_${i}.txt"
+    #                cp "extracted_flux_for_obj_$j.log" "extracted_flux_for_source_${m_Source_Name}_from_cat_${i}.log"
+    #            fi
+    #        done
+    #    else
+    #        # if no source id is given, we extract all sources in a catalog
+    #        # so we need to check whether any source is extracted and how many
+    #        if [[ $(find . -maxdepth 1 -type f -name "extracted_flux_for_obj_at_row_*.txt" | grep -v "from_cat_*.txt" | wc -l) -gt 0 ]]; then
+    #        if [[ -f "extracted_flux.txt" ]]; then
+    #            cp "extracted_flux.txt" "extracted_flux_from_cat_${i}.txt"
+    #            cp "extracted_flux.log" "extracted_flux_from_cat_${i}.log"
+    #        fi
+    #    fi
+    #fi
     
     if [[ "$m_OutputDir"x != x ]]; then
         cd "../"
@@ -334,15 +367,18 @@ if [[ "$m_OutputDir"x != x ]]; then
     cd "$m_OutputDir"
 fi
 
-
+# if the input catalog is not only one, then we 
 # combine the photometry in all catalogs for each source
-if [[ ${#m_Sources[@]} -gt 0 ]]; then
-    for (( j=0; j<${#m_Sources[@]}; j++ )); do
-        head -n 2 "extracted_flux_for_source_${m_Sources[j]}_from_cat_0.txt" > "extracted_flux_for_source_${m_Sources[j]}_combined.txt"
-        for (( i=0; i<${#m_Catalogs[@]}; i++ )); do
-            cat "extracted_flux_for_source_${m_Sources[j]}_from_cat_$i.txt" | grep -v "^#" >> "extracted_flux_for_source_${m_Sources[j]}_combined.txt"
+if [[ ${#m_Catalogs[@]} -gt 1 ]]; then
+    if [[ ${#m_Sources[@]} -gt 0 ]]; then
+        for (( j=0; j<${#m_Sources[@]}; j++ )); do
+            m_Source_Name=$(clean_source_str "${m_Sources[j]}")
+            head -n 2 "extracted_flux_for_source_${m_Source_Name}_from_cat_1.txt" > "extracted_flux_for_source_${m_Source_Name}_combined.txt"
+            for (( i=1; i<=${#m_Catalogs[@]}; i++ )); do
+                cat "extracted_flux_for_source_${m_Source_Name}_from_cat_$i.txt" | grep -v "^#" >> "extracted_flux_for_source_${m_Source_Name}_combined.txt"
+            done
         done
-    done
+    fi
 fi
 
 if [[ "$m_OutputDir"x != x ]]; then

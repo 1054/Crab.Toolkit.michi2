@@ -21,7 +21,7 @@
 # or 
 # srun -N1 -n20 --pty bash
 # or
-# sbatch --array=1-6%2 a_dzliu_code_for_running_SED_fitting_michi2_on_ISAAC.sh
+# sbatch --array=1-11%4 a_dzliu_code_for_running_SED_fitting_michi2_on_ISAAC.sh
 # 
 
 
@@ -115,18 +115,17 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
         
         ./run_fitting_5_components.sh ${list_of_source_redshifts[i]} -parallel 30
 
-	sleep 3
+    sleep 3
     
     else
         
-	echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
-	
+    echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
+    
     fi
 
     cd "../"
     
 done
-
 
 
 

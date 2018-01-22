@@ -83,10 +83,38 @@ if len(isel) > 0:
 out_file = sys.argv[2]
 asciitable.write(data_table, out_file, Writer=asciitable.Ipac, delimiter='    ', overwrite=True)
 #asciitable.write(data_table, sys.stdout, Writer=asciitable.Ipac, delimiter='  ')
-os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(out_file))
-os.system('sed -i.bak -e "2d;3d;4d" "%s"'%(out_file))
-if os.path.isfile(out_file+'.bak'):
-    os.system('rm "%s"'%(out_file+'.bak'))
+with open(out_file, 'r+') as fp:
+    out_content = fp.readlines() # read everything in the file
+    out_iline = 0
+    out_header = [] # Ipac format has multiple comment lines (commented by the char '\\') and 4 header lines.
+    fp.seek(0)
+    while out_iline < len(out_content):
+        if out_content[out_iline][0] == '\\':
+            # This is a commented line
+            out_content[out_iline][0] = '#'
+            fp.write(out_content[out_iline])
+        else:
+            if len(out_header) == 0:
+                # if this is the first header line, then replace the first white space by '#', or if there is no white space, preprend '#'.
+                if out_content[out_iline][0] == ' ':
+                    out_content[out_iline][0] = '#'
+                else:
+                    out_content[out_iline] = '#' + out_content[out_iline]
+                # append header to 'out_header' list
+                out_header.append(out_content[out_iline])
+                # write only one header line
+                fp.write(out_content[out_iline])
+                # 
+            elif len(out_header) >= 4:
+                # write data line
+                fp.write(out_content[out_iline])
+                # 
+        out_iline = out_iline + 1
+    fp.close()
+#os.system('sed -i.bak -e "$(grep \"\\\" %s | wc -l)s/^ /#/" "%s"'%(out_file, out_file))
+#os.system('sed -i.bak -e "2d;3d;4d" "%s"'%(out_file))
+#if os.path.isfile(out_file+'.bak'):
+#    os.system('rm "%s"'%(out_file+'.bak'))
 print('Output to "%s"!'%(out_file))
 
 

@@ -369,11 +369,15 @@ else:
             # 
             # alpha by chi2
             print('Plotting chi2=%s obj_%d'%(Arr_chi2[i], i+1))
-            Alpha_chi2 = Plot_engine.get_color_by_value([Min_chi2-(Max_chi2-Min_chi2)*0.2, Max_chi2+(Max_chi2-Min_chi2)*0.3], 
+            Min_chi2_log = numpy.log10(Min_chi2)
+            Max_chi2_log = numpy.log10(Max_chi2)
+            Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.8)
+            Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.3)
+            Alpha_chi2 = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
                                                         input_value=Arr_chi2[i], 
                                                         log=1, 
                                                         cmap=matplotlib.cm.get_cmap('gray_r'))[0]
-            #print('Alpha_chi2: ', Alpha_chi2)
+            print('Alpha_chi2: ', Alpha_chi2)
             # 
             # 
             for j in range(int(InfoDict['NLIB'])):
@@ -406,7 +410,9 @@ else:
             #pprint(obj_SED_sum_y)
             #print(numpy.column_stack((obj_SED_sum_x, obj_SED_sum_y)))
             #print(Arr_chi2[i])
-            Color_chi2 = Plot_engine.get_color_by_value([Min_chi2, Max_chi2+(Max_chi2-Min_chi2)*0.3], 
+            Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.05)
+            Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.85)
+            Color_chi2 = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
                                                         input_value=Arr_chi2[i], 
                                                         log=1, 
                                                         cmap=matplotlib.cm.get_cmap('gray'))
@@ -415,7 +421,7 @@ else:
             Plot_engine.plot_data_file('obj_%d/SED_SUM'%(i+1), xlog=1, ylog=1, current=1, \
                                 dataname='obj_%d_SED_SUM'%(i+1), 
                                 redshift = Redshift, 
-                                linestyle='solid', linewidth=1.0, color=Color_chi2, alpha=Alpha_chi2)
+                                linestyle='solid', linewidth=1.0, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Alpha_chi2
             # 
             # show chi2 on the figure
             if i == SelectNumber-1:
@@ -447,8 +453,8 @@ else:
         # 
         Plot_engine.set_xrange([0.1,1e6])
         Plot_engine.set_yrange([1e-6,1e4])
-        Plot_engine.set_xtitle('Wavelength [um]')
-        Plot_engine.set_ytitle('Flux Density [mJy]')
+        Plot_engine.set_xtitle('Observing-frame wavelength [um]')
+        Plot_engine.set_ytitle('Flux density [mJy]')
         Plot_engine.savepdf(Output_name+'.pdf')
         #Plot_engine.show()
         Plot_engine.close()
