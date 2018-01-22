@@ -105,11 +105,17 @@ with open(out_file, 'r+') as fp:
                 # write only one header line
                 fp.write(out_content[out_iline])
                 # 
-            elif len(out_header) >= 4:
+            elif len(out_header) < 4:
+                # append header to 'out_header' list
+                out_header.append(out_content[out_iline])
+                # skip the 2nd to 4th header line
+                pass
+            else:
                 # write data line
                 fp.write(out_content[out_iline])
                 # 
         out_iline = out_iline + 1
+    fp.truncate()
     fp.close()
 #os.system('sed -i.bak -e "$(grep \"\\\" %s | wc -l)s/^ /#/" "%s"'%(out_file, out_file))
 #os.system('sed -i.bak -e "2d;3d;4d" "%s"'%(out_file))
