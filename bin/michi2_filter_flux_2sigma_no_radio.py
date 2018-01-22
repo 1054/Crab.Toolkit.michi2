@@ -90,14 +90,14 @@ with open(out_file, 'r+') as fp:
     fp.seek(0)
     while out_iline < len(out_content):
         if out_content[out_iline][0] == '\\':
-            # This is a commented line
-            out_content[out_iline][0] = '#'
+            # if his is a commented line, then we change the comment mark to '#'
+            out_content[out_iline] = '#' + out_content[out_iline][1:]
             fp.write(out_content[out_iline])
         else:
             if len(out_header) == 0:
                 # if this is the first header line, then replace the first white space by '#', or if there is no white space, preprend '#'.
                 if out_content[out_iline][0] == ' ':
-                    out_content[out_iline][0] = '#'
+                    out_content[out_iline] = '#' + out_content[out_iline][1:]
                 else:
                     out_content[out_iline] = '#' + out_content[out_iline]
                 # append header to 'out_header' list
