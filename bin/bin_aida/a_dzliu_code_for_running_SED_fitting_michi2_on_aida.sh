@@ -109,7 +109,7 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     # check user input, only run for sources input by the user.
     imatch=0
     for iargs in "$@"; do
-        if [[ "${list_of_source_names[i]}" == "${iargs}" ]]; then
+        if [[ "${list_of_source_names[i]}" == $(echo "${iargs}" | sed -e 's%/$%%g') ]]; then
             imatch=1
             break
         fi

@@ -322,6 +322,10 @@ for (( i=0; i<${#m_Catalogs[@]}; i++ )); do
             mkdir "$m_BackupDir"
             mv extracted_flux_for_obj_at_row_*.txt "$m_BackupDir/"
         fi
+    fi
+    
+    # if there is only one input catalog, the do not name the output file by catalog id
+    if [[ ${#m_Catalogs[@]} -gt 1 ]]; then
         m_CatalogId=(-catid $((i+1)))
     else
         m_CatalogId=()

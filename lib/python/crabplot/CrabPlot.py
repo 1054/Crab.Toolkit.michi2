@@ -642,7 +642,7 @@ class CrabPlot(object):
     def set_figure_margin(self, left=None, bottom=None, right=None, top=None):
         # set the margin to the full image
         self.Plot_device.subplots_adjust(left=left, bottom=bottom, right=right, top=top)
-        print('CrabPlot::set_figure_margin() left=, bottom, right, top', left, bottom, right, top)
+        print('CrabPlot::set_figure_margin() left=%s, bottom=%s, right=%s, top=%s'%(left, bottom, right, top))
     # 
     # def set_panel_margin
     def set_panel_margin(self, i, left=None, bottom=None, right=None, top=None):
@@ -766,6 +766,11 @@ class CrabPlot(object):
                 plot_panel_ax = plot_panel_xy['panel']
                 current = len(self.Plot_panels)
                 overplot = False
+        # 
+        # tweak ax
+        #plot_panel_ax.ticklabel_format(useOffset=False) # only works for ScalarFormatter
+        # 
+        # return
         return plot_panel_ax, current, overplot
     # 
     def get_upper_limit_marker(self):
@@ -790,7 +795,7 @@ class CrabPlot(object):
                 xtitle = None, ytitle = None, 
                 fmt = None, 
                 symbol = 'o', symsize = 3, thick = 2, 
-                marker = None, size = None, color = 'blue', fillstyle = None, 
+                marker = None, size = None, color = '#1b81e5', fillstyle = None, 
                 linestyle = 'None', linewidth = None, drawstyle = None, 
                 facecolor = None, edgecolor = None, edgewidth = None, alpha = 1.0, zorder = 5, 
                 uplims = None, lolims = None, 
@@ -821,15 +826,15 @@ class CrabPlot(object):
             self.set_margin(left=0.18)
         # check xlog ylog
         if xlog is not None:
-            if type(xlog) is bool:
+            if type(xlog) is not int:
                 xlog = int(xlog)
         else:
-            xlog = (plot_panel_ax.get_xscale()=='log')
+            xlog = int(plot_panel_ax.get_xscale()=='log')
         if ylog is not None:
-            if type(ylog) is bool:
+            if type(ylog) is not int:
                 ylog = int(ylog)
         else:
-            ylog = (plot_panel_ax.get_yscale()=='log')
+            ylog = int(plot_panel_ax.get_yscale()=='log')
         # parse symbol (does not override marker)
         if symbol is not None and marker is None:
             if symbol == 'square':
@@ -885,18 +890,32 @@ class CrabPlot(object):
         # axis ticks format
         # -- http://matplotlib.org/examples/ticks_and_spines/tick-locators.html
         # -- http://stackoverflow.com/questions/33126126/matplotlib-minor-ticks
-        #if xlog>0:
-        #    plot_panel_xy['panel'].xaxis.set_tick_params(which='major', length=8.0)
-        #    plot_panel_xy['panel'].xaxis.set_tick_params(which='minor', length=4.0)
+        if xlog>0:
+            #plot_panel_xy['panel'].xaxis.set_tick_params(which='major', length=8.0)
+            #plot_panel_xy['panel'].xaxis.set_tick_params(which='minor', length=4.0)
+            plot_panel_ax.xaxis.set_major_locator(LogLocator(base=10,numticks=30))
+            plot_panel_ax.xaxis.set_minor_locator(LogLocator(base=10,numticks=30,subs=numpy.arange(2.0,10.0,1.0)))
+            #plot_panel_ax.xaxis.set_minor_formatter(NullFormatter())
+            #plot_panel_ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+            #plot_panel_ax.xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
+        else:
+            plot_panel_ax.ticklabel_format(style='plain',axis='x',useOffset=False) # 20180122
         if ylog>0:
             #plot_panel_xy['panel'].yaxis.set_tick_params(which='major', length=8.0)
             #plot_panel_xy['panel'].yaxis.set_tick_params(which='minor', length=4.0)
             plot_panel_ax.yaxis.set_major_locator(LogLocator(base=10,numticks=30))
             plot_panel_ax.yaxis.set_minor_locator(LogLocator(base=10,numticks=30,subs=numpy.arange(2.0,10.0,1.0)))
-            plot_panel_ax.yaxis.set_minor_formatter(NullFormatter())
-            ##print(plot_panel_xy['panel'].yaxis.get_major_formatter())
+            #plot_panel_ax.yaxis.set_minor_formatter(NullFormatter())
+            #plot_panel_ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+            #plot_panel_ax.yaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
             ##plot_panel_xy['panel'].xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
             ##plot_panel_xy['panel'].yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        else:
+            plot_panel_ax.ticklabel_format(style='plain',axis='y',useOffset=False) # 20180122
+        # 
+        #print('CrabPlot::plot_xy() debug xlog=%s ylog=%s'%(xlog, ylog)) # 20180122, axis useOffset problem.
+        #print('CrabPlot::plot_xy() debug xlog=%s ylog=%s'%(xlog, ylog)) # 20180122, axis useOffset problem.
+        #print('CrabPlot::plot_xy() debug xlog=%s ylog=%s'%(xlog, ylog)) # 20180122, axis useOffset problem.
         # 
         # set tick label format, scitific notation
         #plot_panel_ax.ticklabel_format(axis='both', style='sci', scilimits=(-2,+2)) # not working for log!
@@ -992,10 +1011,12 @@ class CrabPlot(object):
         # 
         # set log, title, range, etc.
         if xlog is not None:
+            xlog = int(xlog)
             if xlog > 0:
                 plot_panel_ax.set_xscale('log')
                 if current>0: self.Plot_panels[current-1]['xlog'] = xlog
         if ylog is not None:
+            ylog = int(ylog)
             if ylog > 0:
                 plot_panel_ax.set_yscale('log')
                 if current>0: self.Plot_panels[current-1]['ylog'] = ylog
@@ -1023,40 +1044,41 @@ class CrabPlot(object):
         x0 = self.check_scalar(x0)
         y0 = self.check_scalar(y0)
         # check if a direct matplotlib axis var is given or not
-        if ax is not None:
-            current = -1
-            overplot = True
-            plot_panel_ax = ax
-            plot_panel_xy = None
-        else:
-            # get current panel or add new panel
-            if len(self.Plot_panels) == 0:
-                plot_panel_xy = self.add_panel(position = position, label = label)
-                plot_panel_ax = plot_panel_xy['panel']
-                current = len(self.Plot_panels)
-                current = 1
-                overplot = False
-            # get current panel
-            elif current>0:
-                plot_panel_xy = self.Plot_panels[current-1]
-                plot_panel_ax = plot_panel_xy['panel']
-            # get last panel for overplotting
-            elif overplot: 
-                plot_panel_xy = self.Plot_panels[-1]
-                plot_panel_ax = plot_panel_xy['panel']
-                current = len(self.Plot_panels)
-        # get plot panel 'ax' variable
-        if ax is not None:
-            plot_panel_ax = ax
-        else:
-            plot_panel_xy = self.Plot_panels[-1]
-            plot_panel_ax = plot_panel_xy['panel']
+        #if ax is not None:
+        #    current = -1
+        #    overplot = True
+        #    plot_panel_ax = ax
+        #    plot_panel_xy = None
+        #else:
+        #    # get current panel or add new panel
+        #    if len(self.Plot_panels) == 0:
+        #        plot_panel_xy = self.add_panel(position = position, label = label)
+        #        plot_panel_ax = plot_panel_xy['panel']
+        #        current = len(self.Plot_panels)
+        #        current = 1
+        #        overplot = False
+        #    # get current panel
+        #    elif current>0:
+        #        plot_panel_xy = self.Plot_panels[current-1]
+        #        plot_panel_ax = plot_panel_xy['panel']
+        #    # get last panel for overplotting
+        #    elif overplot: 
+        #        plot_panel_xy = self.Plot_panels[-1]
+        #        plot_panel_ax = plot_panel_xy['panel']
+        #        current = len(self.Plot_panels)
+        ## get plot panel 'ax' variable
+        #if ax is not None:
+        #    plot_panel_ax = ax
+        #else:
+        #    plot_panel_xy = self.Plot_panels[-1]
+        #    plot_panel_ax = plot_panel_xy['panel']
+        ax, current, overplot = self.get_panel_ax(ax, current, overplot)
         # plot line
-        if plot_panel_ax:
+        if ax:
             if NormalizedCoordinate is True:
-                plot_panel_ax.text(x0, y0, text_input, transform=plot_panel_ax.transAxes, **kwargs) # verticalalignment='center', horizontalalignment='left'
+                ax.text(x0, y0, text_input, transform=ax.transAxes, **kwargs) # verticalalignment='center', horizontalalignment='left'
             else:
-                plot_panel_ax.text(x0, y0, text_input, **kwargs) # verticalalignment='center', horizontalalignment='left'
+                ax.text(x0, y0, text_input, **kwargs) # verticalalignment='center', horizontalalignment='left'
     # 
     def xyouts(self, x0, y0, text_input, ax = None, current = None, overplot = True, NormalizedCoordinate = False, **kwargs):
         ax, current, overplot = self.get_panel_ax(ax, current, overplot)
@@ -1075,14 +1097,25 @@ class CrabPlot(object):
         # set log
         log = False
         if xlog is not None:
+            xlog = int(xlog)
             if xlog > 0:
                 plot_panel_ax.set_xscale('log')
                 if current>0: self.Plot_panels[current-1]['xlog'] = xlog
+                #<TODO># how to apply xlog?
+            else:
+                plot_panel_ax.ticklabel_format(style='plain',axis='x',useOffset=False) # 20180122
+        else:
+            plot_panel_ax.ticklabel_format(style='plain',axis='x',useOffset=False) # 20180122
         if ylog is not None:
+            ylog = int(ylog)
             if ylog > 0:
                 plot_panel_ax.set_yscale('log')
                 if current>0: self.Plot_panels[current-1]['ylog'] = ylog
                 log = True
+            else:
+                plot_panel_ax.ticklabel_format(style='plain',axis='x',useOffset=False) # 20180122
+        else:
+            plot_panel_ax.ticklabel_format(style='plain',axis='x',useOffset=False) # 20180122
         # plot histogram using the matplotlib bar() function
         plot_panel_ax.bar(x, y, log=log, **kwargs)
         # set titles

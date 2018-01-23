@@ -8,14 +8,11 @@ import sys
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabplot')
-sys.path.insert(1, os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabbin')
 #sys.path.insert(1, '/Users/dzliu/Softwares/Python/lib/crab/crabtable')
 #sys.path.insert(1, '/Users/dzliu/Softwares/Python/lib/crab/crabplot')
-#sys.path.insert(1, '/Users/dzliu/Softwares/Python/lib/crab/crabbin')
 
 from CrabTable import *
 from CrabPlot import *
-from CrabBin import *
 
 import glob
 import math
@@ -62,7 +59,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         'chisq' in param_dict :
         if verbose>=1:
             print('Analyzing the chi-square distribution for parameter "%s" in library %s from file "%s"'%(param_dict['Par_name'], param_dict['Lib_name'], param_dict['Lib_file']))
-            #print(param_dict)
+            print(param_dict)
         # 
         #print(big_chisq_data_table.colnames)
         #chisq_array = big_chisq_data_table[big_chisq_data_table.colnames[2-1]] # the second column of the input 'big_chisq_data_table' is the chisq column. -- TODO: MUST MAKE SURE USER DO NOT CHANGE THE FORMAT!
@@ -89,53 +86,49 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         #        param_array = param_array[param_range_mask]
         #        param_array_nonan = param_array_nonan[param_range_mask]
         # 
-        # set xrange to the user-specified values
-        xrange = None
-        param_min = None
-        param_max = None
-        if 'range' in param_dict:
-            if len(param_dict['range'])>=2:
-                param_min = param_dict['range'][0]
-                param_max = param_dict['range'][1]
-        # 
         # bin param
         param_log = False
         if 'Log_calc' in param_dict:
             if param_dict['Log_calc'] == True:
                 param_log = True
+        if param_log == True: 
+            param_log_mask = (param_array>0)
+            param_log_mask2 = (param_array<=0)
+            param_array[param_log_mask] = numpy.log10(param_array[param_log_mask])
+            param_array[param_log_mask2] = numpy.nan
+            param_array_nonan[param_log_mask] = numpy.log10(param_array_nonan[param_log_mask]) # NoNaN array
+        param_min = numpy.nanmin(param_array)
+        param_max = numpy.nanmax(param_array)
         # 
-        # crab_bin_compute_param_chisq_histogram for delta_chisq = 2.3 (2p)
-        param_stats_2p = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, delta_chisq = 2.3, log = param_log)
-        if 'Par_file' in param_dict:
-            # remove previous file
-            if os.path.isfile('best-fit_param_'+param_dict['Par_file']+'.txt'):
-                os.system('mv %s %s.backup'%('best-fit_param_'+param_dict['Par_file']+'.txt', 
-                                            'best-fit_param_'+param_dict['Par_file']+'.txt'))
-            if param_stats_2p['valid'] is True:
-                param_median = param_stats_2p['median']
-                param_best = param_stats_2p['best']
-                param_sigma = param_stats_2p['sigma']
-                param_L68 = param_stats_2p['L68']
-                param_H68 = param_stats_2p['H68']
-            else:
-                param_median = 0.0
-                param_best = 0.0
-                param_sigma = 0.0
-                param_L68 = 0.0
-                param_H68 = 0.0
-            asciitable.write(numpy.column_stack((param_median, param_best, param_sigma, param_L68, param_H68)), 
-                                    'best-fit_param_'+param_dict['Par_file']+'.txt', Writer=asciitable.Ipac, 
-                                            names=['param_median', 'param_best', 'param_sigma', 'param_L68', 'param_H68'], 
-                                            formats={'param_median': '%20.10g', 'param_best': '%20.10g', 'param_sigma': '%20.10g', 'param_L68': '%20.10g', 'param_H68': '%20.10g'}, 
-                                                delimiter='    ', overwrite = True)
+        # set xrange to the user-specified values
+        xrange = None
+        if 'range' in param_dict:
+            if len(param_dict['range'])>=2:
+                param_min = param_dict['range'][0]
+                param_max = param_dict['range'][1]
+                if param_log == True: 
+                    param_min = numpy.log10(param_min)
+                    param_max = numpy.log10(param_max)
+                xrange = [param_min, param_max]
         # 
-        # crab_bin_compute_param_chisq_histogram for plotting
-        param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, delta_chisq = Delta_chisq_of_interest, log = param_log)
+        param_bin_numb = 50 #<TODO># 
+        param_bin_step = (param_max-param_min)/param_bin_numb
+        print('Param value min max are %s %s'%(param_min, param_max))
         # 
-        xrange = param_stats['xrange']
-        yrange = param_stats['yrange']
-        xrange = [xrange[0]-(xrange[1]-xrange[0])*2.00, xrange[1]+(xrange[1]-xrange[0])*2.00] # extend the range for plotting.
-        yrange = [yrange[0]-(yrange[1]-yrange[0])*0.35, yrange[1]+(yrange[1]-yrange[0])*2.00] # extend the range for plotting.
+        # optimize xrange
+        xclip_mask = (chisq_array <= chisq_min+Delta_chisq_of_interest)
+        if len(numpy.argwhere(xclip_mask)) > 0:
+            xclip_min = numpy.nanmin(param_array[xclip_mask])
+            xclip_max = numpy.nanmax(param_array[xclip_mask])
+            if xclip_max > xclip_min:
+                xrange = [xclip_min, xclip_max]
+                xrange = [xrange[0]-(xrange[1]-xrange[0])*1.0, xrange[1]+(xrange[1]-xrange[0])*1.0]
+                param_bin_step = (xclip_max - xclip_min) / 15.0 #<TODO># bin step
+                param_bin_numb = int((param_max-param_min)/param_bin_step)+1
+        # 
+        # optimize yrange
+        yrange = [1/(chisq_min+Delta_chisq_of_interest), 1/(chisq_min)]
+        yrange = [yrange[0]-(yrange[1]-yrange[0])*0.25, yrange[1]+(yrange[1]-yrange[0])*0.35]
         # 
         xlog = None
         #if 'Log_plot' in param_dict:
@@ -145,58 +138,50 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         ylog = None
         # 
         # compute minimum chisq in each parameter bin
-        param_bin_x = param_stats['hist_x']
-        param_bin_y = param_stats['hist_y']
-        param_bin_step = param_stats['bin_step']
-        # 
-        # log
-        if param_log is True:
-            param_array_mask = (param_array>0)
-            param_array_mask2 = (param_array<=0)
-            param_array[param_array_mask] = numpy.log10(param_array[param_array_mask])
-            param_array[param_array_mask2] = numpy.nan
-        #pprint(numpy.column_stack((param_bin_x, param_bin_y, 1/param_bin_y)))
-        #print('------ xrange', xrange)
-        #print('------ yrange', yrange, [1/yrange[1],1/yrange[0]])
-        #print('------ param_stats.xrange', param_stats['xrange'])
-        #print('------ param_stats.yrange', param_stats['yrange'], [1/param_stats['yrange'][1],1/param_stats['yrange'][0]])
-        #print('------ param_stats.minimum_chisq', param_stats['minimum_chisq'])
-        #print('------ param_stats.best_min_chisq', param_stats['best_min_chisq'])
-        #print('------ param_stats.best', param_stats['best'])
-        #--
-        #--TODO--20180123-10h44m-- when param_log is True, param_min can be zero!
-        #--
+        param_bin_x = []
+        param_bin_y = []
+        for i in range(param_bin_numb):
+            param_bin_lower = numpy.nan
+            param_bin_upper = numpy.nan
+            if i == param_bin_numb-1:
+                param_bin_lower = param_min+float(i)*param_bin_step
+                param_bin_upper = param_min+float(i+1)*param_bin_step # param_max
+                param_bin_mask = (param_array_nonan>=param_bin_lower) & (param_array_nonan<=param_bin_upper)
+            else:
+                param_bin_lower = param_min+float(i)*param_bin_step
+                param_bin_upper = param_min+float(i+1)*param_bin_step
+                param_bin_mask = (param_array_nonan>=param_bin_lower) & (param_array_nonan<param_bin_upper)
+            # check if there are data points in a parameter bin
+            param_bin_args = numpy.argwhere(param_bin_mask)
+            if verbose>=2:
+                print('Binning from param value %s to %s, step %s, count %d'%(param_bin_lower, param_bin_upper, param_bin_step, len(param_bin_args)))
+            if len(param_bin_args) > 0:
+                chisq_bin_array = chisq_array[param_bin_mask]
+                chisq_bin_min = numpy.nanmin(chisq_bin_array)
+                chisq_bin_max = numpy.nanmax(chisq_bin_array)
+                param_bin_x.append(param_min+i*param_bin_step)
+                param_bin_y.append(chisq_bin_min)
         # 
         # Initialize a plot
         if Plot_engine is None:
             Plot_engine = CrabPlot(figure_size=(9.0,5.0))
-            Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04)
+            Plot_engine.set_margin(panel=0, top=0.96)
         # 
         # Plot xy
         Plot_engine.plot_xy(param_array, 1/numpy.array(chisq_array), overplot = False, 
                                 xtitle = param_dict['Par_name'], ytitle = '$1/\chi^2$', useTex = True, 
-                                size = 2.2, color='#1873cc', symbol = 'o')
-                                #xrange = xrange, yrange = [1/yrange[1],1/yrange[0]], 
-                                #xlog = xlog, ylog = ylog)
-        # 
-        # Plot Cut_chi2
-        Plot_engine.plot_line(param_stats['min'], 1/(chisq_min+Delta_chisq_of_interest), param_stats['max'], 1/(chisq_min+Delta_chisq_of_interest), 
-                                overplot = True, linestyle = 'dashed')
-        # 
-        # Plot histogram
-        Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step*3.0, align = 'edge', overplot = False, 
-                                xtitle = param_dict['Par_name'], ytitle = '$1/\chi^2$', useTex = True, 
-                                xrange = xrange, yrange = [1/yrange[1],1/yrange[0]], xlog = xlog, ylog = ylog)
+                                size = 0.12, symbol = 'cross', xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
         # Plot Cut_chi2
         Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
-        Plot_engine.plot_text(xrange[1], 1/(yrange[0]+0.07*(yrange[1]-yrange[0])), ' (zoomed) ', NormalizedCoordinate=False, overplot=True, horizontalalignment='right')
         # 
-        # Plot Cut_chi2 2p = 2.3
-        Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(chisq_min+2.3), 
-                                param_stats_2p['xrange'][1], 1/(chisq_min+2.3), 
-                                overplot = True, color='#1e90ff', linestyle = 'dotted')
-                                # color: http://www.color-hex.com/color/1e90ff
+        # Plot histogram
+        Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step, align = 'edge', overplot = False, 
+                                xtitle = param_dict['Par_name'], ytitle = '$1/\chi^2$', useTex = True, 
+                                xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
+        # 
+        # Plot Cut_chi2
+        Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
         # 
     else:
         print('Error! analyze_chisq_distribution() got unaccepted inputs!')
@@ -379,8 +364,7 @@ else:
         # Then plot SEDs
         Redshift = float(InfoDict['REDSHIFT'])
         Color_list = ['cyan', 'gold', 'red', 'blue', 'purple']
-        Plot_engine = CrabPlot(figure_size=(8.0,5.0))
-        Plot_engine.set_margin(top=0.92, bottom=0.16, left=0.12, right=0.96)
+        Plot_engine = CrabPlot(figure_size=(9.0,5.0))
         for i in range(SelectNumber-1,-1,-1):
             # 
             # skip solutions between 11th to last 11th.
@@ -397,7 +381,7 @@ else:
                                                         input_value=Arr_chi2[i], 
                                                         log=1, 
                                                         cmap=matplotlib.cm.get_cmap('gray_r'))[0]
-            #print('Alpha_chi2: ', Alpha_chi2)
+            print('Alpha_chi2: ', Alpha_chi2)
             # 
             # 
             for j in range(int(InfoDict['NLIB'])):
@@ -447,7 +431,7 @@ else:
             if i == SelectNumber-1:
                 Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
             if i >= SelectNumber-6:
-                #print('Plotting label at', 0.09, 0.95-0.03*(SelectNumber-1-i), 'chi2 = %.1f'%(Arr_chi2[i]))
+                print(0.09, 0.95-0.03*(SelectNumber-1-i), '%.1f'%(Arr_chi2[i]))
                 Plot_engine.xyouts(0.09, 0.95-0.03*(SelectNumber-1-i), '%.1f'%(Arr_chi2[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
             if i == 0:
                 Plot_engine.xyouts(0.09, 0.95-0.03*(6), '......', NormalizedCoordinate=True, color=Color_chi2)
@@ -466,7 +450,7 @@ else:
             Detection_mask = (Flux_obs>=2.0*FluxErr_obs)
             UpperLimits_mask = (Flux_obs<2.0*FluxErr_obs)
             #print(Wavelength_obs)
-            Plot_engine.plot_xy(Wavelength_obs[Detection_mask], Flux_obs[Detection_mask], yerr=FluxErr_obs[Detection_mask], dataname='obs', overplot=True, symbol='open square', symsize=3, thick=1.5, capsize=4, zorder=10)
+            Plot_engine.plot_xy(Wavelength_obs[Detection_mask], Flux_obs[Detection_mask], yerr=FluxErr_obs[Detection_mask], dataname='obs', overplot=True, symbol='open square', symsize=3, thick=1.75, capsize=4, zorder=10)
             Plot_engine.plot_xy(Wavelength_obs[UpperLimits_mask], 3.0*FluxErr_obs[UpperLimits_mask], dataname='upper limits', overplot=True, symbol='upper limits', symsize=3, thick=1.25, alpha=0.5, zorder=9)
         except Exception as err:
             print(err)
@@ -558,11 +542,10 @@ else:
                     Stellar_mass_dict['Lib_file'] = InfoDict[Lib_name]
                     Stellar_mass_dict['Lib_name'] = Lib_name
                     Stellar_mass_dict['Lib_numb'] = j+1
-                    Stellar_mass_dict['Par_name'] = '$\log \ M_{*}$ [$\mathrm{M}_{\odot}$]' # Lib_dict[Key_TPAR]
-                    Stellar_mass_dict['Par_file'] = 'Mstar'
+                    Stellar_mass_dict['Par_name'] = '$M_{*}$ [$\mathrm{M}_{\odot}$]' # Lib_dict[Key_TPAR]
                     Stellar_mass_dict['Col_numb'] = Col_number
                     Stellar_mass_dict['Log_calc'] = True
-                    Stellar_mass_dict['range'] = numpy.power(10,[8.0,13.5])
+                    Stellar_mass_dict['range'] = numpy.power(10,[8.0,13.0])
                     Stellar_mass_dict['value'] = DataArray['a%d'%(j+1)] / (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * DataTable.getColumn('col%d'%(Col_number)) / (1+Redshift)
                     Stellar_mass_dict['chisq'] = DataArray['chi2']
             elif InfoDict[Lib_name].find('DL07.HiExCom') >= 0:
@@ -570,11 +553,10 @@ else:
                     LTIR_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     LTIR_warm_dust_dict['Lib_name'] = Lib_name
                     LTIR_warm_dust_dict['Lib_numb'] = j+1
-                    LTIR_warm_dust_dict['Par_name'] = '$\log \ L_{\mathrm{IR}}$ (warm) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
-                    LTIR_warm_dust_dict['Par_file'] = 'LIR_warm'
+                    LTIR_warm_dust_dict['Par_name'] = '$L_{\mathrm{IR}}$ (warm) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     LTIR_warm_dust_dict['Col_numb'] = Col_number
                     LTIR_warm_dust_dict['Log_calc'] = True
-                    LTIR_warm_dust_dict['range'] = numpy.power(10,[9.0,14.5])
+                    LTIR_warm_dust_dict['range'] = numpy.power(10,[9.0,14.0])
                     LTIR_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn('col%d'%(Col_number))) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     LTIR_warm_dust_dict['chisq'] = DataArray['chi2']
                 elif 'Umin' == Lib_dict[Key_TPAR]:
@@ -582,7 +564,6 @@ else:
                     Umin_warm_dust_dict['Lib_name'] = Lib_name
                     Umin_warm_dust_dict['Lib_numb'] = j+1
                     Umin_warm_dust_dict['Par_name'] = '$U_{\mathrm{min}}$ (warm)' # Lib_dict[Key_TPAR]
-                    Umin_warm_dust_dict['Par_file'] = 'Umin_warm'
                     Umin_warm_dust_dict['Col_numb'] = Col_number
                     Umin_warm_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
                     Umin_warm_dust_dict['range'] = [0.08,30.0]
@@ -592,8 +573,7 @@ else:
                     Mass_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     Mass_warm_dust_dict['Lib_name'] = Lib_name
                     Mass_warm_dust_dict['Lib_numb'] = j+1
-                    Mass_warm_dust_dict['Par_name'] = '$\log \ M_{\mathrm{dust}}$ (warm) [$\mathrm{M}_{\odot}$]'
-                    Mass_warm_dust_dict['Par_file'] = 'Mdust_warm'
+                    Mass_warm_dust_dict['Par_name'] = '$M_{\mathrm{dust}}$ (warm) [$\mathrm{M}_{\odot}$]'
                     Mass_warm_dust_dict['Col_numb'] = 2+2*(j+1)
                     Mass_warm_dust_dict['Log_calc'] = True
                     Mass_warm_dust_dict['range'] = numpy.power(10,[7.0,12.0])
@@ -605,11 +585,10 @@ else:
                     LTIR_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     LTIR_cold_dust_dict['Lib_name'] = Lib_name
                     LTIR_cold_dust_dict['Lib_numb'] = j+1
-                    LTIR_cold_dust_dict['Par_name'] = '$\log \ L_{\mathrm{IR}}$ (cold) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
-                    LTIR_cold_dust_dict['Par_file'] = 'LIR_cold'
+                    LTIR_cold_dust_dict['Par_name'] = '$L_{\mathrm{IR}}$ (cold) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     LTIR_cold_dust_dict['Col_numb'] = Col_number
                     LTIR_cold_dust_dict['Log_calc'] = True
-                    LTIR_cold_dust_dict['range'] = numpy.power(10,[9.0,14.5])
+                    LTIR_cold_dust_dict['range'] = numpy.power(10,[9.0,14.0])
                     LTIR_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn('col%d'%(Col_number))) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     LTIR_cold_dust_dict['chisq'] = DataArray['chi2']
                 elif 'Umin' == Lib_dict[Key_TPAR]:
@@ -617,7 +596,6 @@ else:
                     Umin_cold_dust_dict['Lib_name'] = Lib_name
                     Umin_cold_dust_dict['Lib_numb'] = j+1
                     Umin_cold_dust_dict['Par_name'] = '$U_{\mathrm{min}}$ (cold)' # Lib_dict[Key_TPAR]
-                    Umin_cold_dust_dict['Par_file'] = 'Umin_cold'
                     Umin_cold_dust_dict['Col_numb'] = Col_number
                     Umin_cold_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
                     Umin_cold_dust_dict['range'] = [0.08,30.0]
@@ -627,8 +605,7 @@ else:
                     Mass_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     Mass_cold_dust_dict['Lib_name'] = Lib_name
                     Mass_cold_dust_dict['Lib_numb'] = j+1
-                    Mass_cold_dust_dict['Par_name'] = '$\log \ M_{\mathrm{dust}}$ (cold) [$\mathrm{M}_{\odot}$]'
-                    Mass_cold_dust_dict['Par_file'] = 'Mdust_cold'
+                    Mass_cold_dust_dict['Par_name'] = '$M_{\mathrm{dust}}$ (cold) [$\mathrm{M}_{\odot}$]'
                     Mass_cold_dust_dict['Col_numb'] = 2+2*(j+1)
                     Mass_cold_dust_dict['Log_calc'] = True
                     Mass_cold_dust_dict['range'] = numpy.power(10,[7.0,12.0])
@@ -641,11 +618,10 @@ else:
                     Lumin_AGN_dict['Lib_file'] = InfoDict[Lib_name]
                     Lumin_AGN_dict['Lib_name'] = Lib_name
                     Lumin_AGN_dict['Lib_numb'] = j+1
-                    Lumin_AGN_dict['Par_name'] = '$\log \ L_{\mathrm{AGN}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
-                    Lumin_AGN_dict['Par_file'] = 'LAGN'
+                    Lumin_AGN_dict['Par_name'] = '$L_{\mathrm{AGN}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     Lumin_AGN_dict['Col_numb'] = Col_number
                     Lumin_AGN_dict['Log_calc'] = True
-                    Lumin_AGN_dict['range'] = numpy.power(10,[0.0,14.5])
+                    Lumin_AGN_dict['range'] = numpy.power(10,[9.0,14.0])
                     Lumin_AGN_dict['value'] = DataArray['a%d'%(j+1)] * 5133.913101 * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     Lumin_AGN_dict['chisq'] = DataArray['chi2']
                     # 
@@ -659,8 +635,7 @@ else:
     LTIR_total_dust_dict['Lib_file'] = [LTIR_warm_dust_dict['Lib_file'], LTIR_cold_dust_dict['Lib_file']]
     LTIR_total_dust_dict['Lib_name'] = [LTIR_warm_dust_dict['Lib_name'], LTIR_cold_dust_dict['Lib_name']]
     LTIR_total_dust_dict['Col_numb'] = [LTIR_warm_dust_dict['Col_numb'], LTIR_cold_dust_dict['Col_numb']]
-    LTIR_total_dust_dict['Par_name'] = '$\log \ L_{\mathrm{IR}}$ (total) [$\mathrm{L}_{\odot}$]'
-    LTIR_total_dust_dict['Par_file'] = 'LIR_total'
+    LTIR_total_dust_dict['Par_name'] = '$L_{\mathrm{IR}}$ (total) [$\mathrm{L}_{\odot}$]'
     # 
     # Total Mdust
     Mass_total_dust_dict = copy(Mass_warm_dust_dict)
@@ -668,8 +643,7 @@ else:
     Mass_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
     Mass_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
     Mass_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
-    Mass_total_dust_dict['Par_name'] = '$\log \ M_{\mathrm{dust}}$ (total) [$\mathrm{M}_{\odot}$]'
-    Mass_total_dust_dict['Par_file'] = 'Mdust_total'
+    Mass_total_dust_dict['Par_name'] = '$M_{\mathrm{dust}}$ (total) [$\mathrm{M}_{\odot}$]'
     # 
     # Total fPDR Umean
     #   the Draine & Li 2007 IRSF (interstellar radiation field) model is like Dale 2005, 
@@ -689,8 +663,7 @@ else:
     fPDR_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
     fPDR_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
     fPDR_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
-    fPDR_total_dust_dict['Par_name'] = '$\log \ \delta_{\mathrm{PDR}}$ (total)'
-    fPDR_total_dust_dict['Par_file'] = 'fPDR_total'
+    fPDR_total_dust_dict['Par_name'] = '$\log \delta_{\mathrm{PDR}}$ (total)'
     fPDR_total_dust_dict['Log_calc'] = True
     fPDR_total_dust_dict['range'] = [1e-4,1.0]
     # 
@@ -700,14 +673,13 @@ else:
     Umean_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
     Umean_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
     Umean_total_dust_dict['Par_name'] = '$\\left<U\\right>$ (total)'
-    Umean_total_dust_dict['Par_file'] = 'Umean_total'
     Umean_total_dust_dict['range'] = [0.08,50.0]
     # 
     # analyze 
     print('Num_params', Num_params)
     print('Lib_params', Lib_params)
-    Plot_engine = CrabPlot(figure_size=(14.0,10.0))
-    Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04, left=0.06, right=0.96)
+    Plot_engine = CrabPlot(figure_size=(12.0,10.0))
+    Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04)
     analyze_chisq_distribution(Stellar_mass_dict, Plot_engine = Plot_engine)
     analyze_chisq_distribution(Lumin_AGN_dict, Plot_engine = Plot_engine)
     analyze_chisq_distribution(Umin_warm_dust_dict, Plot_engine = Plot_engine)
