@@ -21,7 +21,7 @@
 # or 
 # srun -N1 -n20 --pty bash
 # or
-# sbatch --array=1-11%4 a_dzliu_code_for_running_SED_fitting_michi2_on_ISAAC.sh
+# sbatch --array=30-34%2 a_dzliu_code_for_running_SED_fitting_michi2_on_ISAAC.sh
 # 
 
 
@@ -98,15 +98,20 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     fi
     
     if [[ ! -d "${list_of_source_names[i]}" ]]; then
-        echo "Warning! \"${list_of_source_names[i]}\" was not found!"
+        echo "Warning! \"${list_of_source_names[i]}\" was not found! Will skip this source!"
         continue
     fi
     
     cd "${list_of_source_names[i]}"
     
-    if [[ ! -f "flux_obsframe.dat" ]] || [[ ! -f "source_id_ra_dec_zspec.txt" ]]; then
-        echo "Warning! \"flux_obsframe.dat\" or \"source_id_ra_dec_zspec.txt\" was not found!"
-        continue
+    if [[ ! -f "flux_obsframe.dat" ]]; then
+        if [[ -f "extracted_flux.txt" ]]; then
+            michi2_filter_flux_2sigma_no_radio.py extracted_flux.txt flux_obsframe.dat
+        fi
+        if [[ ! -f "flux_obsframe.dat" ]]; then
+            echo "Warning! \"flux_obsframe.dat\" was not found!"
+            continue
+        fi
     fi
     
     if [[ ! -f "fit_5.out" ]]; then
