@@ -329,14 +329,14 @@ else:
             json.dump(Plot_chi2_index_dict, fp, sort_keys=True, indent=4)
             fp.close()
         with open('Plot_chi2_indices.json', 'w') as fp:
-            json.dump(Plot_chi2_indices, fp, sort_keys=True, indent=4)
+            json.dump(Plot_chi2_indices.tolist(), fp)
             fp.close()
     else:
         with open('Plot_chi2_index_dict.json', 'r') as fp:
             Plot_chi2_index_dict = json.load(fp)
             fp.close()
         with open('Plot_chi2_indices.json', 'r') as fp:
-            Plot_chi2_indices = json.load(fp)
+            Plot_chi2_indices = numpy.array(json.load(fp))
             fp.close()
     #print('Will plot chi2 solution indices %s'%(Plot_chi2_index_dict))
     # 
