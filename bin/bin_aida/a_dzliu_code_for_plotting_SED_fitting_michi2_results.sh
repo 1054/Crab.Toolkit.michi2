@@ -1,6 +1,9 @@
 #!/bin/bash
 # 
 
+set -e
+
+
 # 
 # Check software dependencies
 # 
