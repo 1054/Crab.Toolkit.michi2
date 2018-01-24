@@ -189,7 +189,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         # Plot histogram
         Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step*3.0, align = 'edge', overplot = False, 
                                 xtitle = param_dict['Par_name'], ytitle = '$1/\chi^2$', useTex = True, 
-                                xrange = xrange, yrange = [yrange[1],yrange[0]], xlog = xlog, ylog = ylog)
+                                xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
         # Plot Cut_chi2
         Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
