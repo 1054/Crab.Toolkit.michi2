@@ -135,6 +135,9 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         xrange = param_stats['xrange']
         yrange = param_stats['yrange']
         xrange = [xrange[0]-(xrange[1]-xrange[0])*2.00, xrange[1]+(xrange[1]-xrange[0])*2.00] # extend the range for plotting.
+        if xrange[0] < param_stats['min']: xrange[0] = param_stats['min']
+        if xrange[1] > param_stats['max']: xrange[1] = param_stats['max']
+        # invert y
         yrange = [1.0/yrange[1], 1.0/yrange[0]]
         yrange = numpy.log10(yrange)
         yrange = [yrange[0]-(yrange[1]-yrange[0])*0.50, yrange[1]+(yrange[1]-yrange[0])*0.05] # extend the range for plotting.
@@ -185,7 +188,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                                 size = 2.2, color='#1873cc', symbol = 'o')
         # 
         # Plot Cut_chi2
-        Plot_engine.plot_line(param_stats['min'], 1/(chisq_min+Delta_chisq_of_interest), param_stats['max'], 1/(chisq_min+Delta_chisq_of_interest), 
+        Plot_engine.plot_line(param_stats['min'], 1/(chisq_min+Delta_chisq_of_interest), 
+                                param_stats['max'], 1/(chisq_min+Delta_chisq_of_interest), 
                                 overplot = True, linestyle = 'dashed')
         # 
         # Plot histogram
