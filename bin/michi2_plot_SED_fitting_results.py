@@ -78,8 +78,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         chisq_min = numpy.nanmin(chisq_array)
         # 
         # copy
-        param_array_nonan = copy(param_array)
-        param_array_nonan[numpy.isnan(param_array_nonan)] = -99
+        #param_array_nonan = copy(param_array)
+        #param_array_nonan[numpy.isnan(param_array_nonan)] = -99
         # 
         # apply range -- no, do not cut the array, but just adjust the plotting range.
         #if 'range' in param_dict:
@@ -135,8 +135,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         xrange = param_stats['xrange']
         yrange = param_stats['yrange']
         xrange = [xrange[0]-(xrange[1]-xrange[0])*2.00, xrange[1]+(xrange[1]-xrange[0])*2.00] # extend the range for plotting.
-        if xrange[0] < param_stats['min']: xrange[0] = param_stats['min']
-        if xrange[1] > param_stats['max']: xrange[1] = param_stats['max']
+        #if xrange[0] < param_stats['min']: xrange[0] = param_stats['min']
+        #if xrange[1] > param_stats['max']: xrange[1] = param_stats['max']
         # invert y
         yrange = [1.0/yrange[1], 1.0/yrange[0]]
         yrange = numpy.log10(yrange)
@@ -195,7 +195,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         # Plot histogram
         Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step*3.0, align = 'edge', overplot = False, 
                                 xtitle = param_dict['Par_name'], ytitle = '$1/\chi^2$', useTex = True, 
-                                xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
+                                yrange = yrange, xlog = xlog, ylog = ylog)
         # 
         # Plot Cut_chi2
         Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
