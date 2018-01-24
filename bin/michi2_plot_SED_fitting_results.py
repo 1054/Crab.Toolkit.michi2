@@ -221,7 +221,8 @@ def random_sorted_chi2_index_dict(Cut_chi2_array, max = 50):
     Plot_chi2_indices[-1] = 0 if Plot_chi2_indices[-1] != 0 else 0 # make sure the last element is always '0', i.e., the mininum chi-square solution
     # 
     Plot_chi2_index_dict = {}
-    for i in range(len(Plot_chi2_indices)): Plot_chi2_index_dict[Plot_chi2_indices[i]] = Cut_chi2_array[i]
+    for i in range(len(Plot_chi2_indices)): 
+        Plot_chi2_index_dict['%d'%(Plot_chi2_indices[i])] = Cut_chi2_array[i]
     # 
     return Plot_chi2_index_dict, Plot_chi2_indices
 
@@ -360,7 +361,7 @@ else:
             # skip solutions between 11th to last 11th.
             #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_number-1-Plot_chi2_max_number/2):
             #    continue
-            if not i in Plot_chi2_index_dict:
+            if not ('%d'%i) in Plot_chi2_index_dict:
                 continue
             # 
             # Read SED_LIB
@@ -428,7 +429,7 @@ else:
             # skip solutions between 11th to last 11th.
             #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_number-1-Plot_chi2_max_number/2):
             #    continue
-            if not i in Plot_chi2_index_dict:
+            if not ('%d'%i) in Plot_chi2_index_dict:
                 continue
             # 
             # alpha by chi2
