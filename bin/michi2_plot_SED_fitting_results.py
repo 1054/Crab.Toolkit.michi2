@@ -336,7 +336,7 @@ else:
             Plot_chi2_index_dict = json.load(fp)
             fp.close()
         with open('Plot_chi2_indices.json', 'r') as fp:
-            Plot_chi2_indices = numpy.array(json.load(fp))
+            Plot_chi2_indices = numpy.array(int(json.load(fp)))
             fp.close()
     #print('Will plot chi2 solution indices %s'%(Plot_chi2_index_dict))
     # 
