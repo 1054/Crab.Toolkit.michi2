@@ -137,7 +137,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         xrange = [xrange[0]-(xrange[1]-xrange[0])*2.00, xrange[1]+(xrange[1]-xrange[0])*2.00] # extend the range for plotting.
         yrange = [1.0/yrange[1], 1.0/yrange[0]]
         yrange = numpy.log10(yrange)
-        yrange = [yrange[0]-(yrange[1]-yrange[0])*0.50, yrange[1]+(yrange[1]-yrange[0])*0.10] # extend the range for plotting.
+        yrange = [yrange[0]-(yrange[1]-yrange[0])*0.50, yrange[1]+(yrange[1]-yrange[0])*0.05] # extend the range for plotting.
         yrange = numpy.power(10,yrange)
         # 
         xlog = None
@@ -195,7 +195,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         # 
         # Plot Cut_chi2
         Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
-        Plot_engine.plot_text(xrange[1], yrange[1]-0.01*(yrange[1]-yrange[0]), ' (zoomed) ', NormalizedCoordinate=False, overplot=True, horizontalalignment='right', verticalalignment='top')
+        Plot_engine.plot_text(xrange[1], yrange[1]-0.02*(yrange[1]-yrange[0]), ' (zoomed) ', NormalizedCoordinate=False, overplot=True, horizontalalignment='right', verticalalignment='top')
         # 
         # Plot Cut_chi2 2p = 2.3
         Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(chisq_min+2.3), 
