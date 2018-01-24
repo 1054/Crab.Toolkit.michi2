@@ -163,6 +163,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         #print('------ param_stats.minimum_chisq', param_stats['minimum_chisq'])
         #print('------ param_stats.best_min_chisq', param_stats['best_min_chisq'])
         #print('------ param_stats.best', param_stats['best'])
+        print('param_stats.xrange', param_stats['xrange'])
+        print('param_stats.yrange', param_stats['yrange'], [1/param_stats['yrange'][1],1/param_stats['yrange'][0]])
         #--
         #--TODO--20180123-10h44m-- when param_log is True, param_min can be zero!
         #--
