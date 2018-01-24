@@ -207,6 +207,25 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
 
 
 
+def random_sorted_chi2_index_dict(Cut_chi2_array, max = 50):
+    # 
+    # This function returns a list of index in the 'Cut_chi2_array', including the first one, the last one, and at most 50 random elements in between.
+    # 
+    Plot_chi2_max_number = max # Max chi2 solutions to plot, we plot the first Plot_chi2_max_number/2 and the last Plot_chi2_max_number/2 solutions, skip solutions in the middle.
+    # 
+    #Cut_chi2_array = numpy.random.random(30)
+    Cut_chi2_number = len(Cut_chi2_array)
+    # 
+    Plot_chi2_indices = numpy.sort(numpy.argsort(numpy.random.random(Cut_chi2_number))[0:Plot_chi2_max_number])[::-1] # non-repeated index array from 0 to Plot_chi2_max_number
+    Plot_chi2_indices[0] = Cut_chi2_number-1 if Plot_chi2_indices[0] != Cut_chi2_number-1 else Cut_chi2_number-1 # make sure the first element is always 'Cut_chi2_number-1', i.e., the worst chi-square solution
+    Plot_chi2_indices[-1] = 0 if Plot_chi2_indices[-1] != 0 else 0 # make sure the last element is always '0', i.e., the mininum chi-square solution
+    # 
+    Plot_chi2_index_dict = {}
+    for i in range(len(Plot_chi2_indices)): Plot_chi2_index_dict[Plot_chi2_indices[i]] = Cut_chi2_array[i]
+    # 
+    return Plot_chi2_index_dict, Plot_chi2_indices
+
+
 
 
 
@@ -286,23 +305,26 @@ else:
     # Sort chi2 table
     #print(DataTable.TableHeaders)
     #print(DataArray['chi2'])
-    SortedIndex = numpy.argsort(DataArray['chi2'])
-    #SelectNumber = 10 #<TODO># how many SEDs to show?
-    #SelectNumber = len(SortedIndex) if len(SortedIndex)<SelectNumber else SelectNumber
-    #SelectIndex = SortedIndex[0:SelectNumber-1]
+    All_chi2_index_sorted = numpy.argsort(DataArray['chi2'])
+    All_chi2_number = len(All_chi2_index_sorted)
+    #Cut_chi2_number = 10 #<TODO># how many SEDs to show?
+    #Cut_chi2_number = All_chi2_number if All_chi2_number<Cut_chi2_number else Cut_chi2_number
+    #SelectIndex = All_chi2_index_sorted[0:Cut_chi2_number-1]
     ##print(DataTable.TableData[SelectIndex])
-    #Arr_chi2 = DataArray['chi2'][SortedIndex] # the sorted chi2 array
-    #Min_chi2 = numpy.nanmin(Arr_chi2[0:SelectNumber-1])
-    #Max_chi2 = numpy.nanmax(Arr_chi2[0:SelectNumber-1])
-    Cut_chi2 = numpy.nanmin(DataArray['chi2']) + Delta_chisq_of_interest # 5 parameter, 68% confidence
-    SelectNumber = len(numpy.argwhere(DataArray['chi2']<=Cut_chi2))
-    SelectNumber = len(SortedIndex) if len(SortedIndex)<SelectNumber else SelectNumber # do not exceed the total number of chi2
-    Arr_chi2 = DataArray['chi2'][SortedIndex[0:SelectNumber]] # the sorted chi2 array, note that when selecting subscript/index with :, the upper index is not included.
-    Min_chi2 = numpy.nanmin(Arr_chi2)
-    Max_chi2 = numpy.nanmax(Arr_chi2)
-    print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(SelectNumber, Delta_chisq_of_interest))
+    #Cut_chi2_array = DataArray['chi2'][All_chi2_index_sorted] # the sorted chi2 array
+    #Min_chi2 = numpy.nanmin(Cut_chi2_array[0:Cut_chi2_number-1])
+    #Max_chi2 = numpy.nanmax(Cut_chi2_array[0:Cut_chi2_number-1])
+    Cut_chi2_threshold = numpy.nanmin(DataArray['chi2']) + Delta_chisq_of_interest # 5 parameter, 68% confidence
+    Cut_chi2_number = len(numpy.argwhere(DataArray['chi2']<=Cut_chi2_threshold))
+    Cut_chi2_number = All_chi2_number if All_chi2_number<Cut_chi2_number else Cut_chi2_number # do not exceed the total number of chi2
+    Cut_chi2_array = DataArray['chi2'][All_chi2_index_sorted[0:Cut_chi2_number]] # the sorted chi2 array, note that when selecting subscript/index with :, the upper index is not included.
+    Min_chi2 = numpy.nanmin(Cut_chi2_array)
+    Max_chi2 = numpy.nanmax(Cut_chi2_array)
+    Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_number)) #<TODO># tune line width
+    print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_number, Delta_chisq_of_interest))
     # 
-    MaxPlotNumber = 50 # Max chi2 solutions to plot, we plot the first MaxPlotNumber/2 and the last MaxPlotNumber/2 solutions, skip solutions in the middle.
+    Plot_chi2_index_dict, Plot_chi2_indices = random_sorted_chi2_index_dict(Cut_chi2_array) # we plot 50 chi2 solution curves
+    print('Will plot chi2 solution indices %s'%(Plot_chi2_index_dict))
     # 
     # 
     # 
@@ -319,10 +341,12 @@ else:
     if True:
         # 
         # Get SED
-        for i in range(SelectNumber):
+        for i in range(Cut_chi2_number):
             # 
             # skip solutions between 11th to last 11th.
-            if i > MaxPlotNumber/2 and i<(SelectNumber-1-MaxPlotNumber/2):
+            #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_number-1-Plot_chi2_max_number/2):
+            #    continue
+            if not i in Plot_chi2_index_dict:
                 continue
             # 
             # Read SED_LIB
@@ -334,28 +358,28 @@ else:
                     #BashCommand = 'cd obj_%d/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../%s %d %s SED_LIB%d'%\
                     #                    (i+1, \
                     #                        InfoDict['LIB%d'%(j+1)], \
-                    #                            DataArray['i%d'%(j+1)][SortedIndex[i]], \
-                    #                                DataArray['a%d'%(j+1)][SortedIndex[i]], \
+                    #                            DataArray['i%d'%(j+1)][All_chi2_index_sorted[i]], \
+                    #                                DataArray['a%d'%(j+1)][All_chi2_index_sorted[i]], \
                     #                                    j+1)
                     #print(BashCommand)
                     #os.system(BashCommand)
                     # 
                     # do python way 20180113
-                    BashCommand = '%s/michi2_read_lib_SEDs.py %s %d obj_%d | tee obj_%d/log.txt'%\
+                    BashCommand = '%s/michi2_read_lib_SEDs.py %s %d obj_%d > obj_%d/log.txt'%\
                                     (os.path.dirname(os.path.realpath(__file__)), \
                                         DataFile, \
-                                            SortedIndex[i]+1, \
+                                            All_chi2_index_sorted[i]+1, \
                                                 i+1, \
                                                     i+1)
                     print(BashCommand)
                     os.system(BashCommand)
                     BashCommand = 'echo "%s" > obj_%d/chi2.txt'%\
-                                    (DataArray['chi2'][SortedIndex[i]], \
+                                    (DataArray['chi2'][All_chi2_index_sorted[i]], \
                                                 i+1)
                     print(BashCommand)
                     os.system(BashCommand)
                     BashCommand = 'echo "%s" > obj_%d/line_number.txt'%\
-                                    (SortedIndex[i]+1, \
+                                    (All_chi2_index_sorted[i]+1, \
                                                 i+1)
                     print(BashCommand)
                     os.system(BashCommand)
@@ -383,34 +407,36 @@ else:
         Color_list = ['cyan', 'gold', 'red', 'blue', 'purple']
         Plot_engine = CrabPlot(figure_size=(8.0,5.0))
         Plot_engine.set_margin(top=0.92, bottom=0.16, left=0.12, right=0.96)
-        for i in range(SelectNumber-1,-1,-1):
+        Count_label_chi2 = 0 # to count the chi-square label printed on the figure, make sure there are not too many labels.
+        for i in range(Cut_chi2_number-1,-1,-1):
             # 
             # skip solutions between 11th to last 11th.
-            if i > MaxPlotNumber/2 and i<(SelectNumber-1-MaxPlotNumber/2):
+            #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_number-1-Plot_chi2_max_number/2):
+            #    continue
+            if not i in Plot_chi2_index_dict:
                 continue
             # 
             # alpha by chi2
-            print('Plotting chi2=%s obj_%d'%(Arr_chi2[i], i+1))
+            print('Plotting chi2=%s obj_%d'%(Cut_chi2_array[i], i+1))
             Min_chi2_log = numpy.log10(Min_chi2)
             Max_chi2_log = numpy.log10(Max_chi2)
             Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.8)
             Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.3)
-            Alpha_chi2 = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
-                                                        input_value=Arr_chi2[i], 
-                                                        log=1, 
-                                                        cmap=matplotlib.cm.get_cmap('gray_r'))[0]
-            #print('Alpha_chi2: ', Alpha_chi2)
+            Plot_chi2_alpha = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
+                                                             input_value=Cut_chi2_array[i], 
+                                                             log=1, 
+                                                             cmap=matplotlib.cm.get_cmap('gray_r'))[0]
+            #print('Plot_chi2_alpha: ', Plot_chi2_alpha)
             # 
             # 
             for j in range(int(InfoDict['NLIB'])):
-                linewidth = numpy.sqrt(1.44/float(SelectNumber)) #<TODO># tune line width
                 xclip = None
                 if j == 0: xclip = [(50,numpy.inf)]
                 elif j == 4: xclip = [(-numpy.inf,2e3)]
                 Plot_engine.plot_data_file('obj_%d/SED_LIB%d'%(i+1,j+1), xlog=1, ylog=1, xclip=xclip, current=1, \
                                     dataname='obj_%d_SED_LIB%d'%(i+1,j+1), 
                                     redshift = Redshift, 
-                                    linestyle='dashed', linewidth=linewidth, color=Color_list[j], alpha=Alpha_chi2)
+                                    linestyle='dashed', linewidth=Plot_chi2_linewidth, color=Color_list[j], alpha=Plot_chi2_alpha)
             # 
             #<20180114><splined else where># obj_SED_1 = Plot_engine.Plot_data['obj_%d_SED_LIB1'%(i+1)]
             #<20180114><splined else where># obj_SED_2 = Plot_engine.Plot_data['obj_%d_SED_LIB2'%(i+1)]
@@ -431,11 +457,11 @@ else:
             # 
             #pprint(obj_SED_sum_y)
             #print(numpy.column_stack((obj_SED_sum_x, obj_SED_sum_y)))
-            #print(Arr_chi2[i])
+            #print(Cut_chi2_array[i])
             Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.05)
             Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.85)
             Color_chi2 = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
-                                                        input_value=Arr_chi2[i], 
+                                                        input_value=Cut_chi2_array[i], 
                                                         log=1, 
                                                         cmap=matplotlib.cm.get_cmap('gray'))
             #print('Color_chi2: ', Color_chi2)
@@ -443,18 +469,21 @@ else:
             Plot_engine.plot_data_file('obj_%d/SED_SUM'%(i+1), xlog=1, ylog=1, current=1, \
                                 dataname='obj_%d_SED_SUM'%(i+1), 
                                 redshift = Redshift, 
-                                linestyle='solid', linewidth=1.0, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Alpha_chi2
+                                linestyle='solid', linewidth=1.0, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
             # 
             # show chi2 on the figure
-            if i == SelectNumber-1:
+            if i == Cut_chi2_number-1:
                 Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
-            if i >= SelectNumber-6:
-                #print('Plotting label at', 0.09, 0.95-0.03*(SelectNumber-1-i), 'chi2 = %.1f'%(Arr_chi2[i]))
-                Plot_engine.xyouts(0.09, 0.95-0.03*(SelectNumber-1-i), '%.1f'%(Arr_chi2[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
             if i == 0:
-                Plot_engine.xyouts(0.09, 0.95-0.03*(6), '......', NormalizedCoordinate=True, color=Color_chi2)
-                Plot_engine.xyouts(0.09, 0.95-0.03*(7), '%.1f'%(Arr_chi2[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
-            if i == SelectNumber-1:
+                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '......', NormalizedCoordinate=True, color=Color_chi2)
+                Count_label_chi2 = Count_label_chi2 + 1
+            if i % int((Cut_chi2_number/7)+1) == 0 or i == 0 or i == Cut_chi2_number-1:
+                #print('Plotting label at', 0.09, 0.95-0.03*(Cut_chi2_number-1-i), 'chi2 = %.1f'%(Cut_chi2_array[i]))
+                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
+                Count_label_chi2 = Count_label_chi2 + 1
+            # 
+            # show redshift (z) on the figure
+            if i == 0:
                 Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
             #break
         # 
