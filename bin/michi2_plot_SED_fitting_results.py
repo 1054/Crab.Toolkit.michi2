@@ -323,7 +323,7 @@ else:
     Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_number)) #<TODO># tune line width
     print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_number, Delta_chisq_of_interest))
     # 
-    if os.path.isfile('Plot_chi2_index_dict.json'):
+    if not os.path.isfile('Plot_chi2_index_dict.json'):
         Plot_chi2_index_dict, Plot_chi2_indices = random_sorted_chi2_index_dict(Cut_chi2_array) # we plot 50 chi2 solution curves
         with open('Plot_chi2_index_dict.json', 'w') as fp:
             json.dump(Plot_chi2_index_dict, fp, sort_keys=True, indent=4)
