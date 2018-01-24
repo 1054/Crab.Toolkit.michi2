@@ -323,8 +323,22 @@ else:
     Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_number)) #<TODO># tune line width
     print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_number, Delta_chisq_of_interest))
     # 
-    Plot_chi2_index_dict, Plot_chi2_indices = random_sorted_chi2_index_dict(Cut_chi2_array) # we plot 50 chi2 solution curves
-    print('Will plot chi2 solution indices %s'%(Plot_chi2_index_dict))
+    if os.path.isfile('Plot_chi2_index_dict.json'):
+        Plot_chi2_index_dict, Plot_chi2_indices = random_sorted_chi2_index_dict(Cut_chi2_array) # we plot 50 chi2 solution curves
+        with open('Plot_chi2_index_dict.json', 'w') as fp:
+            json.dump(Plot_chi2_index_dict, fp, sort_keys=True, indent=4)
+            fp.close()
+        with open('Plot_chi2_indices.json', 'w') as fp:
+            json.dump(Plot_chi2_indices, fp, sort_keys=True, indent=4)
+            fp.close()
+    else:
+        with open('Plot_chi2_index_dict.json', 'r') as fp:
+            Plot_chi2_index_dict = json.load(fp)
+            fp.close()
+        with open('Plot_chi2_indices.json', 'r') as fp:
+            Plot_chi2_indices = json.load(fp)
+            fp.close()
+    #print('Will plot chi2 solution indices %s'%(Plot_chi2_index_dict))
     # 
     # 
     # 
@@ -408,6 +422,7 @@ else:
         Plot_engine = CrabPlot(figure_size=(8.0,5.0))
         Plot_engine.set_margin(top=0.92, bottom=0.16, left=0.12, right=0.96)
         Count_label_chi2 = 0 # to count the chi-square label printed on the figure, make sure there are not too many labels.
+        Count_plot_chi2 = 0
         for i in range(Cut_chi2_number-1,-1,-1):
             # 
             # skip solutions between 11th to last 11th.
@@ -470,6 +485,7 @@ else:
                                 dataname='obj_%d_SED_SUM'%(i+1), 
                                 redshift = Redshift, 
                                 linestyle='solid', linewidth=1.0, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
+            Count_plot_chi2 = Count_plot_chi2 + 1
             # 
             # show chi2 on the figure
             if i == Cut_chi2_number-1:
@@ -477,7 +493,7 @@ else:
             if i == 0:
                 Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '......', NormalizedCoordinate=True, color=Color_chi2)
                 Count_label_chi2 = Count_label_chi2 + 1
-            if i % int((Cut_chi2_number/7)+1) == 0 or i == 0 or i == Cut_chi2_number-1:
+            if Count_plot_chi2 % int((Cut_chi2_number/7)+1) == 0 or i == 0 or i == Cut_chi2_number-1:
                 #print('Plotting label at', 0.09, 0.95-0.03*(Cut_chi2_number-1-i), 'chi2 = %.1f'%(Cut_chi2_array[i]))
                 Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
                 Count_label_chi2 = Count_label_chi2 + 1
