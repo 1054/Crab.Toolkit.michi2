@@ -136,7 +136,9 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         yrange = param_stats['yrange']
         xrange = [xrange[0]-(xrange[1]-xrange[0])*2.00, xrange[1]+(xrange[1]-xrange[0])*2.00] # extend the range for plotting.
         yrange = [1.0/yrange[1], 1.0/yrange[0]]
-        yrange = [yrange[0]-(yrange[1]-yrange[0])*2.00, yrange[1]+(yrange[1]-yrange[0])*0.35] # extend the range for plotting.
+        yrange = numpy.log10(yrange)
+        yrange = [yrange[0]-(yrange[1]-yrange[0])*0.50, yrange[1]+(yrange[1]-yrange[0])*0.10] # extend the range for plotting.
+        yrange = numpy.power(10,yrange)
         # 
         xlog = None
         #if 'Log_plot' in param_dict:
