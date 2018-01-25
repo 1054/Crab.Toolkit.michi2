@@ -195,7 +195,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                                 overplot = True, linestyle = 'dashed')
         # 
         # Plot histogram
-        Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step*3.0, align = 'edge', overplot = False, 
+        Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step, align = 'edge', overplot = False, 
                                 xtitle = param_dict['Par_name'], ytitle = '$1/\chi^2$', useTex = True, 
                                 xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
