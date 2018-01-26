@@ -248,15 +248,33 @@ def random_sorted_chi2_index_dict(Cut_chi2_array, max = 50):
 #               MAIN PROGRAM             #
 ##########################################
 
-if len(sys.argv) == 1:
+if len(sys.argv) <= 1:
     
     print('Usage: michi2_plot_SED_fitting_results.py fit_5.out')
     sys.exit()
 
 else:
     # 
+    # Read user input
+    SetOnlyPlotBestSED = False
+    SourceName = ''
+    iarg = 1
+    while iarg < len(sys.argv):
+        TempCmd = sys.argv[iarg].replace('--','-').lower()
+        if sys.argv[iarg]=='-only-plot-best-sed' or sys.argv[iarg]=='-only-best':
+            SetOnlyPlotBestSED = True
+            print('Setting only plot best-fit!')
+        elif sys.argv[iarg]=='-source-name' or sys.argv[iarg]=='-source':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                SourceName = sys.argv[iarg]
+                print('Setting SourceName = %s'%(SourceName))
+        else:
+            DataFile = sys.argv[iarg]
+        iarg = iarg + 1
+    # 
     # Read chi2 table
-    DataFile = sys.argv[1]
+    #DataFile = sys.argv[1]
     if DataFile == '' or not os.path.isfile(DataFile):
         print('Error! The input fitted chi2 data file "%s" was not found!'%(DataFile))
         sys.exit()
@@ -331,23 +349,33 @@ else:
     Min_chi2 = numpy.nanmin(Cut_chi2_array)
     Max_chi2 = numpy.nanmax(Cut_chi2_array)
     Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_number)) #<TODO># tune line width
+    Plot_SED_linewidth = 1.0
     print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_number, Delta_chisq_of_interest))
     # 
-    if not os.path.isfile('Plot_chi2_index_dict.json') or not os.path.isfile('Plot_chi2_indices.json'):
-        Plot_chi2_index_dict, Plot_chi2_indices = random_sorted_chi2_index_dict(Cut_chi2_array) # we plot 50 chi2 solution curves
-        with open('Plot_chi2_index_dict.json', 'w') as fp:
-            json.dump(Plot_chi2_index_dict, fp, sort_keys=True, indent=4)
-            fp.close()
-        with open('Plot_chi2_indices.json', 'w') as fp:
-            json.dump(Plot_chi2_indices.tolist(), fp)
-            fp.close()
+    if not SetOnlyPlotBestSED:
+        if not os.path.isfile('Plot_chi2_index_dict.json') or not os.path.isfile('Plot_chi2_indices.json'):
+            Plot_chi2_index_dict, Plot_chi2_indices = random_sorted_chi2_index_dict(Cut_chi2_array) # we plot 50 chi2 solution curves
+            with open('Plot_chi2_index_dict.json', 'w') as fp:
+                json.dump(Plot_chi2_index_dict, fp, sort_keys=True, indent=4)
+                fp.close()
+            with open('Plot_chi2_indices.json', 'w') as fp:
+                json.dump(Plot_chi2_indices.tolist(), fp)
+                fp.close()
+        else:
+            with open('Plot_chi2_index_dict.json', 'r') as fp:
+                Plot_chi2_index_dict = json.load(fp)
+                fp.close()
+            with open('Plot_chi2_indices.json', 'r') as fp:
+                Plot_chi2_indices = numpy.array(json.load(fp))
+                fp.close()
     else:
-        with open('Plot_chi2_index_dict.json', 'r') as fp:
-            Plot_chi2_index_dict = json.load(fp)
-            fp.close()
-        with open('Plot_chi2_indices.json', 'r') as fp:
-            Plot_chi2_indices = numpy.array(json.load(fp))
-            fp.close()
+        Plot_chi2_index_dict = {}
+        Plot_chi2_index_dict['0'] = Cut_chi2_array[0]
+        Plot_chi2_indices = [0]
+        # 
+        # also tune plotting linewidth
+        Plot_chi2_linewidth = 1.5
+        Plot_SED_linewidth = 2.0
     #print('Will plot chi2 solution indices %s'%(Plot_chi2_index_dict))
     # 
     # 
@@ -494,23 +522,29 @@ else:
             Plot_engine.plot_data_file('obj_%d/SED_SUM'%(i+1), xlog=1, ylog=1, current=1, \
                                 dataname='obj_%d_SED_SUM'%(i+1), 
                                 redshift = Redshift, 
-                                linestyle='solid', linewidth=1.0, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
+                                linestyle='solid', linewidth=Plot_SED_linewidth, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
             Count_plot_chi2 = Count_plot_chi2 + 1
             # 
             # show chi2 on the figure
-            if i == Cut_chi2_number-1:
-                Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
-            if i == 0:
-                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '......', NormalizedCoordinate=True, color=Color_chi2)
-                Count_label_chi2 = Count_label_chi2 + 1
-            if Count_plot_chi2 % int((Cut_chi2_number/7)+1) == 0 or i == 0 or i == Cut_chi2_number-1:
-                #print('Plotting label at', 0.09, 0.95-0.03*(Cut_chi2_number-1-i), 'chi2 = %.1f'%(Cut_chi2_array[i]))
-                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
-                Count_label_chi2 = Count_label_chi2 + 1
+            if not SetOnlyPlotBestSED:
+                if i == Cut_chi2_number-1:
+                    Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
+                if i == 0:
+                    Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '......', NormalizedCoordinate=True, color=Color_chi2)
+                    Count_label_chi2 = Count_label_chi2 + 1
+                if Count_plot_chi2 % int((Cut_chi2_number/7)+1) == 0 or i == 0 or i == Cut_chi2_number-1:
+                    #print('Plotting label at', 0.09, 0.95-0.03*(Cut_chi2_number-1-i), 'chi2 = %.1f'%(Cut_chi2_array[i]))
+                    Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
+                    Count_label_chi2 = Count_label_chi2 + 1
             # 
             # show redshift (z) on the figure
-            if i == 0:
-                Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
+            if not SetOnlyPlotBestSED:
+                if i == 0:
+                    Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
+            else:
+                if i == 0 and SourceName != '':
+                    Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=15)
+                    Plot_engine.xyouts(0.20, 0.90, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
             #break
         # 
         # Then plot OBS data points

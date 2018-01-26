@@ -22,7 +22,7 @@ if [[ $# -eq 0 ]]; then
         exit
     fi
 else 
-    fitted_file="$1"
+    fitted_file=("$@")
 fi
 
 #echo "macro read rShift.sm redShift_maskout_LowSNR $1" | sm
@@ -30,6 +30,6 @@ fi
 #echo "Go!"
 #exit
 
-michi2_plot_SED_fitting_results.py "$fitted_file"
+michi2_plot_SED_fitting_results.py "${fitted_file[@]}"
 
 
