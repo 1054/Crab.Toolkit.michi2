@@ -95,23 +95,41 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
         else:
             input_str2 = input_str
         # recognize FLUX
-        Pattern = re.compile("^[_]*(FLUX_).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(f)([0-9]+).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(f_).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^.*(_FLUX_).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(f)(ch[0-9]+)")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(f)(K)")
-        if Pattern.match(input_str2):
+        recognized_item = False
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(FLUX_).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(f)([0-9]+).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(f_).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^.*(_FLUX_).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(f)(ch[0-9]+)")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(f)(ch[0-9]+)_(.*)")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(f)(K)")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(f)(K)_(.*)")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        # 
+        if recognized_item == True:
             recognized_list.append(input_str)
     # 
     if special_file_name.find('Laigle')>=0:
@@ -141,29 +159,49 @@ def recognize_Col_FLUXERR(input_list, special_file_name=''):
         else:
             input_str2 = input_str
         # recognize FLUXERR
-        Pattern = re.compile("^[_]*(FLUXERR_).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(FLUX_ERR_).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(df)([0-9]+).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(df_).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(e_).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^.*(_FLUXERR_).*")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(df)(ch[0-9]+)")
-        if Pattern.match(input_str2):
-            recognized_list.append(input_str)
-        Pattern = re.compile("^[_]*(df)(K)")
-        if Pattern.match(input_str2):
+        recognized_item = False
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(FLUXERR_).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(FLUX_ERR_).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(df)([0-9]+).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(df_).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(e_).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^.*(_FLUXERR_).*")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(df)(ch[0-9]+)")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(df)(ch[0-9]+)_(.*)")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(df)(K)")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        if recognized_item == False:
+            Pattern = re.compile("^[_]*(df)(K)_(.*)")
+            if Pattern.match(input_str2):
+                recognized_item = True
+        # 
+        if recognized_item == True:
             recognized_list.append(input_str)
     # 
     if special_file_name.find('Laigle')>=0:
@@ -489,58 +527,58 @@ def recognize_Filter(input_str, special_file_name=''):
         #    Filter_Wave = 3823.3 * 1e-4 # um, Laigle 2016 Table 1
         # 
         elif input_str == 'f_u_3DHST':
-            Filter_Name = 'KPNO 4m/Mosaic'
+            Filter_Name = 'KPNO 4m/Mosaic' + '_3DHST'
             Filter_Wave = 0.35929 # um, Skelton 2014 Table 6
         elif input_str == 'f_b_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam'
+            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
             Filter_Wave = 0.44480 # um, Skelton 2014 Table 6
         elif input_str == 'f_v_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam'
+            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
             Filter_Wave = 0.54702 # um, Skelton 2014 Table 6
         elif input_str == 'f_g_3DHST':
-            Filter_Name = 'Keck/LRIS'
+            Filter_Name = 'Keck/LRIS' + '_3DHST'
             Filter_Wave = 0.47508 # um, Skelton 2014 Table 6
         elif input_str == 'f_rs_3DHST':
-            Filter_Name = 'Keck/LRIS'
+            Filter_Name = 'Keck/LRIS' + '_3DHST'
             Filter_Wave = 0.68186 # um, Skelton 2014 Table 6
         elif input_str == 'f_r_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam'
+            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
             Filter_Wave = 0.62755 # um, Skelton 2014 Table 6
         elif input_str == 'f_i_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam'
+            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
             Filter_Wave = 0.76712 # um, Skelton 2014 Table 6
         elif input_str == 'f_z_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam'
+            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
             Filter_Wave = 0.90282 # um, Skelton 2014 Table 6
         elif input_str == 'f_f435w_3DHST':
-            Filter_Name = 'HST/ACS'
+            Filter_Name = 'HST/ACS' + '_3DHST'
             Filter_Wave = 0.43179 # um, Skelton 2014 Table 6
         elif input_str == 'f_f606w_3DHST':
-            Filter_Name = 'HST/ACS'
+            Filter_Name = 'HST/ACS' + '_3DHST'
             Filter_Wave = 0.59194 # um, Skelton 2014 Table 6
         elif input_str == 'f_f775w_3DHST':
-            Filter_Name = 'HST/ACS'
+            Filter_Name = 'HST/ACS' + '_3DHST'
             Filter_Wave = 0.76933 # um, Skelton 2014 Table 6
         elif input_str == 'f_f850lp_3DHST':
-            Filter_Name = 'HST/ACS'
+            Filter_Name = 'HST/ACS' + '_3DHST'
             Filter_Wave = 0.90364 # um, Skelton 2014 Table 6
         elif input_str == 'f_f125w_3DHST':
-            Filter_Name = 'HST/WFC3'
+            Filter_Name = 'HST/WFC3' + '_3DHST'
             Filter_Wave = 1.24710 # um, Skelton 2014 Table 6
         elif input_str == 'f_f140w_3DHST':
-            Filter_Name = 'HST/WFC3'
+            Filter_Name = 'HST/WFC3' + '_3DHST'
             Filter_Wave = 1.39240 # um, Skelton 2014 Table 6
         elif input_str == 'f_f160w_3DHST':
-            Filter_Name = 'HST/WFC3'
+            Filter_Name = 'HST/WFC3' + '_3DHST'
             Filter_Wave = 1.53960 # um, Skelton 2014 Table 6
         elif input_str == 'f_j_3DHST':
-            Filter_Name = 'Subaru/MOIRCS'
+            Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
             Filter_Wave = 1.25170 # um, Skelton 2014 Table 6
         elif input_str == 'f_h_3DHST':
-            Filter_Name = 'Subaru/MOIRCS'
+            Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
             Filter_Wave = 1.63470 # um, Skelton 2014 Table 6
         elif input_str == 'f_ks_3DHST':
-            Filter_Name = 'Subaru/MOIRCS'
+            Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
             Filter_Wave = 2.15770 # um, Skelton 2014 Table 6   # --- 20171025 for GOODSN 3D-HST catalog (Skelton et al. 2014)
         # 
         #elif input_str == 'f_irac1' or input_str == 'df_irac1' or input_str == 'e_irac1' or input_str == 'fch1' or input_str == 'dfch1' or input_str == '_fch1' or input_str == '_dfch1': 
@@ -615,12 +653,16 @@ def recognize_Filter(input_str, special_file_name=''):
         if numpy.isnan(Filter_Wave):
             Pattern_FLUX_1 = re.compile("(FLUX_)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., FLUX_20cm
             Pattern_FLUXERR_1 = re.compile("(FLUX[_]?ERR_)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)")
-            Pattern_FLUX_2 = re.compile("[^a-zA-Z]*(f[_]?)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., _f1.4ghz
+            Pattern_FLUX_2 = re.compile("[^a-zA-Z]*(f[_]?)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., _f1.4ghz or _f_1.4ghz
             Pattern_FLUXERR_2 = re.compile("[^a-zA-Z]*(df[_]?)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)")
             Pattern_FLUX_3 = re.compile("(.*)(_FLUX)(_.*)") # e.g. SPLASH_1_FLUX_Laigle
             Pattern_FLUXERR_3 = re.compile("(.*)(_FLUX[_]?ERR)(_.*)")
             Pattern_FLUX_4 = re.compile("[_]?(f_)([^_]+)(.*)") # e.g., f_K_Jin
             Pattern_FLUXERR_4 = re.compile("[_]?(df_)([^_]+)(.*)") # 
+            Pattern_FLUX_5 = re.compile("[_]?(f)(K)(_.*)") # e.g., fK_Jin
+            Pattern_FLUXERR_5 = re.compile("[_]?(df)(K)(_.*)") # 
+            Pattern_FLUX_6 = re.compile("[_]?(f)(ch[1234])(_.*)") # e.g., fch1_Jin
+            Pattern_FLUXERR_6 = re.compile("[_]?(df)(ch[1234])(_.*)") # 
             Matched_FLUX_1 = Pattern_FLUX_1.match(input_str)
             Matched_FLUXERR_1 = Pattern_FLUXERR_1.match(input_str)
             Matched_FLUX_2 = Pattern_FLUX_2.match(input_str)
@@ -629,6 +671,10 @@ def recognize_Filter(input_str, special_file_name=''):
             Matched_FLUXERR_3 = Pattern_FLUXERR_3.match(input_str)
             Matched_FLUX_4 = Pattern_FLUX_4.match(input_str)
             Matched_FLUXERR_4 = Pattern_FLUXERR_4.match(input_str)
+            Matched_FLUX_5 = Pattern_FLUX_5.match(input_str)
+            Matched_FLUXERR_5 = Pattern_FLUXERR_5.match(input_str)
+            Matched_FLUX_6 = Pattern_FLUX_6.match(input_str)
+            Matched_FLUXERR_6 = Pattern_FLUXERR_6.match(input_str)
             Matched = None
             if Matched is None:
                 if Matched_FLUX_1:
@@ -668,6 +714,26 @@ def recognize_Filter(input_str, special_file_name=''):
             if Matched is None:
                 if Matched_FLUXERR_4:
                     Matched = Matched_FLUXERR_4
+                    Matched_str_2 = Matched.group(2)
+                    Matched_str_3 = Matched.group(3)
+            if Matched is None:
+                if Matched_FLUX_5:
+                    Matched = Matched_FLUX_5
+                    Matched_str_2 = Matched.group(2)
+                    Matched_str_3 = Matched.group(3)
+            if Matched is None:
+                if Matched_FLUXERR_5:
+                    Matched = Matched_FLUXERR_5
+                    Matched_str_2 = Matched.group(2)
+                    Matched_str_3 = Matched.group(3)
+            if Matched is None:
+                if Matched_FLUX_6:
+                    Matched = Matched_FLUX_6
+                    Matched_str_2 = Matched.group(2)
+                    Matched_str_3 = Matched.group(3)
+            if Matched is None:
+                if Matched_FLUXERR_6:
+                    Matched = Matched_FLUXERR_6
                     Matched_str_2 = Matched.group(2)
                     Matched_str_3 = Matched.group(3)
             if Matched: 
@@ -711,7 +777,15 @@ def recognize_Filter(input_str, special_file_name=''):
                     #    Filter_Name = 'HST F814W'
                     #    Matched_str_3 = Matched_str_3[1:]
                     if Matched_str_3 == '' or Matched_str_3.startswith('_'):
-                        if Matched_str_2 =='16':
+                        if Matched_str_2 =='ch1':
+                            Filter_Name = 'Spitzer IRAC ch1'
+                        elif Matched_str_2 =='ch2':
+                            Filter_Name = 'Spitzer IRAC ch2'
+                        elif Matched_str_2 =='ch3':
+                            Filter_Name = 'Spitzer IRAC ch3'
+                        elif Matched_str_2 =='ch4':
+                            Filter_Name = 'Spitzer IRAC ch4'
+                        elif Matched_str_2 =='16':
                             Filter_Name = 'Spitzer IRS PUI'
                         elif Matched_str_2 =='24':
                             Filter_Name = 'Spitzer MIPS'
@@ -1005,6 +1079,10 @@ if DataFile != '':
                 if MaxSNR > 0:
                     if (FilterFErr>0) and (FilterFlux>MaxSNR*FilterFErr):
                         FilterFErr = FilterFlux/MaxSNR
+                # 3DHST AB MAG ZERO POINT IS 25, WE NEED TO DO FLUX CONVERSION #<TODO><20180128># 
+                if FilterName.endswith('_3DHST'):
+                    FilterFlux = FilterFlux / 2754.228703 #<TODO><20180128># 
+                    FilterFErr = FilterFErr / 2754.228703 #<TODO><20180128># 
                 # print
                 if k == 0:
                     print("# %-20s %-18s %-18s %-12s %-s"%('Wave', 'Flux', 'FluxErr', 'FluxUnit', 'FilterName'))

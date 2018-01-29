@@ -258,6 +258,7 @@ else:
     # Read user input
     SetOnlyPlotBestSED = False
     SourceName = ''
+    PlotYRange = []
     iarg = 1
     while iarg < len(sys.argv):
         TempCmd = sys.argv[iarg].replace('--','-').lower()
@@ -269,6 +270,13 @@ else:
                 iarg = iarg + 1
                 SourceName = sys.argv[iarg]
                 print('Setting SourceName = %s'%(SourceName))
+        elif sys.argv[iarg]=='-yrange':
+            if iarg+2 < len(sys.argv):
+                iarg = iarg + 1
+                PlotYRange.append(float(sys.argv[iarg]))
+                iarg = iarg + 1
+                PlotYRange.append(float(sys.argv[iarg]))
+                print('Setting PlotYRange = %s'%(PlotYRange))
         else:
             DataFile = sys.argv[iarg]
         iarg = iarg + 1
@@ -564,6 +572,8 @@ else:
         # 
         Plot_engine.set_xrange([0.1,1e6])
         Plot_engine.set_yrange([1e-6,1e4])
+        if len(PlotYRange) == 2:
+            Plot_engine.set_yrange(PlotYRange)
         Plot_engine.set_xtitle('Observing-frame wavelength [um]')
         Plot_engine.set_ytitle('Flux density [mJy]')
         Plot_engine.savepdf(Output_name+'.pdf')
