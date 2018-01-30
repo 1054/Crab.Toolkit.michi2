@@ -40,7 +40,8 @@ Flux="extracted_flux.txt" #<TODO>#
 if [[ $# -ge 2 ]]; then
     i=2
     while [[ $i -le $# ]]; do
-        Strcmd=$(echo "${!i}" | sed -e 's/^--/-/g' | tr '[:lower:]' '[:upper:]')
+        Strcmd=$(echo "${!i}" | sed -e 's/^--/-/g' | tr '[:upper:]' '[:lower:]')
+        echo Strcmd="$Strcmd"
         if [[ "$Strcmd" == "-parallel" ]]; then
             if [[ i -lt $# ]]; then
                 i=$((i+1))
