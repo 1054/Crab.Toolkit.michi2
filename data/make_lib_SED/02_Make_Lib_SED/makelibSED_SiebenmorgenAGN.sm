@@ -1,0 +1,105 @@
+makelibSED_SiebenmorgenAGN
+    # 
+    # Usage:
+    #     echo "macro read makelibSED_SiebenmorgenAGN.sm makelibSED_SiebenmorgenAGN" | sm
+    #     
+    # 
+    set nWav = 473 # the Mullaney_AGN_table3.txt has 501 wavelengths + 3 prepend wavelengths
+    # 
+    # 
+    #!echo -n "We will make "$(3*$(nWav))' items for lib.SiebenmorgenAGN.SED, '
+    #define OK ?
+    #if(!$OK){
+    #    echo Abort by user. 
+    #    return
+    #}
+    # 
+    # 
+    writeLibHead "lib.SiebenmorgenAGN.SED"
+    # 
+    # 
+    !ln -fs ../01_SED_Models/AGN_Siebenmorgen
+    # 
+    # 
+    ##set Type = 1 get_one_sed 0 0 1 1 0
+    ##set Type = 2 get_one_sed 4 3 3 3 0
+    ##set Type = 3 get_one_sed 4 2 1 3 2
+    ##set Type = 4 get_one_sed 4 2 1 3 8
+    set Type = 1 get_one_sed 0 0 1 1 0 # coldest
+    set Type = 2 get_one_sed 4 2 1 3 8 # second cold
+    set Type = 3 get_one_sed 4 2 1 3 2 # second hot
+    set Type = 4 get_one_sed 4 3 3 4 0 # hotest
+
+
+set_params
+    set npar = 5
+    set par1 = {"0300" "0514" "0772" "1000" "1545"} # The inner radius of the dusty torus
+    set par2 = {"015" "077" "385" "777"} # The cloud volume filling factor
+    set par3 = {"0000" "0045" "0135" "0450"} # The optical depth (in V) of the individual clouds
+    set par4 = {"0000" "0030" "0100" "0300" "1000"} # The optical depth (in V) of the disk midplane
+    set par5 = 1,9
+
+
+get_one_sed 05
+    # 
+    set_params
+    # 
+    data "AGN_Siebenmorgen/agnsed/R"$(par1[$1])"_Vc"$(par2[$2])"_Ac"$(par3[$3])"_Ad"$(par4[$4])".th"$(par5[$5])
+    lines 2 0
+    read {w 1.f f 2.f}
+    sort {w f}
+    set f = (f<=0) ? 1e-90 : f
+    set R = w*0.0 + number(par1[$1])
+    set Vc = w*0.0 + number(par2[$2])/10.0
+    set Ac = w*0.0 + number(par3[$3])/100.0
+    set Ad = w*0.0 + number(par4[$4])
+    set th = w*0.0 + number(par5[$5])
+    set Type = int(w*0) + Type
+    load astroSfig.sm
+    set Lbol = w*0.0 + calc_ltir(w, f, 0.0, 1.0, 1e3) # integrate over 1.0 to 1000 um
+    define print_noheader 1
+    print +"lib.SiebenmorgenAGN.SED" '%15.6e%15.6e%9d%7.0f%6.1f%6.2f%5.0f%4.0f%12.7g\n' <w f Type R Vc Ac Ad th Lbol>
+    define print_noheader 0
+
+
+
+writeLibHead 01
+    # 
+    # 
+    # 
+    !date +"\#\ %Y-%m-%d\ %H:%M:%S" > $1
+    print +$1 '\# NVAR  = 2 \# Variable X Y\n' {}
+    print +$1 '\# TVAR1 = band wavelengths (rest-frame) (lambda) [um]\n' {}
+    print +$1 '\# TVAR2 = flux, in unit of mJy, normalized to Lbol (1-1000um) column value.\n' {}
+    print +$1 '\# CVAR1 = 1 \# the colomn number of VAR1\n' {}
+    print +$1 '\# CVAR2 = 2 \# the colomn number of VAR2\n' {}
+    print +$1 '\# NVAR1 = $(nWav) \# NAXIS1, wavelength grid\n' {}
+    print +$1 '\# NVAR2 = 4 \# NAXIS2, multiplication of number of all parameters\n' {}
+    print +$1 '\# NPAR  = 7 \# Parameter 1 2 3 ...\n' {}
+    print +$1 '\# TPAR1 = AGN_Type \# AGN Type, determined by the five parameters followed\n' {}
+    print +$1 '\# TPAR2 = R \# The inner radius of the dusty torus, in units of 10**15 cm\n' {}
+    print +$1 '\# TPAR3 = Vc \# The cloud volume filling factor, percentage\n' {}
+    print +$1 '\# TPAR4 = Ac \# The optical depth (in V) of the individual clouds\n' {}
+    print +$1 '\# TPAR5 = Ad \# The optical depth (in V) of the disk midplane\n' {}
+    print +$1 '\# TPAR6 = th \# Viewing angle, 1-9 corresponding to bins at 86, 80, 73, 67, 60, 52, 43, 33, and 19 degrees\n' {}
+    print +$1 '\# TPAR7 = Lbol \# integrated over 1-1000um. a*Lbol*4*pi*dL**2 makes the final AGN luminosity in Lsun, where a is the normalization.\n' {}
+    print +$1 '\# NPAR1 = 4 \# 4 types of AGN.\n' {}
+    print +$1 '\# NPAR2 = 1 \# non-independent.\n' {}
+    print +$1 '\# NPAR3 = 1 \# non-independent.\n' {}
+    print +$1 '\# NPAR4 = 1 \# non-independent.\n' {}
+    print +$1 '\# NPAR5 = 1 \# non-independent.\n' {}
+    print +$1 '\# NPAR6 = 1 \# non-independent.\n' {}
+    print +$1 '\# NPAR7 = 1 \# non-independent.\n' {}
+    print +$1 '\# CPAR1 = 3\n' {}
+    print +$1 '\# CPAR2 = 4\n' {}
+    print +$1 '\# CPAR3 = 5\n' {}
+    print +$1 '\# CPAR4 = 6\n' {}
+    print +$1 '\# CPAR5 = 7\n' {}
+    print +$1 '\# CPAR6 = 8\n' {}
+    print +$1 '\# CPAR7 = 9\n' {}
+    print +$1 '\# \n' {}
+    print +$1 '\#        lambda           flux     Type      R    Vc    Ac   Ad  th        Lbol\n' {}
+    print +$1 '\#          [um]          [mJy]                                                 \n' {}
+    return
+
+

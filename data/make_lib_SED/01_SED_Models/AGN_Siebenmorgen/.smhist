@@ -1,0 +1,11 @@
+QUIT
+help add_ctype
+quit
+QUIT
+set par1 = {"0300" "0514" "0772" "1000" "1545"}
+set R = float(par1[0])
+print {R}
+set R = number(par1[0])
+print {R}
+quit
+QUIT

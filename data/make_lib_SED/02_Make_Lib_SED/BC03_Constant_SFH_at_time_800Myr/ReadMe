@@ -1,0 +1,18 @@
+
+
+# First run BC03, you need to prepare your own BC03 running results
+
+cd $HOME/Softwares/BC03
+ls 
+cd bc03
+ls 
+
+
+
+# Then make lib
+
+./makelibSED_BC03.sh
+
+./make_Calzetti2000law.sh
+
+# done

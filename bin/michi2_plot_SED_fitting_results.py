@@ -325,18 +325,18 @@ else:
     DataArray = {}
     for i in range(len(DataHeaders)):
         #if DataHeaders[i] == 'chi2':
-        #    Data_chi2 = DataTable.getColumn('col%d'%(i+1))
+        #    Data_chi2 = DataTable.getColumn(i+1)
         for j in range(int(InfoDict['NLIB'])):
             if DataHeaders[i] == 'i%d'%(j+1):
-                DataArray['i%d'%(j+1)] = DataTable.getColumn('col%d'%(i+1))
+                DataArray['i%d'%(j+1)] = DataTable.getColumn(i+1)
             elif DataHeaders[i] == 'a%d'%(j+1):
-                DataArray['a%d'%(j+1)] = DataTable.getColumn('col%d'%(i+1))
+                DataArray['a%d'%(j+1)] = DataTable.getColumn(i+1)
             elif DataHeaders[i] == 'i0':
-                DataArray['i0'] = DataTable.getColumn('col%d'%(i+1))
+                DataArray['i0'] = DataTable.getColumn(i+1)
             elif DataHeaders[i] == 'a0':
-                DataArray['a0'] = DataTable.getColumn('col%d'%(i+1))
+                DataArray['a0'] = DataTable.getColumn(i+1)
             elif DataHeaders[i] == 'chi2':
-                DataArray['chi2'] = DataTable.getColumn('col%d'%(i+1))
+                DataArray['chi2'] = DataTable.getColumn(i+1)
     # 
     # Sort chi2 table
     #print(DataTable.TableHeaders)
@@ -601,6 +601,10 @@ else:
     Mass_warm_dust_dict = {}
     Mass_cold_dust_dict = {}
     Lumin_AGN_dict = {}
+    LTIR_total_dust_dict = {}
+    Mass_total_dust_dict = {}
+    fPDR_total_dust_dict = {}
+    Umean_total_dust_dict = {}
     # 
     # define constants
     pi = numpy.pi
@@ -664,7 +668,7 @@ else:
                     Stellar_mass_dict['Col_numb'] = Col_number
                     Stellar_mass_dict['Log_calc'] = True
                     Stellar_mass_dict['range'] = numpy.power(10,[8.0,13.5])
-                    Stellar_mass_dict['value'] = DataArray['a%d'%(j+1)] / (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * DataTable.getColumn('col%d'%(Col_number)) / (1+Redshift)
+                    Stellar_mass_dict['value'] = DataArray['a%d'%(j+1)] / (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * DataTable.getColumn(Col_number) / (1+Redshift)
                     Stellar_mass_dict['chisq'] = DataArray['chi2']
             elif InfoDict[Lib_name].find('DL07.HiExCom') >= 0:
                 if 'lgLTIR' == Lib_dict[Key_TPAR]:
@@ -676,7 +680,7 @@ else:
                     LTIR_warm_dust_dict['Col_numb'] = Col_number
                     LTIR_warm_dust_dict['Log_calc'] = True
                     LTIR_warm_dust_dict['range'] = numpy.power(10,[9.0,14.5])
-                    LTIR_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn('col%d'%(Col_number))) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
+                    LTIR_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn(Col_number)) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     LTIR_warm_dust_dict['chisq'] = DataArray['chi2']
                 elif 'Umin' == Lib_dict[Key_TPAR]:
                     Umin_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
@@ -687,7 +691,7 @@ else:
                     Umin_warm_dust_dict['Col_numb'] = Col_number
                     Umin_warm_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
                     Umin_warm_dust_dict['range'] = [0.08,30.0]
-                    Umin_warm_dust_dict['value'] = DataTable.getColumn('col%d'%(Col_number))
+                    Umin_warm_dust_dict['value'] = DataTable.getColumn(Col_number)
                     Umin_warm_dust_dict['chisq'] = DataArray['chi2']
                     # 
                     Mass_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
@@ -711,7 +715,7 @@ else:
                     LTIR_cold_dust_dict['Col_numb'] = Col_number
                     LTIR_cold_dust_dict['Log_calc'] = True
                     LTIR_cold_dust_dict['range'] = numpy.power(10,[9.0,14.5])
-                    LTIR_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn('col%d'%(Col_number))) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
+                    LTIR_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn(Col_number)) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     LTIR_cold_dust_dict['chisq'] = DataArray['chi2']
                 elif 'Umin' == Lib_dict[Key_TPAR]:
                     Umin_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
@@ -722,7 +726,7 @@ else:
                     Umin_cold_dust_dict['Col_numb'] = Col_number
                     Umin_cold_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
                     Umin_cold_dust_dict['range'] = [0.08,30.0]
-                    Umin_cold_dust_dict['value'] = DataTable.getColumn('col%d'%(Col_number))
+                    Umin_cold_dust_dict['value'] = DataTable.getColumn(Col_number)
                     Umin_cold_dust_dict['chisq'] = DataArray['chi2']
                     # 
                     Mass_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
@@ -735,7 +739,8 @@ else:
                     Mass_cold_dust_dict['range'] = numpy.power(10,[7.0,12.0])
                     Mass_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * dL**2 / (1+Redshift) # Mdust # Mdust #NOTE# no need to multiply a '4*pi'!
                     Mass_cold_dust_dict['chisq'] = DataArray['chi2']
-            elif InfoDict[Lib_name].find('MullaneyAGN') >= 0:
+            elif InfoDict[Lib_name].find('MullaneyAGN') >= 0 or \
+                InfoDict[Lib_name].find('SiebenmorgenAGN') >= 0:
                 # Mullaney AGN
                 #   by integrating the AGN template (AGN_TYPE=2) from 1um to 1000um, we get an integration of 5133.913101
                 if 'AGN_TYPE' == Lib_dict[Key_TPAR]:
@@ -755,22 +760,24 @@ else:
             Col_number = Col_number + 1
     # 
     # Total LIR
-    LTIR_total_dust_dict = copy(LTIR_warm_dust_dict)
-    LTIR_total_dust_dict['value'] = LTIR_warm_dust_dict['value'] + LTIR_cold_dust_dict['value']
-    LTIR_total_dust_dict['Lib_file'] = [LTIR_warm_dust_dict['Lib_file'], LTIR_cold_dust_dict['Lib_file']]
-    LTIR_total_dust_dict['Lib_name'] = [LTIR_warm_dust_dict['Lib_name'], LTIR_cold_dust_dict['Lib_name']]
-    LTIR_total_dust_dict['Col_numb'] = [LTIR_warm_dust_dict['Col_numb'], LTIR_cold_dust_dict['Col_numb']]
-    LTIR_total_dust_dict['Par_name'] = '$\log \ L_{\mathrm{IR}}$ (total) [$\mathrm{L}_{\odot}$]'
-    LTIR_total_dust_dict['Par_file'] = 'LIR_total'
+    if 'value' in LTIR_warm_dust_dict and 'value' in LTIR_cold_dust_dict:
+        LTIR_total_dust_dict = copy(LTIR_warm_dust_dict)
+        LTIR_total_dust_dict['value'] = LTIR_warm_dust_dict['value'] + LTIR_cold_dust_dict['value']
+        LTIR_total_dust_dict['Lib_file'] = [LTIR_warm_dust_dict['Lib_file'], LTIR_cold_dust_dict['Lib_file']]
+        LTIR_total_dust_dict['Lib_name'] = [LTIR_warm_dust_dict['Lib_name'], LTIR_cold_dust_dict['Lib_name']]
+        LTIR_total_dust_dict['Col_numb'] = [LTIR_warm_dust_dict['Col_numb'], LTIR_cold_dust_dict['Col_numb']]
+        LTIR_total_dust_dict['Par_name'] = '$\log \ L_{\mathrm{IR}}$ (total) [$\mathrm{L}_{\odot}$]'
+        LTIR_total_dust_dict['Par_file'] = 'LIR_total'
     # 
     # Total Mdust
-    Mass_total_dust_dict = copy(Mass_warm_dust_dict)
-    Mass_total_dust_dict['value'] = Mass_warm_dust_dict['value'] + Mass_cold_dust_dict['value']
-    Mass_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
-    Mass_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
-    Mass_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
-    Mass_total_dust_dict['Par_name'] = '$\log \ M_{\mathrm{dust}}$ (total) [$\mathrm{M}_{\odot}$]'
-    Mass_total_dust_dict['Par_file'] = 'Mdust_total'
+    if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
+        Mass_total_dust_dict = copy(Mass_warm_dust_dict)
+        Mass_total_dust_dict['value'] = Mass_warm_dust_dict['value'] + Mass_cold_dust_dict['value']
+        Mass_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
+        Mass_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
+        Mass_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
+        Mass_total_dust_dict['Par_name'] = '$\log \ M_{\mathrm{dust}}$ (total) [$\mathrm{M}_{\odot}$]'
+        Mass_total_dust_dict['Par_file'] = 'Mdust_total'
     # 
     # Total fPDR Umean
     #   the Draine & Li 2007 IRSF (interstellar radiation field) model is like Dale 2005, 
@@ -785,42 +792,56 @@ else:
     #       
     #       e.g. Aniano et al. 2012
     # 
-    fPDR_total_dust_dict = copy(Umin_warm_dust_dict)
-    fPDR_total_dust_dict['value'] = Mass_warm_dust_dict['value'] / (Mass_warm_dust_dict['value'] + Mass_cold_dust_dict['value'])
-    fPDR_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
-    fPDR_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
-    fPDR_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
-    fPDR_total_dust_dict['Par_name'] = '$\log \ \delta_{\mathrm{PDR}}$ (total)'
-    fPDR_total_dust_dict['Par_file'] = 'fPDR_total'
-    fPDR_total_dust_dict['Log_calc'] = True
-    fPDR_total_dust_dict['range'] = [1e-4,1.0]
+    if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
+        fPDR_total_dust_dict = copy(Umin_warm_dust_dict)
+        fPDR_total_dust_dict['value'] = Mass_warm_dust_dict['value'] / (Mass_warm_dust_dict['value'] + Mass_cold_dust_dict['value'])
+        fPDR_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
+        fPDR_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
+        fPDR_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
+        fPDR_total_dust_dict['Par_name'] = '$\log \ \delta_{\mathrm{PDR}}$ (total)'
+        fPDR_total_dust_dict['Par_file'] = 'fPDR_total'
+        fPDR_total_dust_dict['Log_calc'] = True
+        fPDR_total_dust_dict['range'] = [1e-4,1.0]
     # 
-    Umean_total_dust_dict = copy(Umin_warm_dust_dict)
-    Umean_total_dust_dict['value'] = (1-fPDR_total_dust_dict['value']) * Umin_cold_dust_dict['value'] + fPDR_total_dust_dict['value'] * Umin_warm_dust_dict['value'] * (numpy.log(1e6/Umin_warm_dust_dict['value'])/(1-Umin_warm_dust_dict['value']/1e6))
-    Umean_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
-    Umean_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
-    Umean_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
-    Umean_total_dust_dict['Par_name'] = '$\\left<U\\right>$ (total)'
-    Umean_total_dust_dict['Par_file'] = 'Umean_total'
-    Umean_total_dust_dict['range'] = [0.08,50.0]
+    if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
+        Umean_total_dust_dict = copy(Umin_warm_dust_dict)
+        Umean_total_dust_dict['value'] = (1-fPDR_total_dust_dict['value']) * Umin_cold_dust_dict['value'] + fPDR_total_dust_dict['value'] * Umin_warm_dust_dict['value'] * (numpy.log(1e6/Umin_warm_dust_dict['value'])/(1-Umin_warm_dust_dict['value']/1e6))
+        Umean_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
+        Umean_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
+        Umean_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
+        Umean_total_dust_dict['Par_name'] = '$\\left<U\\right>$ (total)'
+        Umean_total_dust_dict['Par_file'] = 'Umean_total'
+        Umean_total_dust_dict['range'] = [0.08,50.0]
     # 
     # analyze 
     print('Num_params', Num_params)
     print('Lib_params', Lib_params)
     Plot_engine = CrabPlot(figure_size=(14.0,10.0))
     Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04, left=0.06, right=0.96)
-    analyze_chisq_distribution(Stellar_mass_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(Lumin_AGN_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(Umin_warm_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(Umin_cold_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(LTIR_warm_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(LTIR_cold_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(Mass_warm_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(Mass_cold_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(LTIR_total_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(Mass_total_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(fPDR_total_dust_dict, Plot_engine = Plot_engine)
-    analyze_chisq_distribution(Umean_total_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in Stellar_mass_dict:
+        analyze_chisq_distribution(Stellar_mass_dict, Plot_engine = Plot_engine)
+    if 'value' in Lumin_AGN_dict:
+        analyze_chisq_distribution(Lumin_AGN_dict, Plot_engine = Plot_engine)
+    if 'value' in Umin_warm_dust_dict:
+        analyze_chisq_distribution(Umin_warm_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in Umin_cold_dust_dict:
+        analyze_chisq_distribution(Umin_cold_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in LTIR_warm_dust_dict:
+        analyze_chisq_distribution(LTIR_warm_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in LTIR_cold_dust_dict:
+        analyze_chisq_distribution(LTIR_cold_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in Mass_warm_dust_dict:
+        analyze_chisq_distribution(Mass_warm_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in Mass_cold_dust_dict:
+        analyze_chisq_distribution(Mass_cold_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in LTIR_total_dust_dict:
+        analyze_chisq_distribution(LTIR_total_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in Mass_total_dust_dict:
+        analyze_chisq_distribution(Mass_total_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in fPDR_total_dust_dict:
+        analyze_chisq_distribution(fPDR_total_dust_dict, Plot_engine = Plot_engine)
+    if 'value' in Umean_total_dust_dict:
+        analyze_chisq_distribution(Umean_total_dust_dict, Plot_engine = Plot_engine)
     Plot_engine.savepdf(Output_name+'.chisq.pdf')
     #Plot_engine.show()
     Plot_engine.close()

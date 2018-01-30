@@ -1,0 +1,114 @@
+#!/bin/bash
+#
+
+set -e
+
+
+if [[ $(type michi2_v04 2>/dev/null | wc -l) -eq 0 ]]; then
+    if [[ -f "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash" ]]; then
+        #echo source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        #echo $PATH
+    else
+        echo "Error! \"$(dirname ${BASH_SOURCE[0]})/bin_setup.bash\" was not found!"
+        exit
+    fi
+fi
+
+# 
+# Read Redshift
+# 
+Redshift=""
+if [[ $# -eq 0 ]]; then
+    echo -n "Please input redshift: "
+    read Redshift
+    if [[ -z "$Redshift" ]]; then
+        echo "Error! Empty input!"
+        exit
+    fi
+    echo "Redshift=$Redshift"
+else 
+    Redshift="$1"
+fi
+
+# 
+# Read Parallel, Redshift, Flux
+# 
+Parallel=2
+Flux="extracted_flux.txt" #<TODO># 
+if [[ $# -ge 2 ]]; then
+    i=2
+    while [[ $i -le $# ]]; do
+        Strcmd=$(echo "${!i}" | sed -e 's/^--/-/g' | tr '[:lower:]' '[:upper:]')
+        if [[ "$Strcmd" == "-parallel" ]]; then
+            if [[ i -lt $# ]]; then
+                i=$((i+1))
+                Parallel="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-redshift" ]]; then
+            if [[ i -lt $# ]]; then
+                i=$((i+1))
+                Redshift="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-flux" ]]; then
+            if [[ i -lt $# ]]; then
+                i=$((i+1))
+                Flux="${!i}"
+            fi
+        fi
+        i=$((i+1))
+    done
+fi
+
+
+# 
+# Check photometry file
+# 
+if [[ ! -f "$Flux" ]]; then
+    echo "Error! \"$Flux\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+    exit
+fi
+
+
+# 
+# Prepare SED fitting input data file
+# 
+michi2_filter_flux_2sigma_only_FIR.py "$Flux" "flux_obsframe.dat"
+
+
+# 
+# Copy SED files
+# 
+cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/BC03_Constant_SFH_at_time_800Myr/lib.BC03.Padova1994.BaSeL.Z0.0190.Age800Myr.EBV.SED .
+cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.HiExCom.Single.qPAH.2.5.SED .
+cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.LoExCom.Single.qPAH.2.5.SED .
+cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.SED .
+cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Single.Hotest.SED .
+cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.RadioPowerlaw.Single.SED .
+cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filters .
+cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filter.list .
+
+
+# 
+# Run michi2
+# 
+michi2_v04 -obs flux_obsframe.dat \
+           -redshift $Redshift \
+           -lib lib.BC03.Padova1994.BaSeL.Z0.0190.Age800Myr.EBV.SED \
+                lib.SiebenmorgenAGN.SED \
+                lib.DL07.LoExCom.Single.qPAH.2.5.SED \
+                lib.RadioPowerlaw.Single.SED \
+           -out fit_4.out \
+           -parallel $Parallel \
+           -constraint LIB4 NORM EQ SED "((LIB3*(10^LIB3_PAR3)))*40.31970/3750/10^2.4" \
+           -filter filter.list
+           
+           # -constraint LIB5 NORM EQ SED "LIR(8,1000)*1.061619121e-06" \
+           # calc 1/3750/10**2.4 = 1.061619121e-06, qIR = 2.4. 
+
+
+
+
+
+
+

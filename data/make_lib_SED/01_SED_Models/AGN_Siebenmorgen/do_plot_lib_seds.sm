@@ -1,0 +1,208 @@
+plot_lib_seds
+    # 
+    # usage:
+    #   echo "macro read do_plot_lib_seds.sm plot_lib_seds" | sm
+    # 
+    load crabPlot.sm
+    crabPlotOpenPS "Plot_lib_seds_v1.eps"
+    crabPlotDefaultPenForBox
+    limits -3 5 -7 3
+    ticksize -1 10 -1 10
+    box
+    crabPlotDefaultPenForTitle
+    xlabel "{\lambda} [{\mu}m]"
+    # 
+    set_color_RdBu
+    # 
+    define ipar1 0 # par1 = 0 is useless, peak at 1um
+    define ipar1 1 # par1 = 1 has two peaks, 
+    define ipar1 2 # par1 = 1 has two peaks, 
+    ltype 0
+    #plot_one_par1
+    #plot_one_par2
+    #plot_one_par3
+    #plot_one_par4
+    #plot_one_par5
+    plot_sel_pars
+    # 
+    #define ipar1 4 # 
+    #ltype 1
+    #plot_one_par4
+    # 
+    crabPlotClosePS
+    # 
+    #!cp Plot_lib_seds_v1.pdf Plot_lib_seds_par1_$ipar1""_par2_$ipar2""_par3_$ipar3""_par4_$ipar4""_par5_all.pdf
+    #!cp Plot_lib_seds_v1.pdf Plot_tune_par1.pdf
+    #!cp Plot_lib_seds_v1.pdf Plot_tune_par2.pdf
+    #!cp Plot_lib_seds_v1.pdf Plot_tune_par3.pdf
+    #!cp Plot_lib_seds_v1.pdf Plot_tune_par4.pdf
+    #!cp Plot_lib_seds_v1.pdf Plot_tune_par5.pdf
+    !cp Plot_lib_seds_v1.pdf Plot_tune_pars.pdf
+
+set_params
+    set npar = 5
+    set par1 = {"0300" "0514" "0772" "1000" "1545"} # The inner radius of the dusty torus
+    set par2 = {"015" "077" "385" "777"} # The cloud volume filling factor
+    set par3 = {"0000" "0045" "0135" "0450"} # The optical depth (in V) of the individual clouds
+    set par4 = {"0000" "0030" "0100" "0300" "1000"} # The optical depth (in V) of the disk midplane
+    set par5 = 1,9
+    # 
+    # -- 
+    # par3[0] is useless, peak at 1um
+    # 
+
+set_color_RdBu
+    # http://colrd.com/palette/18859/?download=css
+    add_ctype RdBu_1  103  0    31  
+    add_ctype RdBu_2  178  24   43  
+    add_ctype RdBu_3  214  96   77  
+    add_ctype RdBu_4  244  165  130 
+    add_ctype RdBu_5  253  219  199 
+    add_ctype RdBu_6  247  247  247 
+    add_ctype RdBu_7  209  229  240 
+    add_ctype RdBu_8  146  197  222 
+    add_ctype RdBu_9  67   147  195 
+    add_ctype RdBu_10 33   102  172 
+    add_ctype RdBu_11 5    48   97  
+    add_ctype RdBu_12 5    48   97  
+    add_ctype RdBu_13 5    48   97  
+
+plot_one_par1
+    define ipar1 0 # 0 - 4, changes the SED peak
+    define ipar2 0 # 0 - 3, changes the bulge
+    define ipar3 2 # 0 - 3
+    define ipar4 3 # 0 - 4. 0 not good. 
+    define ipar5 5 # 0 - 4. 0 not good. 
+    do i = 0,4 {
+        ctype RdBu_$($i*3+1) plot_one_sed $i $ipar2 $ipar3 $ipar4 $ipar5
+    }
+
+plot_one_par2
+    define ipar1 2 # 0 - 4, changes the SED peak
+    define ipar2 0 # 0 - 3, changes the bulge
+    define ipar3 2 # 0 - 3
+    define ipar4 3 # 0 - 4. 0 not good. 
+    define ipar5 5 # 0 - 4. 0 not good. 
+    do i = 0,3 {
+        ctype RdBu_$($i*3+1) plot_one_sed $ipar1 $i $ipar3 $ipar4 $ipar5
+    }
+
+plot_one_par3a
+    define ipar1 2 # 0 - 4, changes the SED peak
+    define ipar2 2 # 0 - 3, changes the bulge
+    define ipar3 2 # 0 - 3, changes the bulge, -- good, has large variety
+    define ipar4 3 # 0 - 4. 0 not good. 
+    define ipar5 5 # 0 - 4. 0 not good. 
+    do i = 0,3 {
+        ctype RdBu_$($i*3+1) plot_one_sed $ipar1 $ipar2 $i $ipar4 $ipar5
+    }
+
+plot_one_par3
+    define ipar1 4 # 0 - 4, changes the SED peak
+    define ipar2 2 # 0 - 3, changes the bulge
+    define ipar3 2 # 0 - 3, changes the bulge, very similar to ipar2
+    define ipar4 3 # 0 - 4. 0 not good. 
+    define ipar5 3 # 0 - 8. 0 not good. 
+    do i = 0,3 {
+        ctype RdBu_$($i*3+1) plot_one_sed $ipar1 $ipar2 $i $ipar4 $ipar5
+    }
+
+plot_one_par4
+    define ipar1 2 # 0 - 4, changes the SED peak
+    define ipar2 2 # 0 - 3, changes the bulge
+    define ipar3 2 # 0 - 3, changes the bulge, very similar to ipar2
+    define ipar4 3 # 0 - 4. only slightly changes the peak
+    define ipar5 5 # 0 - 4. 0 not good. 
+    do i = 0,4 {
+        ctype RdBu_$($i*3+1) plot_one_sed $ipar1 $ipar2 $ipar3 $i $ipar5
+    }
+
+plot_one_par5a
+    define ipar1 5 # 0 - 4, changes the SED peak
+    define ipar2 2 # 0 - 3, changes the bulge
+    define ipar3 2 # 0 - 3, changes the bulge, very similar to ipar2
+    define ipar4 3 # 0 - 4. only slightly changes the peak
+    define ipar5 5 # 0 - 4. only slightly changes the peak
+    do i = 0,8 {
+        ctype RdBu_$($i*1+1) plot_one_sed $ipar1 $ipar2 $ipar3 $ipar4 $i
+    }
+
+plot_one_par5a
+    define ipar1 4 # 0 - 4, changes the SED peak
+    define ipar2 1 # 0 - 3, changes the bulge
+    define ipar3 2 # 0 - 3, changes the bulge, very similar to ipar2
+    define ipar4 3 # 0 - 4. only slightly changes the peak
+    define ipar5 5 # 0 - 4. only slightly changes the peak
+    foreach i {0 2 8} {
+        ctype RdBu_$($i*1+1) plot_one_sed $ipar1 $ipar2 $ipar3 $ipar4 $i
+    }
+
+plot_one_par5
+    define ipar1 4 # 0 - 4, changes the SED peak
+    define ipar2 1 # 0 - 3, changes the bulge
+    define ipar3 1 # 0 - 3, changes the bulge, very similar to ipar2
+    define ipar4 3 # 0 - 4. only slightly changes the peak
+    define ipar5 5 # 0 - 4. only slightly changes the peak
+    set listpar1 = {0 2 4}
+    set listpar5 = {0 2 8}
+    do ii1=0,dimen(listpar1)-1 {
+        define i1 $(listpar1[$ii1])
+        do ii5=0,dimen(listpar5)-1 {
+            define i5 $(listpar5[$ii5])
+            ltype $ii5
+            echo RdBu_$($ii5*3+$ii1+1)
+            ctype RdBu_$($ii5*3+$ii1+1) plot_one_sed $i1 $ipar2 $ipar3 $ipar4 $i5
+        }
+    }
+
+plot_sel_pars_good_in_use_20180130
+    ltype 0
+    ctype RdBu_1 plot_one_sed 0 0 1 1 0
+    #ctype RdBu_1 plot_one_sed 0 1 1 3 0
+    #ctype RdBu_2 plot_one_sed 4 2 1 3 0
+    ctype RdBu_3 plot_one_sed 4 3 3 3 0
+    
+    ltype 0
+    #ctype RdBu_4 plot_one_sed 0 1 1 3 2
+    ctype RdBu_5 plot_one_sed 4 2 1 3 2
+    #ctype RdBu_6 plot_one_sed 4 3 3 3 2
+    
+    ltype 0
+    #ctype RdBu_7 plot_one_sed 0 1 1 3 8 #-- very similar to 'plot_one_sed 0 0 1 1 0'
+    ctype RdBu_8 plot_one_sed 4 2 1 3 8
+    #ctype RdBu_9 plot_one_sed 4 3 3 3 8 #-- very similar to '4 3 3 3 0'
+
+plot_sel_pars
+    ltype 0
+    ctype RdBu_1 plot_one_sed 0 0 1 1 0
+    #ctype RdBu_1 plot_one_sed 0 1 1 3 0
+    #ctype RdBu_2 plot_one_sed 4 2 1 3 0
+    ctype RdBu_3 plot_one_sed 4 3 3 4 0
+    
+    ltype 0
+    #ctype RdBu_4 plot_one_sed 0 1 1 3 2
+    ctype RdBu_5 plot_one_sed 4 2 1 3 2
+    #ctype RdBu_6 plot_one_sed 4 3 3 3 2
+    
+    ltype 0
+    #ctype RdBu_7 plot_one_sed 0 1 1 3 8 #-- very similar to 'plot_one_sed 0 0 1 1 0'
+    ctype RdBu_8 plot_one_sed 4 2 1 3 8
+    #ctype RdBu_9 plot_one_sed 4 3 3 3 8 #-- very similar to '4 3 3 3 0'
+    
+
+plot_one_sed 05
+    # 
+    set_params
+    # 
+    data "agnsed/R"$(par1[$1])"_Vc"$(par2[$2])"_Ac"$(par3[$3])"_Ad"$(par4[$4])".th"$(par5[$5])
+    lines 2 0
+    read {w 1.f f 2.f}
+    sort {w f}
+    vecminmax f fMIN fMAX
+    set f = f/$fMAX
+    set lg_w = lg(w)
+    set lg_f = lg(f)
+    connect lg_w lg_f
+
+
+
