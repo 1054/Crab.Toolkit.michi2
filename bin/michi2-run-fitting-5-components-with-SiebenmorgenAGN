@@ -1,6 +1,10 @@
 #!/bin/bash
 #
 
+set -e
+
+
+
 if [[ $(type michi2_v04 2>/dev/null | wc -l) -eq 0 ]]; then
     if [[ -f "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash" ]]; then
         #echo source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
@@ -31,8 +35,8 @@ fi
 # 
 # Read Parallel
 # 
-Flux="extracted_flux.txt" #<TODO># 
 Parallel=2
+Flux="extracted_flux.txt" #<TODO># 
 if [[ $# -ge 2 ]]; then
     i=2
     while [[ $i -le $# ]]; do
@@ -60,16 +64,25 @@ fi
 # 
 # Check photometry file
 # 
-if [[ ! -f "flux_obsframe.dat" ]]; then
-    echo "Error! \"flux_obsframe.dat\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
-    exit
-fi
+#if [[ ! -f "$Flux" ]]; then
+#    echo "Error! \"$Flux\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+#    exit
+#fi
 
 
 # 
 # Prepare SED fitting input data file
 # 
-michi2_filter_flux_2sigma_only_FIR.py "$Flux" "flux_obsframe.dat"
+#michi2_filter_flux_2sigma_only_FIR.py "$Flux" "flux_obsframe.dat"
+
+
+# 
+# Check photometry file for SED fitting
+# 
+if [[ ! -f "flux_obsframe.dat" ]]; then
+    echo "Error! \"flux_obsframe.dat\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+    exit
+fi
 
 
 # 
