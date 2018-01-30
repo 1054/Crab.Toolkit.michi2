@@ -49,29 +49,15 @@ get_one_sed 05
     read {w0 1.f f0 2.f}
     sort {w0 f0}
     # cut zero flux model data
-    #set f1 = (f0<=0) ? 1e-99 : f0
-    set f1 = f0 if(f0>0)
-    set w1 = w0 if(f0>0)
-    # 
-    # cut non-idea model data
-    if(Type==1) {
-        set f1 = f0 if(f0>0 && w0>=0.02 && w0<=200)
-        set w1 = w0 if(f0>0 && w0>=0.02 && w0<=200)
-    }
+    set f1 = (f0<=0) ? 1e-99 : f0
     # 
     echo dimen(w1) = $(dimen(w1))
     echo dimen(f1) = $(dimen(f1))
     set f1 = lg(f1)
     set w1 = lg(w1)
     vecminmax w1 w1MIN w1MAX
-    # prepare extrapolation
-    set f1LAST = f1[$(dimen(f1)-1)]
-    # start gridding and splining
-    set w = -3,4,0.05
-    spline w1 f1 w f
-    set f = (w<$w1MIN) ? -99 : f # at shorter wavelength, cut it
-    #set f = (w>$w1MAX) ? f1LAST : f # at longer wavelength, extrapolation with freq**(-2)
-    set f = (w>$w1MAX) ? f1LAST + (3.8)*(lg(2.99792458e5/(10**w))-lg(2.99792458e5/(10**$w1MAX))) : f # at longer wavelength, extrapolation with freq**(-2)
+    set w = w1
+    set f = f1
     # log -> linear
     set w = 10**w
     set f = 10**f
@@ -82,7 +68,6 @@ get_one_sed 05
     set Ad = w*0.0 + number(par4[$4])
     set th = w*0.0 + number(par5[$5])
     set Type = int(w*0) + Type
-    set nWav = dimen(w)
     load astroSfig.sm
     set Lbol = w*0.0 + calc_ltir(w, f, 0.0, 1.0, 1e3) # integrate over 1.0 to 1000 um
     define print_noheader 1

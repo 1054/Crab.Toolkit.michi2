@@ -15,7 +15,7 @@
 # CPAR3 = 5    # the colomn number of PAR2
 # NPAR1 = 1    # Number of different PAR1
 # NPAR2 = 18   # Number of different PAR2
-# NPAR3 = 18   # Number of different PAR3
+# NPAR3 = 18   # Number of different PAR3 -- non-independent
 # 
 #        lambda           flux    metallicity         age        mass
 #          [um]      [Lsun/Hz]                      [Gyr]      [Msun]

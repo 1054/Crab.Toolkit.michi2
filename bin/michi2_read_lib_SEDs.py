@@ -81,6 +81,11 @@ def check_array(arr):
         arr = numpy.array(arr)
     return arr
 
+def nearest_interp(xi, x, y):
+    # https://stackoverflow.com/questions/21002799/extraploation-with-nearest-method-in-python
+    idx = numpy.abs(x - xi[:,None])
+    return y[idx.argmin(axis=1)]
+
 def spline(input_x, input_y, output_x, xlog=0, ylog=0, outputxlog=None, outputylog=None, fill=numpy.nan):
     # spline
     # note that we can input xlog, ylog, outputxlog, outputylog to deal with logarithm input/output needs
@@ -112,11 +117,22 @@ def spline(input_x, input_y, output_x, xlog=0, ylog=0, outputxlog=None, outputyl
     # 
     #print(numpy.column_stack((input_x_coord, input_y_value)))
     input_mask = numpy.isnan(input_y_value)
-    ###spl = UnivariateSpline(input_x_coord, input_y_value, w=~input_mask)
-    ###output_y_value = spl(output_x_coord)
-    ##output_y_value = scipy.interpolate.spline(input_x_coord, input_y_value, output_x_coord, **kwargs) # order=3, kind='smoothest', conds=None
-    spl = scipy.interpolate.CubicSpline(input_x_coord, input_y_value) # axis=0, bc_type='not-a-knot', extrapolate=None
-    output_y_value = spl(output_x_coord)
+    
+    #########output_y_value = scipy.interpolate.UnivariateSpline(input_x_coord, input_y_value, w=~input_mask)(output_x_coord)
+    
+    ###############output_y_value = scipy.interpolate.interpn(input_x_coord, input_y_value, output_x_coord, method='linear')
+    
+    ###########output_y_value = scipy.interpolate.interp1d(input_x_coord, input_y_value, kind='nearest')(output_x_coord) # error on outside data
+    
+    ###########output_y_value = numpy.interp() # this does the extrapolation, but see https://stackoverflow.com/questions/21002799/extraploation-with-nearest-method-in-python
+    
+    #output_y_value = nearest_interp(output_x_coord, input_x_coord, input_y_value)
+    
+    output_y_value = scipy.interpolate.spline(input_x_coord, input_y_value, output_x_coord, order='1') # order=3, kind='smoothest', conds=None
+    
+    #spl = scipy.interpolate.CubicSpline(input_x_coord, input_y_value) # axis=0, bc_type='not-a-knot', extrapolate=None
+    #output_y_value = spl(output_x_coord)
+    
     # 
     # deal with data out of X range
     output_mask = (output_x_coord<numpy.nanmin(input_x_coord)) | (output_x_coord>numpy.nanmax(input_x_coord))

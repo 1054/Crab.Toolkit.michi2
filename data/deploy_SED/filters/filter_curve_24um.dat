@@ -1,5 +1,6 @@
 # http://irsa.ipac.caltech.edu/data/SPITZER/docs/mips/mipsinstrumenthandbook/6/
 # Figure 2.3
+# wavelength_um transmission
 20 0.0
 20.5 0.2
 21 0.8

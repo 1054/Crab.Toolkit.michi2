@@ -1,10 +1,9 @@
 #      wavelength_um   filter_curve
 #
-             3.56343    none
-             3.56343    none
-             4.51101    none
-             5.75934    none
-             7.95949    none
+                 3.6    filters/filter_curve_irac_ch1.dat
+                 4.5    filters/filter_curve_irac_ch2.dat
+                 5.8    filters/filter_curve_irac_ch3.dat
+                 8.0    filters/filter_curve_irac_ch4.dat
                   24    filters/filter_curve_24um.dat
                  100    none
                  160    none
