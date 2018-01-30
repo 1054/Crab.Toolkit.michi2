@@ -91,7 +91,7 @@ fi
 #cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/BC03_Constant_SFH_at_time_800Myr/lib.BC03.Padova1994.BaSeL.Z0.0190.Age800Myr.EBV.SED .
 #cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.HiExCom.Single.qPAH.2.5.SED .
 #cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.LoExCom.Single.qPAH.2.5.SED .
-cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.SED .
+cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Extrapolated.SED .
 #cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Single.Hotest.SED .
 #cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.RadioPowerlaw.Single.SED .
 #cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filters .
@@ -104,7 +104,7 @@ cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/l
 michi2_v04 -obs flux_obsframe.dat \
            -redshift $Redshift \
            -lib lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED \
-                lib.SiebenmorgenAGN.SED \
+                lib.SiebenmorgenAGN.Extrapolated.SED \
                 lib.DL07.HiExCom.SED \
                 lib.DL07.LoExCom.SED \
                 RadioPowerlaw.Single.lib.SED \

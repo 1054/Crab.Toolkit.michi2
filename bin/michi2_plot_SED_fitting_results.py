@@ -635,6 +635,7 @@ else:
     for j in range(Lib_number):
         Lib_name = 'LIB%d'%(j+1)
         Lib_dict = CrabTableReadInfo(InfoDict[Lib_name], verbose=0)
+        #print(Lib_dict)
         # 
         # read the number of parameters from the SED LIB file
         Key_NPAR = '# NPAR'
@@ -743,7 +744,7 @@ else:
                 InfoDict[Lib_name].find('SiebenmorgenAGN') >= 0:
                 # Mullaney AGN
                 #   by integrating the AGN template (AGN_TYPE=2) from 1um to 1000um, we get an integration of 5133.913101
-                if 'AGN_TYPE' == Lib_dict[Key_TPAR]:
+                if 'AGN_TYPE' == Lib_dict[Key_TPAR].upper():
                     Lumin_AGN_dict['Lib_file'] = InfoDict[Lib_name]
                     Lumin_AGN_dict['Lib_name'] = Lib_name
                     Lumin_AGN_dict['Lib_numb'] = j+1
