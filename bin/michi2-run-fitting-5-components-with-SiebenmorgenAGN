@@ -45,16 +45,19 @@ if [[ $# -ge 2 ]]; then
             if [[ i -lt $# ]]; then
                 i=$((i+1))
                 Parallel="${!i}"
+                echo Parallel="${!i}"
             fi
         elif [[ "$Strcmd" == "-redshift" ]]; then
             if [[ i -lt $# ]]; then
                 i=$((i+1))
                 Redshift="${!i}"
+                echo Redshift="${!i}"
             fi
         elif [[ "$Strcmd" == "-flux" ]]; then
             if [[ i -lt $# ]]; then
                 i=$((i+1))
                 Flux="${!i}"
+                echo Flux="${!i}"
             fi
         fi
         i=$((i+1))
