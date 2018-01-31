@@ -90,6 +90,9 @@ if len(isel) > 0:
     for iseli in isel:
         print('Limited row %d S/N no larger than 10: w = %s, f = %s, ferr = %s'%(iseli, w[iseli], f[iseli], ferr[iseli]))
 
+# sort
+data_table.sort(data_table.colnames[0])
+
 # output
 out_file = sys.argv[2]
 asciitable.write(data_table, out_file, Writer=asciitable.Ipac, delimiter='    ', overwrite=True)
