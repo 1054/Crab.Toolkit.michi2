@@ -132,11 +132,18 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         # crab_bin_compute_param_chisq_histogram for plotting
         param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, delta_chisq = Delta_chisq_of_interest, log = param_log)
         # 
-        xrange = param_stats['xrange']
+        param_bin_x = param_stats['hist_x']
+        param_bin_y = param_stats['hist_y']
+        param_bin_step = param_stats['bin_step']
+        # 
+        xrange = param_stats['xrange'] # xrange is the param range where chi-sq < min-chi-sq + 2.3
         yrange = param_stats['yrange']
-        xrange = [xrange[0]-(xrange[1]-xrange[0])*0.50, xrange[1]+(xrange[1]-xrange[0])*0.50] # extend the range for plotting.
-        #if xrange[0] < param_stats['min']: xrange[0] = param_stats['min']
-        #if xrange[1] > param_stats['max']: xrange[1] = param_stats['max']
+        #xrange = [xrange[0]-(xrange[1]-xrange[0])*0.50, xrange[1]+(xrange[1]-xrange[0])*0.50] # extend the range for plotting.
+        if param_stats['valid']:
+            xrange = [ param_stats['L68'] - 10*param_stats['bin_step'], 
+                       param_stats['H68'] + 10*param_stats['bin_step'] ]
+        ##if xrange[0] < param_stats['min']: xrange[0] = param_stats['min']
+        ##if xrange[1] > param_stats['max']: xrange[1] = param_stats['max']
         # invert y
         yrange = [1.0/yrange[1], 1.0/yrange[0]]
         yrange = numpy.log10(yrange)
@@ -149,11 +156,6 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         #        xlog = 1 # not working for matplotlib bar plot (i.e., CrabPlot plot_hist)!
         # 
         ylog = None
-        # 
-        # compute minimum chisq in each parameter bin
-        param_bin_x = param_stats['hist_x']
-        param_bin_y = param_stats['hist_y']
-        param_bin_step = param_stats['bin_step']
         # 
         # log
         if param_log is True:
@@ -184,26 +186,26 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
             Plot_engine = CrabPlot(figure_size=(9.0,5.0))
             Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04)
         # 
-        # Plot xy
+        # Plot xy (left panel)
         Plot_engine.plot_xy(param_array, 1/numpy.array(chisq_array), overplot = False, 
                                 xtitle = param_dict['Par_name'], ytitle = '$1/\chi^2$', useTex = True, 
                                 size = 2.2, color='#1873cc', symbol = 'o')
         # 
-        # Plot Cut_chi2
+        # Plot Cut_chi2 line
         Plot_engine.plot_line(param_stats['xrange'][0], 1/(chisq_min+Delta_chisq_of_interest), 
                                 param_stats['xrange'][0], 1/(chisq_min+Delta_chisq_of_interest), 
                                 overplot = True, linestyle = 'dashed')
         # 
-        # Plot histogram
+        # Plot histogram (right panel)
         Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step*1.5, align = 'edge', overplot = False, 
                                 xtitle = param_dict['Par_name'], ytitle = '$1/\chi^2$', useTex = True, 
                                 xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
-        # Plot Cut_chi2
+        # Plot Cut_chi2 line
         Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
         Plot_engine.plot_text(xrange[1], yrange[1]-0.02*(yrange[1]-yrange[0]), ' (zoomed) ', NormalizedCoordinate=False, overplot=True, horizontalalignment='right', verticalalignment='top')
         # 
-        # Plot Cut_chi2 2p = 2.3
+        # Plot Cut_chi2 line (2p = 2.3)
         Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(chisq_min+2.3), 
                                 param_stats_2p['xrange'][1], 1/(chisq_min+2.3), 
                                 overplot = True, color='#1e90ff', linestyle = 'dotted')
