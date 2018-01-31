@@ -68,6 +68,17 @@ while i < len(data_table):
         data_table.remove_rows(isel3)
     i = i+1
 
+# set zero error data error to 1/3 flux
+w = data_table.field(data_table.colnames[0])
+f = data_table.field(data_table.colnames[1])
+ferr = data_table.field(data_table.colnames[2])
+mask = (ferr==0)
+isel = numpy.argwhere(mask).flatten()
+if len(isel) > 0:
+    ferr[mask] = f[mask] / 3.0
+    for iseli in isel:
+        print('Limited row %d error from zero to 1/3: w = %s, f = %s, ferr = %s'%(iseli, w[iseli], f[iseli], ferr[iseli]))
+
 # limit S/N to be not larger than 10
 w = data_table.field(data_table.colnames[0])
 f = data_table.field(data_table.colnames[1])
