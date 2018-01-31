@@ -828,6 +828,7 @@ else:
     if 'value' in Umin_cold_dust_dict:
         analyze_chisq_distribution(Umin_cold_dust_dict, Plot_engine = Plot_engine)
     if 'value' in LTIR_warm_dust_dict:
+        print(LTIR_warm_dust_dict)
         analyze_chisq_distribution(LTIR_warm_dust_dict, Plot_engine = Plot_engine)
     if 'value' in LTIR_cold_dust_dict:
         analyze_chisq_distribution(LTIR_cold_dust_dict, Plot_engine = Plot_engine)
