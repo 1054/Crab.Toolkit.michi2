@@ -608,7 +608,7 @@ else:
     Count_plot_chi2 = 0
     # 
     # Then plot SEDs
-    for i in numpy.flip(Plot_chi2_indices):
+    for i in Plot_chi2_indices[::-1]:
         # 
         # alpha by chi2
         print('Plotting chi2=%s obj_%d'%(Cut_chi2_array[i], i+1))
@@ -678,6 +678,7 @@ else:
                 Plot_engine.xyouts(0.20, 0.90, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
         #break
     # 
+    # 
     # Then plot OBS data points
     DataTable_obs = asciitable.read(InfoDict['OBS'])
     #print(type(DataTable_obs))
@@ -692,6 +693,7 @@ else:
         Plot_engine.plot_xy(Wavelength_obs[UpperLimits_mask], 3.0*FluxErr_obs[UpperLimits_mask], dataname='upper limits', overplot=True, symbol='upper limits', symsize=3, thick=1.25, alpha=0.5, zorder=9)
     except Exception as err:
         print(err)
+    # 
     # 
     Plot_engine.set_xrange([0.1,1e6])
     Plot_engine.set_yrange([1e-6,1e4])
