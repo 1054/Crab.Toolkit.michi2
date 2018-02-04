@@ -566,7 +566,7 @@ else:
     else:
         Plot_chi2_index_dict = {}
         Plot_chi2_index_dict['0'] = Cut_chi2_array[0]
-        Plot_chi2_indices = [0]
+        Plot_chi2_indices = [0] # note -- this is the index of Cut_chi2_array, and 'Cut_chi2_array' is the cut-and-sorted array of 'All_chi2_array'. 
         # 
         # also tune plotting linewidth
         Plot_chi2_linewidth = 1.5
@@ -593,26 +593,22 @@ else:
     #Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_indices_sorted, Cut_chi2_array_size, Plot_chi2_index_dict)
     dump_LIB_SEDs_to_files(chisq_file = DataFile, chisq_array = All_chi2_array, 
                             lib_dict = InfoDict, 
-                            dump_indices = All_chi2_indices_sorted[0:Cut_chi2_array_size], 
+                            dump_indices = All_chi2_indices_sorted[Plot_chi2_indices], 
                             output_numbers = numpy.arange(Cut_chi2_array_size)+1, 
                             output_prefix = 'obj', 
                             redshift = Redshift)
     # 
     # Wait for a long time
     # 
-    # Then plot SEDs
+    # set color styles
     Color_list = ['cyan', 'gold', 'red', 'blue', 'purple']
     Plot_engine = CrabPlot(figure_size=(8.0,5.0))
     Plot_engine.set_margin(top=0.92, bottom=0.16, left=0.12, right=0.96)
     Count_label_chi2 = 0 # to count the chi-square label printed on the figure, make sure there are not too many labels.
     Count_plot_chi2 = 0
-    for i in range(Cut_chi2_array_size-1,-1,-1):
-        # 
-        # skip solutions between 11th to last 11th.
-        #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_array_size-1-Plot_chi2_max_number/2):
-        #    continue
-        if not ('%d'%i) in Plot_chi2_index_dict:
-            continue
+    # 
+    # Then plot SEDs
+    for i in numpy.flip(Plot_chi2_indices):
         # 
         # alpha by chi2
         print('Plotting chi2=%s obj_%d'%(Cut_chi2_array[i], i+1))
@@ -627,6 +623,7 @@ else:
         #print('Plot_chi2_alpha: ', Plot_chi2_alpha)
         # 
         # 
+        # plot each single SED component
         for j in range(int(InfoDict['NLIB'])):
             xclip = None
             if j == 0: xclip = [(50,numpy.inf)]
@@ -636,26 +633,6 @@ else:
                                 redshift = Redshift, 
                                 linestyle='dashed', linewidth=Plot_chi2_linewidth, color=Color_list[j], alpha=Plot_chi2_alpha)
         # 
-        #<20180114><splined else where># obj_SED_1 = Plot_engine.Plot_data['obj_%d_SED_LIB1'%(i+1)]
-        #<20180114><splined else where># obj_SED_2 = Plot_engine.Plot_data['obj_%d_SED_LIB2'%(i+1)]
-        #<20180114><splined else where># obj_SED_3 = Plot_engine.Plot_data['obj_%d_SED_LIB3'%(i+1)]
-        #<20180114><splined else where># obj_SED_4 = Plot_engine.Plot_data['obj_%d_SED_LIB4'%(i+1)]
-        #<20180114><splined else where># obj_SED_5 = Plot_engine.Plot_data['obj_%d_SED_LIB5'%(i+1)]
-        #<20180114><splined else where># obj_SED_sum_x_lg = numpy.arange(-2,6,0.001) # wavelength_um grid
-        #<20180114><splined else where># obj_SED_sum_x = numpy.power(10, obj_SED_sum_x_lg) # make it in linear space
-        #<20180114><splined else where># obj_SED_sum_y = []
-        #<20180114><splined else where># for j in range(int(InfoDict['NLIB'])):
-        #<20180114><splined else where>#     obj_SED_single_x = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,0]
-        #<20180114><splined else where>#     obj_SED_single_y = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,1]
-        #<20180114><splined else where>#     obj_SED_spline_y = Plot_engine.spline(obj_SED_single_x, obj_SED_single_y, obj_SED_sum_x_lg, xlog=1, ylog=1, outputxlog=0)
-        #<20180114><splined else where>#     if j == 0:
-        #<20180114><splined else where>#         obj_SED_sum_y = obj_SED_spline_y
-        #<20180114><splined else where>#     else:
-        #<20180114><splined else where>#         obj_SED_sum_y = obj_SED_sum_y + obj_SED_spline_y
-        # 
-        #pprint(obj_SED_sum_y)
-        #print(numpy.column_stack((obj_SED_sum_x, obj_SED_sum_y)))
-        #print(Cut_chi2_array[i])
         Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.05)
         Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.85)
         Color_chi2 = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
@@ -663,14 +640,20 @@ else:
                                                     log=1, 
                                                     cmap=matplotlib.cm.get_cmap('gray'))
         #print('Color_chi2: ', Color_chi2)
-        #Plot_engine.plot_line(obj_SED_sum_x, obj_SED_sum_y, current=1, color=Color_chi2)
+        # 
+        # 
+        # plot total SED
         Plot_engine.plot_data_file('obj_%d/SED_SUM'%(i+1), xlog=1, ylog=1, current=1, \
                             dataname='obj_%d_SED_SUM'%(i+1), 
                             redshift = Redshift, 
                             linestyle='solid', linewidth=Plot_SED_linewidth, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
+        # 
+        # 
+        # count++
         Count_plot_chi2 = Count_plot_chi2 + 1
         # 
-        # show chi2 on the figure
+        # 
+        # show chi2 text on the figure
         if not SetOnlyPlotBestSED:
             if i == Cut_chi2_array_size-1:
                 Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
@@ -682,15 +665,16 @@ else:
                 Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
                 Count_label_chi2 = Count_label_chi2 + 1
         # 
-        # show redshift (z) on the figure
+        # 
+        # show redshift (z) and source name on the figure
         if not SetOnlyPlotBestSED:
             if i == 0:
                 Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
             if i == 0 and SourceName != '':
-                Plot_engine.xyouts(0.97, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=16, horizontalalignment='right')
+                Plot_engine.xyouts(0.97, 0.90, SourceName, NormalizedCoordinate=True, fontsize=16, horizontalalignment='right')
         else:
             if i == 0 and SourceName != '':
-                Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=15)
+                Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, fontsize=15)
                 Plot_engine.xyouts(0.20, 0.90, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
         #break
     # 
