@@ -218,58 +218,6 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
 
 
 
-
-
-def constrain_by_upper_limits(DataFile, Input_data_array, Input_info_dict):
-    if os.path.isfile('flagged_chi2_solution.txt'):
-        os.system('mv flagged_chi2_solution.txt flagged_chi2_solution.txt.backup')
-    if os.path.isfile('flagged_chi2_solution_sorted_index.txt'):
-        os.system('mv flagged_chi2_solution_sorted_index.txt flagged_chi2_solution_sorted_index.txt.backup')
-    os.system('rm -rf obj_*')
-    if os.path.isfile('extracted_flux.txt'):
-        obs_data_table = asciitable.read('extracted_flux.txt')
-        obs_wave = numpy.array(obs_data_table.field(obs_data_table.colnames[0]))
-        obs_flux = numpy.array(obs_data_table.field(obs_data_table.colnames[1]))
-        obs_error = numpy.array(obs_data_table.field(obs_data_table.colnames[2]))
-        obs_undetection = (obs_flux < 3.0*obs_error) & (obs_error>0)
-        obs_where_undetected = numpy.argwhere(obs_undetection)
-        # 
-        # check if obs data contains upper limits
-        if len(obs_where_undetected) > 0:
-            obs_wave_undetected = obs_wave[obs_undetection] / (1.0 + float(Input_info_dict['REDSHIFT']))
-            obs_flux_undetected = obs_error[obs_undetection] * 5.0 # 5-sigma upper limit <TODO>
-            # 
-            # loop each input chi2 solution
-            All_chi2_index_sorted = numpy.argsort(Input_data_array['chi2'])
-            i_constrain = 0
-            while i_constrain < len(Input_data_array['chi2']):
-                print('constrain_by_upper_limits: Read_SED_LIB(Input_info_dict, %d)'%(All_chi2_index_sorted[i_constrain]))
-                Read_SED_LIB(DataFile, DataArray, Input_info_dict, All_chi2_index_sorted[i_constrain])
-                SED_data_table = asciitable.read('obj_1/SED_SUM') # always read the minimum chi2 solution
-                SED_x = numpy.array(SED_data_table.field(SED_data_table.colnames[0]))
-                SED_y = numpy.array(SED_data_table.field(SED_data_table.colnames[1]))
-                #SED_flux_to_constrain = scipy.interpolate.spline(SED_x, SED_y, obs_wave_undetected, order='1') # order=3, kind='smoothest', conds=None
-                SED_flux_to_constrain = scipy.interpolate.interp1d(SED_x, SED_y, kind='nearest')(obs_wave_undetected)
-                # 
-                where_constraint = (SED_flux_to_constrain > obs_flux_undetected)
-                which_to_constrain = numpy.argwhere(where_constraint)
-                if len(which_to_constrain) > 0:
-                    # this chi2 solution is not allowed by the upper limit
-                    Input_data_array['chi2'][All_chi2_index_sorted[i_constrain]] = 1e+99
-                    os.system('echo %d >> flagged_chi2_solution.txt'%(All_chi2_index_sorted[i_constrain]))
-                    os.system('echo %d >> flagged_chi2_solution_sorted_index.txt'%(i_constrain))
-                os.system('rm -rf obj_1') # always read the minimum chi2 solution
-                if len(which_to_constrain) <= 0:
-                    # ok, nothing to constrain, break
-                    break
-                i_constrain = i_constrain + 1
-    return Input_data_array
-                
-
-
-
-
-
 def random_sorted_chi2_index_dict(Cut_chi2_array, max = 50):
     # 
     # This function returns a list of index in the 'Cut_chi2_array', including the first one, the last one, and at most 50 random elements in between.
@@ -294,100 +242,11 @@ def random_sorted_chi2_index_dict(Cut_chi2_array, max = 50):
 
 
 
-def Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_index_sorted, Cut_chi2_number = 1, Plot_chi2_index_dict = []):
-    # 
-    if type(All_chi2_index_sorted) is not list or type(All_chi2_index_sorted) is not numpy.array or type(All_chi2_index_sorted) is not numpy.ndarray:
-        All_chi2_index_sorted = [All_chi2_index_sorted]
-    # 
-    for i in range(Cut_chi2_number):
-        # 
-        # skip solutions between 11th to last 11th.
-        #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_number-1-Plot_chi2_max_number/2):
-        #    continue
-        if len(Plot_chi2_index_dict) > 0:
-            if not ('%d'%i) in Plot_chi2_index_dict:
-                continue
-        # 
-        # 
-        for j in range(int(InfoDict['NLIB'])):
-            # 
-            if not os.path.isdir('obj_%d'%(i+1)):
-                os.mkdir('obj_%d'%(i+1))
-            # 
-            if not os.path.isfile('obj_%d/SED_LIB%d'%(i+1,j+1)):
-                #BashCommand = 'cd obj_%d/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../%s %d %s SED_LIB%d'%\
-                #                    (i+1, \
-                #                        InfoDict['LIB%d'%(j+1)], \
-                #                            DataArray['i%d'%(j+1)][All_chi2_index_sorted[i]], \
-                #                                DataArray['a%d'%(j+1)][All_chi2_index_sorted[i]], \
-                #                                    j+1)
-                #print(BashCommand)
-                #os.system(BashCommand)
-                # 
-                # do python way 20180113
-                #BashCommand = '%s/michi2_read_lib_SEDs.py %s %d obj_%d > obj_%d/log.txt'%\
-                #                (os.path.dirname(os.path.realpath(__file__)), \
-                #                    DataFile, \
-                #                        All_chi2_index_sorted[i]+1, \
-                #                            i+1, \
-                #                                i+1)
-                BashCommand = 'michi2_read_lib_SEDs.py %s %d obj_%d > obj_%d/log.txt'%\
-                                ( \
-                                    DataFile, \
-                                        All_chi2_index_sorted[i]+1, \
-                                            i+1, \
-                                                i+1)
-                print(BashCommand)
-                os.system(BashCommand)
-                BashCommand = 'echo "%s" > obj_%d/chi2.txt'%\
-                                (DataArray['chi2'][All_chi2_index_sorted[i]], \
-                                            i+1)
-                print(BashCommand)
-                os.system(BashCommand)
-                BashCommand = 'echo "%s" > obj_%d/line_number.txt'%\
-                                (All_chi2_index_sorted[i]+1, \
-                                            i+1)
-                print(BashCommand)
-                os.system(BashCommand)
-                # 
-                # check
-                #cd obj_8/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../lib.DL07.LoExCom.SED 140140 16.1932 SED_LIB4
-                #/Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SEDs.py fit_5.out 2451 c_2451
-                #topcat -f ASCII c_2451/SED_LIB4 obj_8/SED_LIB4 &
-                #checked that the two code give exactly the same result!
-                #
-                # how about the integrated IR luminosity?
-                #cat obj_8/SED_LIB4.vLv_8_1000 # 8.8442327616e+03
-                #cd obj_8
-                #sm
-                #load astroSfig.sm
-                #data SED_LIB4 read {x 1 y 2}
-                #calc_ltir x y # 3536.147921
-                #calc 10**2.339198 * 16.1932 # 3536.150006 -- 2.339198 is the PAR3 in lib file, agreed with our manual integration! 
-                # 
-        # 
-        #return SED_x, SED_y
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-######################################
+##########################################
 #               MAIN PROGRAM             #
 ##########################################
 
@@ -481,16 +340,6 @@ else:
             elif DataHeaders[i] == 'chi2':
                 DataArray['chi2'] = DataTable.getColumn(i+1)
     # 
-    # 
-    # 
-    # 
-    # Constrain DataArray by upper limits <20180202>
-    if True == False:
-        DataArray = constrain_by_upper_limits(DataFile, DataArray, InfoDict)
-    # 
-    # 
-    # 
-    # 
     # Sort chi2 table
     #print(DataTable.TableHeaders)
     #print(DataArray['chi2'])
@@ -554,7 +403,64 @@ else:
     if True:
         # 
         # Get SED
-        Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_index_sorted, Cut_chi2_number, Plot_chi2_index_dict)
+        for i in range(Cut_chi2_number):
+            # 
+            # skip solutions between 11th to last 11th.
+            #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_number-1-Plot_chi2_max_number/2):
+            #    continue
+            if not ('%d'%i) in Plot_chi2_index_dict:
+                continue
+            # 
+            # Read SED_LIB
+            for j in range(int(InfoDict['NLIB'])):
+                if not os.path.isdir('obj_%d'%(i+1)):
+                    os.mkdir('obj_%d'%(i+1))
+                # 
+                if not os.path.isfile('obj_%d/SED_LIB%d'%(i+1,j+1)):
+                    #BashCommand = 'cd obj_%d/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../%s %d %s SED_LIB%d'%\
+                    #                    (i+1, \
+                    #                        InfoDict['LIB%d'%(j+1)], \
+                    #                            DataArray['i%d'%(j+1)][All_chi2_index_sorted[i]], \
+                    #                                DataArray['a%d'%(j+1)][All_chi2_index_sorted[i]], \
+                    #                                    j+1)
+                    #print(BashCommand)
+                    #os.system(BashCommand)
+                    # 
+                    # do python way 20180113
+                    BashCommand = '%s/michi2_read_lib_SEDs.py %s %d obj_%d > obj_%d/log.txt'%\
+                                    (os.path.dirname(os.path.realpath(__file__)), \
+                                        DataFile, \
+                                            All_chi2_index_sorted[i]+1, \
+                                                i+1, \
+                                                    i+1)
+                    print(BashCommand)
+                    os.system(BashCommand)
+                    BashCommand = 'echo "%s" > obj_%d/chi2.txt'%\
+                                    (DataArray['chi2'][All_chi2_index_sorted[i]], \
+                                                i+1)
+                    print(BashCommand)
+                    os.system(BashCommand)
+                    BashCommand = 'echo "%s" > obj_%d/line_number.txt'%\
+                                    (All_chi2_index_sorted[i]+1, \
+                                                i+1)
+                    print(BashCommand)
+                    os.system(BashCommand)
+                    # 
+                    # check
+                    #cd obj_8/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../lib.DL07.LoExCom.SED 140140 16.1932 SED_LIB4
+                    #/Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SEDs.py fit_5.out 2451 c_2451
+                    #topcat -f ASCII c_2451/SED_LIB4 obj_8/SED_LIB4 &
+                    #checked that the two code give exactly the same result!
+                    #
+                    # how about the integrated IR luminosity?
+                    #cat obj_8/SED_LIB4.vLv_8_1000 # 8.8442327616e+03
+                    #cd obj_8
+                    #sm
+                    #load astroSfig.sm
+                    #data SED_LIB4 read {x 1 y 2}
+                    #calc_ltir x y # 3536.147921
+                    #calc 10**2.339198 * 16.1932 # 3536.150006 -- 2.339198 is the PAR3 in lib file, agreed with our manual integration! 
+                    # 
         # 
         # Wait for a long time
         # 
@@ -645,8 +551,6 @@ else:
             if not SetOnlyPlotBestSED:
                 if i == 0:
                     Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
-                if i == 0 and SourceName != '':
-                    Plot_engine.xyouts(0.97, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=16, horizontalalignment='right')
             else:
                 if i == 0 and SourceName != '':
                     Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=15)
