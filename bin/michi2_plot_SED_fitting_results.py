@@ -608,7 +608,7 @@ else:
     Count_plot_chi2 = 0
     # 
     # Then plot SEDs
-    for i in Plot_chi2_indices[::-1]:
+    for i in Plot_chi2_indices:
         # 
         # alpha by chi2
         print('Plotting chi2=%s obj_%d'%(Cut_chi2_array[i], i+1))
