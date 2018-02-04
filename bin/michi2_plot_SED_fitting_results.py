@@ -300,7 +300,7 @@ def random_sorted_chi2_index_dict(Cut_chi2_array, max = 50):
 
 def dump_LIB_SEDs_to_files(chisq_file = '', chisq_array = [], lib_dict = {}, 
                             dump_indices = [], output_numbers = [], output_prefix = 'dump', 
-                            redshift = numpy.nan)
+                            redshift = numpy.nan):
     # 
     #def Read_SED_LIB(DataFile, DataArray, InfoDict, chisq_indices_sorted, Cut_chi2_array_size = 1, Plot_chi2_index_dict = [])
     # 
