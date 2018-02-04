@@ -594,7 +594,7 @@ else:
     dump_LIB_SEDs_to_files(chisq_file = DataFile, chisq_array = All_chi2_array, 
                             lib_dict = InfoDict, 
                             dump_indices = All_chi2_indices_sorted[Plot_chi2_indices], 
-                            output_numbers = numpy.arange(Cut_chi2_array_size)+1, 
+                            output_numbers = Plot_chi2_indices+1, 
                             output_prefix = 'obj', 
                             redshift = Redshift)
     # 
