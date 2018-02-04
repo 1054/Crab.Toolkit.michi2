@@ -220,12 +220,13 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
 
 
 
-def constrain_by_upper_limits(DataFile, Input_data_array, Input_info_dict):
+def constrain_by_upper_limits(chisq_file, chisq_array, lib_dict):
     if os.path.isfile('flagged_chi2_solution.txt'):
         os.system('mv flagged_chi2_solution.txt flagged_chi2_solution.txt.backup')
     if os.path.isfile('flagged_chi2_solution_sorted_index.txt'):
         os.system('mv flagged_chi2_solution_sorted_index.txt flagged_chi2_solution_sorted_index.txt.backup')
-    os.system('rm -rf obj_*')
+    os.system('bash -c \"rm -rf obj_* 2>/dev/null\"')
+    os.system('bash -c \"rm -rf dump_* 2>/dev/null\"')
     if os.path.isfile('extracted_flux.txt'):
         obs_data_table = asciitable.read('extracted_flux.txt')
         obs_wave = numpy.array(obs_data_table.field(obs_data_table.colnames[0]))
@@ -240,12 +241,16 @@ def constrain_by_upper_limits(DataFile, Input_data_array, Input_info_dict):
             obs_flux_undetected = obs_error[obs_undetection] * 5.0 # 5-sigma upper limit <TODO>
             # 
             # loop each input chi2 solution
-            All_chi2_index_sorted = numpy.argsort(Input_data_array['chi2'])
+            chisq_indices_sorted = numpy.argsort(chisq_array)
             i_constrain = 0
-            while i_constrain < len(Input_data_array['chi2']):
-                print('constrain_by_upper_limits: Read_SED_LIB(Input_info_dict, %d)'%(All_chi2_index_sorted[i_constrain]))
-                Read_SED_LIB(DataFile, DataArray, Input_info_dict, All_chi2_index_sorted[i_constrain])
-                SED_data_table = asciitable.read('obj_1/SED_SUM') # always read the minimum chi2 solution
+            while i_constrain < len(chisq_array):
+                print('constrain_by_upper_limits: dump_LIB_SEDs_to_files(Input_info_dict, %d)'%(chisq_indices_sorted[i_constrain]))
+                #Read_SED_LIB(DataFile, DataArray, Input_info_dict, chisq_indices_sorted[i_constrain])
+                dump_LIB_SEDs_to_files(chisq_file = chisq_file, chisq_array = chisq_array, lib_dict = lib_dict, 
+                                        dump_indices = chisq_indices_sorted[i_constrain], 
+                                        output_numbers = 1, 
+                                        output_prefix = 'dump')
+                SED_data_table = asciitable.read('dump_1/SED_SUM') # always read the minimum chi2 solution
                 SED_x = numpy.array(SED_data_table.field(SED_data_table.colnames[0]))
                 SED_y = numpy.array(SED_data_table.field(SED_data_table.colnames[1]))
                 #SED_flux_to_constrain = scipy.interpolate.spline(SED_x, SED_y, obs_wave_undetected, order='1') # order=3, kind='smoothest', conds=None
@@ -255,15 +260,15 @@ def constrain_by_upper_limits(DataFile, Input_data_array, Input_info_dict):
                 which_to_constrain = numpy.argwhere(where_constraint)
                 if len(which_to_constrain) > 0:
                     # this chi2 solution is not allowed by the upper limit
-                    Input_data_array['chi2'][All_chi2_index_sorted[i_constrain]] = 1e+99
-                    os.system('echo %d >> flagged_chi2_solution.txt'%(All_chi2_index_sorted[i_constrain]))
+                    chisq_array[chisq_indices_sorted[i_constrain]] = 1e+99
+                    os.system('echo %d >> flagged_chi2_solution.txt'%(chisq_indices_sorted[i_constrain]))
                     os.system('echo %d >> flagged_chi2_solution_sorted_index.txt'%(i_constrain))
-                os.system('rm -rf obj_1') # always read the minimum chi2 solution
+                os.system('rm -rf dump_1') # always read the minimum chi2 solution
                 if len(which_to_constrain) <= 0:
                     # ok, nothing to constrain, break
                     break
                 i_constrain = i_constrain + 1
-    return Input_data_array
+    return chisq_array
                 
 
 
@@ -277,10 +282,10 @@ def random_sorted_chi2_index_dict(Cut_chi2_array, max = 50):
     Plot_chi2_max_number = max # Max chi2 solutions to plot, we plot the first Plot_chi2_max_number/2 and the last Plot_chi2_max_number/2 solutions, skip solutions in the middle.
     # 
     #Cut_chi2_array = numpy.random.random(30)
-    Cut_chi2_number = len(Cut_chi2_array)
+    Cut_chi2_array_size = len(Cut_chi2_array)
     # 
-    Plot_chi2_indices = numpy.sort(numpy.argsort(numpy.random.random(Cut_chi2_number))[0:Plot_chi2_max_number])[::-1] # non-repeated index array from 0 to Plot_chi2_max_number
-    Plot_chi2_indices[0] = Cut_chi2_number-1 if Plot_chi2_indices[0] != Cut_chi2_number-1 else Cut_chi2_number-1 # make sure the first element is always 'Cut_chi2_number-1', i.e., the worst chi-square solution
+    Plot_chi2_indices = numpy.sort(numpy.argsort(numpy.random.random(Cut_chi2_array_size))[0:Plot_chi2_max_number])[::-1] # non-repeated index array from 0 to Plot_chi2_max_number
+    Plot_chi2_indices[0] = Cut_chi2_array_size-1 if Plot_chi2_indices[0] != Cut_chi2_array_size-1 else Cut_chi2_array_size-1 # make sure the first element is always 'Cut_chi2_array_size-1', i.e., the worst chi-square solution
     Plot_chi2_indices[-1] = 0 if Plot_chi2_indices[-1] != 0 else 0 # make sure the last element is always '0', i.e., the mininum chi-square solution
     # 
     Plot_chi2_index_dict = {}
@@ -293,60 +298,66 @@ def random_sorted_chi2_index_dict(Cut_chi2_array, max = 50):
 
 
 
-
-def Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_index_sorted, Cut_chi2_number = 1, Plot_chi2_index_dict = []):
+def dump_LIB_SEDs_to_files(chisq_file = '', chisq_array = [], lib_dict = {}, 
+                            dump_indices = [], output_numbers = [], output_prefix = 'dump', 
+                            redshift = numpy.nan)
     # 
-    if type(All_chi2_index_sorted) is not list or type(All_chi2_index_sorted) is not numpy.array or type(All_chi2_index_sorted) is not numpy.ndarray:
-        All_chi2_index_sorted = [All_chi2_index_sorted]
+    #def Read_SED_LIB(DataFile, DataArray, InfoDict, chisq_indices_sorted, Cut_chi2_array_size = 1, Plot_chi2_index_dict = [])
     # 
-    for i in range(Cut_chi2_number):
+    if numpy.isscalar(dump_indices):
+        dump_indices = [dump_indices]
+    # 
+    if len(dump_indices) == 0:
+        dump_indices = numpy.arange(len(chisq_array))
+    # 
+    if numpy.isscalar(output_numbers):
+        output_numbers = [output_numbers]
+    # 
+    if len(output_numbers) == 0:
+        output_numbers = numpy.arange(len(dump_indices)) + 1
+    # 
+    #output_prefix = 'dump'
+    # 
+    for i in range(len(output_numbers)):
         # 
         # skip solutions between 11th to last 11th.
-        #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_number-1-Plot_chi2_max_number/2):
+        #if i > Plot_chi2_max_number/2 and i<(dump_number-1-Plot_chi2_max_number/2):
         #    continue
-        if len(Plot_chi2_index_dict) > 0:
-            if not ('%d'%i) in Plot_chi2_index_dict:
-                continue
+        #if len(Plot_chi2_index_dict) > 0:
+        #    if not ('%d'%i) in Plot_chi2_index_dict:
+        #        continue
         # 
         # 
+        if i >= len(dump_indices):
+            continue
+        # 
+        # 
+        # create output directory
+        if not os.path.isdir('%s_%d'%(output_prefix, output_numbers[i])):
+            os.mkdir('%s_%d'%(output_prefix, output_numbers[i]))
+        # 
+        # loop each SED LIB and dump LIB file (we do not overwrite existing files)
         for j in range(int(InfoDict['NLIB'])):
             # 
-            if not os.path.isdir('obj_%d'%(i+1)):
-                os.mkdir('obj_%d'%(i+1))
-            # 
-            if not os.path.isfile('obj_%d/SED_LIB%d'%(i+1,j+1)):
+            if not os.path.isfile('%s_%d/SED_LIB%d'%(output_prefix, output_numbers[i], j+1)):
                 #BashCommand = 'cd obj_%d/; /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/bin/michi2_read_lib_SED ../%s %d %s SED_LIB%d'%\
                 #                    (i+1, \
                 #                        InfoDict['LIB%d'%(j+1)], \
-                #                            DataArray['i%d'%(j+1)][All_chi2_index_sorted[i]], \
-                #                                DataArray['a%d'%(j+1)][All_chi2_index_sorted[i]], \
+                #                            DataArray['i%d'%(j+1)][dump_indices[i]], \
+                #                                DataArray['a%d'%(j+1)][dump_indices[i]], \
                 #                                    j+1)
                 #print(BashCommand)
                 #os.system(BashCommand)
                 # 
                 # do python way 20180113
-                #BashCommand = '%s/michi2_read_lib_SEDs.py %s %d obj_%d > obj_%d/log.txt'%\
-                #                (os.path.dirname(os.path.realpath(__file__)), \
-                #                    DataFile, \
-                #                        All_chi2_index_sorted[i]+1, \
-                #                            i+1, \
-                #                                i+1)
-                BashCommand = 'michi2_read_lib_SEDs.py %s %d obj_%d > obj_%d/log.txt'%\
+                BashCommand = 'michi2_read_lib_SEDs.py %s %d %s_%d > %s_%d/log.txt'%\
                                 ( \
-                                    DataFile, \
-                                        All_chi2_index_sorted[i]+1, \
-                                            i+1, \
-                                                i+1)
-                print(BashCommand)
-                os.system(BashCommand)
-                BashCommand = 'echo "%s" > obj_%d/chi2.txt'%\
-                                (DataArray['chi2'][All_chi2_index_sorted[i]], \
-                                            i+1)
-                print(BashCommand)
-                os.system(BashCommand)
-                BashCommand = 'echo "%s" > obj_%d/line_number.txt'%\
-                                (All_chi2_index_sorted[i]+1, \
-                                            i+1)
+                                    chisq_file, \
+                                        dump_indices[i]+1, \
+                                            output_prefix, \
+                                                output_numbers[i], \
+                                                    output_prefix, \
+                                                        output_numbers[i])
                 print(BashCommand)
                 os.system(BashCommand)
                 # 
@@ -365,6 +376,32 @@ def Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_index_sorted, Cut_chi2_
                 #calc_ltir x y # 3536.147921
                 #calc 10**2.339198 * 16.1932 # 3536.150006 -- 2.339198 is the PAR3 in lib file, agreed with our manual integration! 
                 # 
+        # 
+        # also dump chi2, line_number (in the chisq_file)
+        if not os.path.isfile('%s_%d/chi2.txt'%(output_prefix, output_numbers[i])):
+            BashCommand = 'echo "%s" > %s_%d/chi2.txt'%\
+                            (chisq_array[dump_indices[i]], \
+                                output_prefix, \
+                                    output_numbers[i])
+            print(BashCommand)
+            os.system(BashCommand)
+        # 
+        if not os.path.isfile('%s_%d/line_number.txt'%(output_prefix, output_numbers[i])):
+            BashCommand = 'echo "%s" > %s_%d/line_number.txt'%\
+                            (dump_indices[i]+1, \
+                                output_prefix, \
+                                    output_numbers[i])
+            print(BashCommand)
+            os.system(BashCommand)
+        # 
+        # also dump redshift if possible
+        if not numpy.isnan(redshift) and not os.path.isfile('%s_%d/redshift.txt'%(output_prefix, output_numbers[i])):
+            BashCommand = 'echo "%s" > %s_%d/redshift.txt'%\
+                            (redshift, \
+                                output_prefix, \
+                                    output_numbers[i])
+            print(BashCommand)
+            os.system(BashCommand)
         # 
         #return SED_x, SED_y
 
@@ -486,32 +523,29 @@ else:
     # 
     # Constrain DataArray by upper limits <20180202>
     if True == False:
-        DataArray = constrain_by_upper_limits(DataFile, DataArray, InfoDict)
+        DataArray['chi2'] = constrain_by_upper_limits(DataFile, DataArray['chi2'], InfoDict)
     # 
     # 
     # 
     # 
     # Sort chi2 table
-    #print(DataTable.TableHeaders)
-    #print(DataArray['chi2'])
-    All_chi2_index_sorted = numpy.argsort(DataArray['chi2'])
-    All_chi2_number = len(All_chi2_index_sorted)
-    #Cut_chi2_number = 10 #<TODO># how many SEDs to show?
-    #Cut_chi2_number = All_chi2_number if All_chi2_number<Cut_chi2_number else Cut_chi2_number
-    #SelectIndex = All_chi2_index_sorted[0:Cut_chi2_number-1]
-    ##print(DataTable.TableData[SelectIndex])
-    #Cut_chi2_array = DataArray['chi2'][All_chi2_index_sorted] # the sorted chi2 array
-    #Min_chi2 = numpy.nanmin(Cut_chi2_array[0:Cut_chi2_number-1])
-    #Max_chi2 = numpy.nanmax(Cut_chi2_array[0:Cut_chi2_number-1])
-    Cut_chi2_threshold = numpy.nanmin(DataArray['chi2']) + Delta_chisq_of_interest # 5 parameter, 68% confidence
-    Cut_chi2_number = len(numpy.argwhere(DataArray['chi2']<=Cut_chi2_threshold))
-    Cut_chi2_number = All_chi2_number if All_chi2_number<Cut_chi2_number else Cut_chi2_number # do not exceed the total number of chi2
-    Cut_chi2_array = DataArray['chi2'][All_chi2_index_sorted[0:Cut_chi2_number]] # the sorted chi2 array, note that when selecting subscript/index with :, the upper index is not included.
+    All_chi2_array = DataArray['chi2']
+    All_chi2_indices_sorted = numpy.argsort(All_chi2_array)
+    All_chi2_array_size = len(All_chi2_indices_sorted)
+    # 
+    All_chi2_minimum_value = numpy.nanmin(All_chi2_array)
+    Cut_chi2_threshold = All_chi2_minimum_value + Delta_chisq_of_interest # 5 parameter, 68% confidence
+    # 
+    Cut_chi2_array_size = len(numpy.argwhere(All_chi2_array<=Cut_chi2_threshold)) # select how many fitting solution with chi2 <= 'Cut_chi2_threshold'
+    Cut_chi2_array_size = All_chi2_array_size if All_chi2_array_size<Cut_chi2_array_size else Cut_chi2_array_size # do not exceed the total number of chi2
+    Cut_chi2_array = All_chi2_array[All_chi2_indices_sorted[0:Cut_chi2_array_size]] # the cut-and-sorted chi2 array, note that when selecting subscript/index with :, the upper index is not included.
+    # 
     Min_chi2 = numpy.nanmin(Cut_chi2_array)
     Max_chi2 = numpy.nanmax(Cut_chi2_array)
-    Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_number)) #<TODO># tune line width
+    # 
+    Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_array_size)) #<TODO># tune line width
     Plot_SED_linewidth = 1.0
-    print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_number, Delta_chisq_of_interest))
+    print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_array_size, Delta_chisq_of_interest))
     # 
     if not SetOnlyPlotBestSED:
         if not os.path.isfile('Plot_chi2_index_dict.json') or not os.path.isfile('Plot_chi2_indices.json'):
@@ -551,133 +585,140 @@ else:
     # 
     # check if output figure already exists or not, see if we overwrite or not.
     Output_name, Output_extension = os.path.splitext(DataFile)
-    if True:
+    # 
+    # Get Redshift
+    Redshift = float(InfoDict['REDSHIFT'])
+    # 
+    # Get SED (dump to subdirectories and files)
+    #Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_indices_sorted, Cut_chi2_array_size, Plot_chi2_index_dict)
+    dump_LIB_SEDs_to_files(chisq_file = DataFile, chisq_array = All_chi2_array, 
+                            lib_dict = InfoDict, 
+                            dump_indices = All_chi2_indices_sorted[0:Cut_chi2_array_size], 
+                            output_numbers = numpy.arange(Cut_chi2_array_size)+1, 
+                            output_prefix = 'obj', 
+                            redshift = Redshift)
+    # 
+    # Wait for a long time
+    # 
+    # Then plot SEDs
+    Color_list = ['cyan', 'gold', 'red', 'blue', 'purple']
+    Plot_engine = CrabPlot(figure_size=(8.0,5.0))
+    Plot_engine.set_margin(top=0.92, bottom=0.16, left=0.12, right=0.96)
+    Count_label_chi2 = 0 # to count the chi-square label printed on the figure, make sure there are not too many labels.
+    Count_plot_chi2 = 0
+    for i in range(Cut_chi2_array_size-1,-1,-1):
         # 
-        # Get SED
-        Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_index_sorted, Cut_chi2_number, Plot_chi2_index_dict)
+        # skip solutions between 11th to last 11th.
+        #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_array_size-1-Plot_chi2_max_number/2):
+        #    continue
+        if not ('%d'%i) in Plot_chi2_index_dict:
+            continue
         # 
-        # Wait for a long time
+        # alpha by chi2
+        print('Plotting chi2=%s obj_%d'%(Cut_chi2_array[i], i+1))
+        Min_chi2_log = numpy.log10(Min_chi2)
+        Max_chi2_log = numpy.log10(Max_chi2)
+        Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.8)
+        Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.3)
+        Plot_chi2_alpha = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
+                                                         input_value=Cut_chi2_array[i], 
+                                                         log=1, 
+                                                         cmap=matplotlib.cm.get_cmap('gray_r'))[0]
+        #print('Plot_chi2_alpha: ', Plot_chi2_alpha)
         # 
-        # Then plot SEDs
-        Redshift = float(InfoDict['REDSHIFT'])
-        Color_list = ['cyan', 'gold', 'red', 'blue', 'purple']
-        Plot_engine = CrabPlot(figure_size=(8.0,5.0))
-        Plot_engine.set_margin(top=0.92, bottom=0.16, left=0.12, right=0.96)
-        Count_label_chi2 = 0 # to count the chi-square label printed on the figure, make sure there are not too many labels.
-        Count_plot_chi2 = 0
-        for i in range(Cut_chi2_number-1,-1,-1):
-            # 
-            # skip solutions between 11th to last 11th.
-            #if i > Plot_chi2_max_number/2 and i<(Cut_chi2_number-1-Plot_chi2_max_number/2):
-            #    continue
-            if not ('%d'%i) in Plot_chi2_index_dict:
-                continue
-            # 
-            # alpha by chi2
-            print('Plotting chi2=%s obj_%d'%(Cut_chi2_array[i], i+1))
-            Min_chi2_log = numpy.log10(Min_chi2)
-            Max_chi2_log = numpy.log10(Max_chi2)
-            Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.8)
-            Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.3)
-            Plot_chi2_alpha = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
-                                                             input_value=Cut_chi2_array[i], 
-                                                             log=1, 
-                                                             cmap=matplotlib.cm.get_cmap('gray_r'))[0]
-            #print('Plot_chi2_alpha: ', Plot_chi2_alpha)
-            # 
-            # 
-            for j in range(int(InfoDict['NLIB'])):
-                xclip = None
-                if j == 0: xclip = [(50,numpy.inf)]
-                elif j == 4: xclip = [(-numpy.inf,2e3)]
-                Plot_engine.plot_data_file('obj_%d/SED_LIB%d'%(i+1,j+1), xlog=1, ylog=1, xclip=xclip, current=1, \
-                                    dataname='obj_%d_SED_LIB%d'%(i+1,j+1), 
-                                    redshift = Redshift, 
-                                    linestyle='dashed', linewidth=Plot_chi2_linewidth, color=Color_list[j], alpha=Plot_chi2_alpha)
-            # 
-            #<20180114><splined else where># obj_SED_1 = Plot_engine.Plot_data['obj_%d_SED_LIB1'%(i+1)]
-            #<20180114><splined else where># obj_SED_2 = Plot_engine.Plot_data['obj_%d_SED_LIB2'%(i+1)]
-            #<20180114><splined else where># obj_SED_3 = Plot_engine.Plot_data['obj_%d_SED_LIB3'%(i+1)]
-            #<20180114><splined else where># obj_SED_4 = Plot_engine.Plot_data['obj_%d_SED_LIB4'%(i+1)]
-            #<20180114><splined else where># obj_SED_5 = Plot_engine.Plot_data['obj_%d_SED_LIB5'%(i+1)]
-            #<20180114><splined else where># obj_SED_sum_x_lg = numpy.arange(-2,6,0.001) # wavelength_um grid
-            #<20180114><splined else where># obj_SED_sum_x = numpy.power(10, obj_SED_sum_x_lg) # make it in linear space
-            #<20180114><splined else where># obj_SED_sum_y = []
-            #<20180114><splined else where># for j in range(int(InfoDict['NLIB'])):
-            #<20180114><splined else where>#     obj_SED_single_x = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,0]
-            #<20180114><splined else where>#     obj_SED_single_y = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,1]
-            #<20180114><splined else where>#     obj_SED_spline_y = Plot_engine.spline(obj_SED_single_x, obj_SED_single_y, obj_SED_sum_x_lg, xlog=1, ylog=1, outputxlog=0)
-            #<20180114><splined else where>#     if j == 0:
-            #<20180114><splined else where>#         obj_SED_sum_y = obj_SED_spline_y
-            #<20180114><splined else where>#     else:
-            #<20180114><splined else where>#         obj_SED_sum_y = obj_SED_sum_y + obj_SED_spline_y
-            # 
-            #pprint(obj_SED_sum_y)
-            #print(numpy.column_stack((obj_SED_sum_x, obj_SED_sum_y)))
-            #print(Cut_chi2_array[i])
-            Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.05)
-            Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.85)
-            Color_chi2 = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
-                                                        input_value=Cut_chi2_array[i], 
-                                                        log=1, 
-                                                        cmap=matplotlib.cm.get_cmap('gray'))
-            #print('Color_chi2: ', Color_chi2)
-            #Plot_engine.plot_line(obj_SED_sum_x, obj_SED_sum_y, current=1, color=Color_chi2)
-            Plot_engine.plot_data_file('obj_%d/SED_SUM'%(i+1), xlog=1, ylog=1, current=1, \
-                                dataname='obj_%d_SED_SUM'%(i+1), 
+        # 
+        for j in range(int(InfoDict['NLIB'])):
+            xclip = None
+            if j == 0: xclip = [(50,numpy.inf)]
+            elif j == 4: xclip = [(-numpy.inf,2e3)]
+            Plot_engine.plot_data_file('obj_%d/SED_LIB%d'%(i+1,j+1), xlog=1, ylog=1, xclip=xclip, current=1, \
+                                dataname='obj_%d_SED_LIB%d'%(i+1,j+1), 
                                 redshift = Redshift, 
-                                linestyle='solid', linewidth=Plot_SED_linewidth, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
-            Count_plot_chi2 = Count_plot_chi2 + 1
-            # 
-            # show chi2 on the figure
-            if not SetOnlyPlotBestSED:
-                if i == Cut_chi2_number-1:
-                    Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
-                if i == 0:
-                    Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '......', NormalizedCoordinate=True, color=Color_chi2)
-                    Count_label_chi2 = Count_label_chi2 + 1
-                if Count_plot_chi2 % int((Cut_chi2_number/7)+1) == 0 or i == 0 or i == Cut_chi2_number-1:
-                    #print('Plotting label at', 0.09, 0.95-0.03*(Cut_chi2_number-1-i), 'chi2 = %.1f'%(Cut_chi2_array[i]))
-                    Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
-                    Count_label_chi2 = Count_label_chi2 + 1
-            # 
-            # show redshift (z) on the figure
-            if not SetOnlyPlotBestSED:
-                if i == 0:
-                    Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
-                if i == 0 and SourceName != '':
-                    Plot_engine.xyouts(0.97, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=16, horizontalalignment='right')
-            else:
-                if i == 0 and SourceName != '':
-                    Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=15)
-                    Plot_engine.xyouts(0.20, 0.90, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
-            #break
+                                linestyle='dashed', linewidth=Plot_chi2_linewidth, color=Color_list[j], alpha=Plot_chi2_alpha)
         # 
-        # Then plot OBS data points
-        DataTable_obs = asciitable.read(InfoDict['OBS'])
-        #print(type(DataTable_obs))
-        try:
-            Wavelength_obs = DataTable_obs[DataTable_obs.colnames[0]].data
-            Flux_obs = DataTable_obs[DataTable_obs.colnames[1]].data
-            FluxErr_obs = DataTable_obs[DataTable_obs.colnames[2]].data
-            Detection_mask = (Flux_obs>=2.0*FluxErr_obs)
-            UpperLimits_mask = (Flux_obs<2.0*FluxErr_obs)
-            #print(Wavelength_obs)
-            Plot_engine.plot_xy(Wavelength_obs[Detection_mask], Flux_obs[Detection_mask], yerr=FluxErr_obs[Detection_mask], dataname='obs', overplot=True, symbol='open square', symsize=3, thick=1.5, capsize=4, zorder=10)
-            Plot_engine.plot_xy(Wavelength_obs[UpperLimits_mask], 3.0*FluxErr_obs[UpperLimits_mask], dataname='upper limits', overplot=True, symbol='upper limits', symsize=3, thick=1.25, alpha=0.5, zorder=9)
-        except Exception as err:
-            print(err)
+        #<20180114><splined else where># obj_SED_1 = Plot_engine.Plot_data['obj_%d_SED_LIB1'%(i+1)]
+        #<20180114><splined else where># obj_SED_2 = Plot_engine.Plot_data['obj_%d_SED_LIB2'%(i+1)]
+        #<20180114><splined else where># obj_SED_3 = Plot_engine.Plot_data['obj_%d_SED_LIB3'%(i+1)]
+        #<20180114><splined else where># obj_SED_4 = Plot_engine.Plot_data['obj_%d_SED_LIB4'%(i+1)]
+        #<20180114><splined else where># obj_SED_5 = Plot_engine.Plot_data['obj_%d_SED_LIB5'%(i+1)]
+        #<20180114><splined else where># obj_SED_sum_x_lg = numpy.arange(-2,6,0.001) # wavelength_um grid
+        #<20180114><splined else where># obj_SED_sum_x = numpy.power(10, obj_SED_sum_x_lg) # make it in linear space
+        #<20180114><splined else where># obj_SED_sum_y = []
+        #<20180114><splined else where># for j in range(int(InfoDict['NLIB'])):
+        #<20180114><splined else where>#     obj_SED_single_x = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,0]
+        #<20180114><splined else where>#     obj_SED_single_y = Plot_engine.Plot_data['obj_%d_SED_LIB%d'%(i+1,j+1)][:,1]
+        #<20180114><splined else where>#     obj_SED_spline_y = Plot_engine.spline(obj_SED_single_x, obj_SED_single_y, obj_SED_sum_x_lg, xlog=1, ylog=1, outputxlog=0)
+        #<20180114><splined else where>#     if j == 0:
+        #<20180114><splined else where>#         obj_SED_sum_y = obj_SED_spline_y
+        #<20180114><splined else where>#     else:
+        #<20180114><splined else where>#         obj_SED_sum_y = obj_SED_sum_y + obj_SED_spline_y
         # 
-        Plot_engine.set_xrange([0.1,1e6])
-        Plot_engine.set_yrange([1e-6,1e4])
-        if len(PlotYRange) == 2:
-            Plot_engine.set_yrange(PlotYRange)
-        Plot_engine.set_xtitle('Observing-frame wavelength [um]')
-        Plot_engine.set_ytitle('Flux density [mJy]')
-        Plot_engine.savepdf(Output_name+'.pdf')
-        #Plot_engine.show()
-        Plot_engine.close()
-        print('Output to "%s"!'%(Output_name+'.pdf'))
+        #pprint(obj_SED_sum_y)
+        #print(numpy.column_stack((obj_SED_sum_x, obj_SED_sum_y)))
+        #print(Cut_chi2_array[i])
+        Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.05)
+        Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.85)
+        Color_chi2 = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
+                                                    input_value=Cut_chi2_array[i], 
+                                                    log=1, 
+                                                    cmap=matplotlib.cm.get_cmap('gray'))
+        #print('Color_chi2: ', Color_chi2)
+        #Plot_engine.plot_line(obj_SED_sum_x, obj_SED_sum_y, current=1, color=Color_chi2)
+        Plot_engine.plot_data_file('obj_%d/SED_SUM'%(i+1), xlog=1, ylog=1, current=1, \
+                            dataname='obj_%d_SED_SUM'%(i+1), 
+                            redshift = Redshift, 
+                            linestyle='solid', linewidth=Plot_SED_linewidth, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
+        Count_plot_chi2 = Count_plot_chi2 + 1
+        # 
+        # show chi2 on the figure
+        if not SetOnlyPlotBestSED:
+            if i == Cut_chi2_array_size-1:
+                Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
+            if i == 0:
+                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '......', NormalizedCoordinate=True, color=Color_chi2)
+                Count_label_chi2 = Count_label_chi2 + 1
+            if Count_plot_chi2 % int((Cut_chi2_array_size/7)+1) == 0 or i == 0 or i == Cut_chi2_array_size-1:
+                #print('Plotting label at', 0.09, 0.95-0.03*(Cut_chi2_array_size-1-i), 'chi2 = %.1f'%(Cut_chi2_array[i]))
+                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
+                Count_label_chi2 = Count_label_chi2 + 1
+        # 
+        # show redshift (z) on the figure
+        if not SetOnlyPlotBestSED:
+            if i == 0:
+                Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
+            if i == 0 and SourceName != '':
+                Plot_engine.xyouts(0.97, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=16, horizontalalignment='right')
+        else:
+            if i == 0 and SourceName != '':
+                Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, useTex=True, fontsize=15)
+                Plot_engine.xyouts(0.20, 0.90, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
+        #break
+    # 
+    # Then plot OBS data points
+    DataTable_obs = asciitable.read(InfoDict['OBS'])
+    #print(type(DataTable_obs))
+    try:
+        Wavelength_obs = DataTable_obs[DataTable_obs.colnames[0]].data
+        Flux_obs = DataTable_obs[DataTable_obs.colnames[1]].data
+        FluxErr_obs = DataTable_obs[DataTable_obs.colnames[2]].data
+        Detection_mask = (Flux_obs>=2.0*FluxErr_obs)
+        UpperLimits_mask = (Flux_obs<2.0*FluxErr_obs)
+        #print(Wavelength_obs)
+        Plot_engine.plot_xy(Wavelength_obs[Detection_mask], Flux_obs[Detection_mask], yerr=FluxErr_obs[Detection_mask], dataname='obs', overplot=True, symbol='open square', symsize=3, thick=1.5, capsize=4, zorder=10)
+        Plot_engine.plot_xy(Wavelength_obs[UpperLimits_mask], 3.0*FluxErr_obs[UpperLimits_mask], dataname='upper limits', overplot=True, symbol='upper limits', symsize=3, thick=1.25, alpha=0.5, zorder=9)
+    except Exception as err:
+        print(err)
+    # 
+    Plot_engine.set_xrange([0.1,1e6])
+    Plot_engine.set_yrange([1e-6,1e4])
+    if len(PlotYRange) == 2:
+        Plot_engine.set_yrange(PlotYRange)
+    Plot_engine.set_xtitle('Observing-frame wavelength [um]')
+    Plot_engine.set_ytitle('Flux density [mJy]')
+    Plot_engine.savepdf(Output_name+'.pdf')
+    #Plot_engine.show()
+    Plot_engine.close()
+    print('Output to "%s"!'%(Output_name+'.pdf'))
     # 
     # 
     # 
