@@ -40,7 +40,7 @@ if len(isel) > 0:
 w = data_table.field(data_table.colnames[0])
 f = data_table.field(data_table.colnames[1])
 ferr = data_table.field(data_table.colnames[2])
-mask = (w<8.0) & (f<3.0*ferr)
+mask = (w<8.0) & (f<2.0*ferr)
 isel = numpy.argwhere(mask).flatten()
 if len(isel) > 0:
     data_table.remove_rows(isel)

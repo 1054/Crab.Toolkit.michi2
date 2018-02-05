@@ -67,7 +67,7 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     cp extracted_flux.txt plot_flux_obsframe.dat
     cp plot_flux_obsframe.dat flux_obsframe.dat
     # 
-    michi2-plot-results-of-fitting-5-components fit_5.out
+    michi2-plot-results-of-fitting-5-components fit_5.out -source "${source_name}"
     # 
     cd "../"
 done

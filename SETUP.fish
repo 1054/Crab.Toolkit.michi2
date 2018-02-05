@@ -25,7 +25,7 @@ if not contains "$CRABTOOLKITMICHI2/lib/idl" $IDL_PATH
 end
 #
 # LIST
-set -x CRABTOOLKITCMD "michi2-deploy-files" "michi2-plot-results"
+set -x CRABTOOLKITCMD "michi2-deploy-files" "michi2-run-fitting-5-components" "michi2-plot-results-of-fitting-5-components"
 # 
 # CHECK
 # -- 20160427 only for interactive shell

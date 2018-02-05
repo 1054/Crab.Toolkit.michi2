@@ -32,7 +32,7 @@ if [[ x"$IDL_PATH" != x*"+$CRABTOOLKITMICHI2/lib/idl"* ]]; then
 fi
 #
 # LIST
-CRABTOOLKITCMD=("michi2-deploy-files" "michi2-plot-results")
+CRABTOOLKITCMD=("michi2-deploy-files" "michi2-run-fitting-5-components" "michi2-plot-results-of-fitting-5-components")
 # 
 # CHECK
 # -- 20160427 only for interactive shell

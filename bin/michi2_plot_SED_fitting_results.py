@@ -177,6 +177,19 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         print('param_stats.yrange', param_stats['yrange'], [1/param_stats['yrange'][1],1/param_stats['yrange'][0]])
         print('plotting xrange', xrange)
         print('plotting yrange', yrange)
+        print('param_stats_2p.valid', param_stats_2p['valid'])
+        print('param_stats_2p.global_min_chisq', param_stats_2p['global_min_chisq'])
+        print('param_stats_2p.in_range_min_chisq', param_stats_2p['in_range_min_chisq'])
+        print('param_stats_2p.global_best', param_stats_2p['global_best'])
+        print('param_stats_2p.in_range_best', param_stats_2p['in_range_best'])
+        print('param_stats_2p.in_range_min', param_stats_2p['in_range_min'])
+        print('param_stats_2p.in_range_max', param_stats_2p['in_range_max'])
+        print('param_stats_2p.min', param_stats_2p['min'])
+        print('param_stats_2p.max', param_stats_2p['max'])
+        print('param_stats_2p.median', param_stats_2p['median'])
+        print('param_stats_2p.best', param_stats_2p['best'])
+        print('param_stats_2p.L68', param_stats_2p['L68'])
+        print('param_stats_2p.H68', param_stats_2p['H68'])
         #--
         #--TODO--20180123-10h44m-- when param_log is True, param_min can be zero!
         #--
@@ -192,8 +205,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                                 size = 2.2, color='#1873cc', symbol = 'o')
         # 
         # Plot Cut_chi2 line
-        Plot_engine.plot_line(param_stats['xrange'][0], 1/(chisq_min+Delta_chisq_of_interest), 
-                                param_stats['xrange'][0], 1/(chisq_min+Delta_chisq_of_interest), 
+        Plot_engine.plot_line(param_stats['xrange'][0], 1/(param_stats['threshold_chisq']), 
+                                param_stats['xrange'][0], 1/(param_stats['threshold_chisq']), 
                                 overplot = True, linestyle = 'dashed')
         # 
         # Plot histogram (right panel)
@@ -202,12 +215,12 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                                 xrange = xrange, yrange = yrange, xlog = xlog, ylog = ylog)
         # 
         # Plot Cut_chi2 line
-        Plot_engine.plot_line(xrange[0], 1/(chisq_min+Delta_chisq_of_interest), xrange[1], 1/(chisq_min+Delta_chisq_of_interest), overplot = True, linestyle = 'dashed')
+        Plot_engine.plot_line(xrange[0], 1/(param_stats['threshold_chisq']), xrange[1], 1/(param_stats['threshold_chisq']), overplot = True, linestyle = 'dashed')
         Plot_engine.plot_text(xrange[1], yrange[1]-0.02*(yrange[1]-yrange[0]), ' (zoomed) ', NormalizedCoordinate=False, overplot=True, horizontalalignment='right', verticalalignment='top')
         # 
         # Plot Cut_chi2 line (2p = 2.3)
-        Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(chisq_min+2.3), 
-                                param_stats_2p['xrange'][1], 1/(chisq_min+2.3), 
+        Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(param_stats_2p['threshold_chisq']), 
+                                param_stats_2p['xrange'][1], 1/(param_stats_2p['threshold_chisq']), 
                                 overplot = True, color='#1e90ff', linestyle = 'dotted')
                                 # color: http://www.color-hex.com/color/1e90ff
         # 
@@ -221,10 +234,10 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
 
 
 def constrain_by_upper_limits(chisq_file, chisq_array, lib_dict):
-    if os.path.isfile('flagged_chi2_solution.txt'):
-        os.system('mv flagged_chi2_solution.txt flagged_chi2_solution.txt.backup')
-    if os.path.isfile('flagged_chi2_solution_sorted_index.txt'):
-        os.system('mv flagged_chi2_solution_sorted_index.txt flagged_chi2_solution_sorted_index.txt.backup')
+    #if os.path.isfile('flagged_chi2_solution.txt'):
+    #    os.system('mv flagged_chi2_solution.txt flagged_chi2_solution.txt.backup')
+    #if os.path.isfile('flagged_chi2_solution_sorted_index.txt'):
+    #    os.system('mv flagged_chi2_solution_sorted_index.txt flagged_chi2_solution_sorted_index.txt.backup')
     os.system('bash -c \"rm -rf obj_* 2>/dev/null\"')
     os.system('bash -c \"rm -rf dump_* 2>/dev/null\"')
     if os.path.isfile('extracted_flux.txt'):
@@ -237,15 +250,16 @@ def constrain_by_upper_limits(chisq_file, chisq_array, lib_dict):
         # 
         # check if obs data contains upper limits
         if len(obs_where_undetected) > 0:
-            obs_wave_undetected = obs_wave[obs_undetection] / (1.0 + float(Input_info_dict['REDSHIFT']))
+            obs_wave_undetected = obs_wave[obs_undetection] / (1.0 + float(lib_dict['REDSHIFT']))
             obs_flux_undetected = obs_error[obs_undetection] * 5.0 # 5-sigma upper limit <TODO>
             # 
             # loop each input chi2 solution
             chisq_indices_sorted = numpy.argsort(chisq_array)
             i_constrain = 0
+            i_constrain = 1436 #<TODO><DEBUG># 
             while i_constrain < len(chisq_array):
-                print('constrain_by_upper_limits: dump_LIB_SEDs_to_files(Input_info_dict, %d)'%(chisq_indices_sorted[i_constrain]))
-                #Read_SED_LIB(DataFile, DataArray, Input_info_dict, chisq_indices_sorted[i_constrain])
+                print('constrain_by_upper_limits: dump_LIB_SEDs_to_files(%d) (%d)'%(chisq_indices_sorted[i_constrain], i_constrain))
+                #Read_SED_LIB(chisq_file, chisq_array, lib_dict, chisq_indices_sorted[i_constrain])
                 dump_LIB_SEDs_to_files(chisq_file = chisq_file, chisq_array = chisq_array, lib_dict = lib_dict, 
                                         dump_indices = chisq_indices_sorted[i_constrain], 
                                         output_numbers = 1, 
@@ -256,15 +270,22 @@ def constrain_by_upper_limits(chisq_file, chisq_array, lib_dict):
                 #SED_flux_to_constrain = scipy.interpolate.spline(SED_x, SED_y, obs_wave_undetected, order='1') # order=3, kind='smoothest', conds=None
                 SED_flux_to_constrain = scipy.interpolate.interp1d(SED_x, SED_y, kind='nearest')(obs_wave_undetected)
                 # 
-                where_constraint = (SED_flux_to_constrain > obs_flux_undetected)
-                which_to_constrain = numpy.argwhere(where_constraint)
-                if len(which_to_constrain) > 0:
+                constrained = (SED_flux_to_constrain > obs_flux_undetected)
+                asciitable.write(numpy.column_stack((obs_wave_undetected, obs_flux_undetected, SED_flux_to_constrain, constrained)), 
+                                    sys.stdout, 
+                                    Writer=asciitable.FixedWidthTwoLine, 
+                                    delimiter='|', delimiter_pad=' ', bookend=True, 
+                                    names=['obs_wave_undetected', 'obs_flux_undetected', 'SED_flux_to_constrain', 'constrained'])
+                print('')
+                # 
+                where_to_constrain = numpy.argwhere(constrained)
+                if len(where_to_constrain) > 0:
                     # this chi2 solution is not allowed by the upper limit
                     chisq_array[chisq_indices_sorted[i_constrain]] = 1e+99
                     os.system('echo %d >> flagged_chi2_solution.txt'%(chisq_indices_sorted[i_constrain]))
                     os.system('echo %d >> flagged_chi2_solution_sorted_index.txt'%(i_constrain))
                 os.system('rm -rf dump_1') # always read the minimum chi2 solution
-                if len(which_to_constrain) <= 0:
+                if len(where_to_constrain) <= 0:
                     # ok, nothing to constrain, break
                     break
                 i_constrain = i_constrain + 1
@@ -437,14 +458,19 @@ else:
     # 
     # Read user input
     SetOnlyPlotBestSED = False
+    ConstrainByUpperLimits = False
     SourceName = ''
     PlotYRange = []
+    PlotMaxSEDNumber = 50
     iarg = 1
     while iarg < len(sys.argv):
         TempCmd = sys.argv[iarg].replace('--','-').lower()
         if sys.argv[iarg]=='-only-plot-best-sed' or sys.argv[iarg]=='-only-best':
             SetOnlyPlotBestSED = True
             print('Setting only plot best-fit!')
+        elif sys.argv[iarg]=='-constrain-by-upper-limits' or sys.argv[iarg]=='-constrain':
+            ConstrainByUpperLimits = True
+            print('Setting constrain by upper limits!')
         elif sys.argv[iarg]=='-source-name' or sys.argv[iarg]=='-source':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
@@ -457,6 +483,11 @@ else:
                 iarg = iarg + 1
                 PlotYRange.append(float(sys.argv[iarg]))
                 print('Setting PlotYRange = %s'%(PlotYRange))
+        elif sys.argv[iarg]=='-max-sed-number' or sys.argv[iarg]=='-max':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                PlotMaxSEDNumber = int(sys.argv[iarg])
+                print('Setting PlotMaxSEDNumber = %s'%(PlotMaxSEDNumber))
         else:
             DataFile = sys.argv[iarg]
         iarg = iarg + 1
@@ -522,8 +553,11 @@ else:
     # 
     # 
     # Constrain DataArray by upper limits <20180202>
-    if True == False:
-        DataArray['chi2'] = constrain_by_upper_limits(DataFile, DataArray['chi2'], InfoDict)
+    if ConstrainByUpperLimits:
+        #DataArray['chi2'] = constrain_by_upper_limits(DataFile, DataArray['chi2'], InfoDict)
+        constrained = (DataArray['a2']>3.2)
+        where_to_constrain = numpy.argwhere(constrained)
+        DataArray['chi2'][where_to_constrain] = 1e99
     # 
     # 
     # 
@@ -545,11 +579,12 @@ else:
     # 
     Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_array_size)) #<TODO># tune line width
     Plot_SED_linewidth = 1.0
+    print('')
     print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_array_size, Delta_chisq_of_interest))
     # 
     if not SetOnlyPlotBestSED:
         if not os.path.isfile('Plot_chi2_index_dict.json') or not os.path.isfile('Plot_chi2_indices.json'):
-            Plot_chi2_index_dict, Plot_chi2_indices = random_sorted_chi2_index_dict(Cut_chi2_array) # we plot 50 chi2 solution curves
+            Plot_chi2_index_dict, Plot_chi2_indices = random_sorted_chi2_index_dict(Cut_chi2_array, max = PlotMaxSEDNumber) # we plot 50 chi2 solution curves
             with open('Plot_chi2_index_dict.json', 'w') as fp:
                 json.dump(Plot_chi2_index_dict, fp, sort_keys=True, indent=4)
                 fp.close()
@@ -591,6 +626,8 @@ else:
     # 
     # Get SED (dump to subdirectories and files)
     #Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_indices_sorted, Cut_chi2_array_size, Plot_chi2_index_dict)
+    print('')
+    print('Dumping library SEDs')
     dump_LIB_SEDs_to_files(chisq_file = DataFile, chisq_array = All_chi2_array, 
                             lib_dict = InfoDict, 
                             dump_indices = All_chi2_indices_sorted[Plot_chi2_indices], 
@@ -608,6 +645,7 @@ else:
     Count_plot_chi2 = 0
     # 
     # Then plot SEDs
+    print('')
     for i in Plot_chi2_indices:
         # 
         # alpha by chi2
@@ -704,6 +742,7 @@ else:
     Plot_engine.savepdf(Output_name+'.pdf')
     #Plot_engine.show()
     Plot_engine.close()
+    print('')
     print('Output to "%s"!'%(Output_name+'.pdf'))
     # 
     # 
@@ -735,6 +774,8 @@ else:
     pi = numpy.pi
     dL = 1.0/(4*pi) # if Redshift is not given, then we do not apply 4*pi*dL**2 to the quantities below. 
     Redshift = float(InfoDict['REDSHIFT'])
+    print('')
+    print('')
     print('z = %s'%(Redshift))
     if Redshift > 0.0:
         lumdist_command = '%s/lumdist'%(os.path.dirname(os.path.realpath(__file__)))
@@ -865,8 +906,7 @@ else:
                     Mass_cold_dust_dict['range'] = numpy.power(10,[7.0,12.0])
                     Mass_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * dL**2 / (1+Redshift) # Mdust # Mdust #NOTE# no need to multiply a '4*pi'!
                     Mass_cold_dust_dict['chisq'] = DataArray['chi2']
-            elif InfoDict[Lib_name].find('MullaneyAGN') >= 0 or \
-                InfoDict[Lib_name].find('SiebenmorgenAGN') >= 0:
+            elif InfoDict[Lib_name].find('MullaneyAGN') >= 0:
                 # Mullaney AGN
                 #   by integrating the AGN template (AGN_TYPE=2) from 1um to 1000um, we get an integration of 5133.913101
                 if 'AGN_TYPE' == Lib_dict[Key_TPAR].upper():
@@ -879,6 +919,21 @@ else:
                     Lumin_AGN_dict['Log_calc'] = True
                     Lumin_AGN_dict['range'] = numpy.power(10,[0.0,14.5])
                     Lumin_AGN_dict['value'] = DataArray['a%d'%(j+1)] * 5133.913101 * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
+                    Lumin_AGN_dict['chisq'] = DataArray['chi2']
+            elif InfoDict[Lib_name].find('SiebenmorgenAGN') >= 0:
+                # Siebenmorgen AGN
+                #   by integrating the AGN template from 1um to 1000um, we get an integration of Lbol
+                if 'AGN_TYPE' == Lib_dict[Key_TPAR].upper():
+                    Lumin_AGN_dict['Lib_file'] = InfoDict[Lib_name]
+                    Lumin_AGN_dict['Lib_name'] = Lib_name
+                    Lumin_AGN_dict['Lib_numb'] = j+1
+                    Lumin_AGN_dict['Par_name'] = '$\log \ L_{\mathrm{AGN}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    Lumin_AGN_dict['Par_file'] = 'LAGN'
+                    Lumin_AGN_dict['Col_numb'] = Col_number
+                    Lumin_AGN_dict['Log_calc'] = True
+                    Lumin_AGN_dict['range'] = numpy.power(10,[0.0,14.5])
+                    #Lumin_AGN_dict['value'] = DataArray['a%d'%(j+1)] * 5133.913101 * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
+                    Lumin_AGN_dict['value'] = DataArray['a%d'%(j+1)] * DataTable.getColumn(Col_number+6) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     Lumin_AGN_dict['chisq'] = DataArray['chi2']
                     # 
             # 
@@ -927,7 +982,11 @@ else:
         fPDR_total_dust_dict['Par_name'] = '$\log \ \delta_{\mathrm{PDR}}$ (total)'
         fPDR_total_dust_dict['Par_file'] = 'fPDR_total'
         fPDR_total_dust_dict['Log_calc'] = True
-        fPDR_total_dust_dict['range'] = [1e-4,1.0]
+        fPDR_total_dust_dict['range'] = [1e-6,1.0]
+        #fPDR_total_dust_dict['Log_calc'] = False
+        #fPDR_total_dust_dict['range'] = [0.0,1.0]
+        # 
+        # Note that this is not exactly 'gamma'
     # 
     if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
         Umean_total_dust_dict = copy(Umin_warm_dust_dict)
@@ -938,6 +997,11 @@ else:
         Umean_total_dust_dict['Par_name'] = '$\\left<U\\right>$ (total)'
         Umean_total_dust_dict['Par_file'] = 'Umean_total'
         Umean_total_dust_dict['range'] = [0.08,50.0]
+        # 
+        # Note: calc_Umean
+        #   set Umin = 1.0
+        #   set fPDR = 0.01
+        #   calc ( lg(1e6/Umin) / (1-Umin/1e6) ) * Umin * fPDR + Umin * (1-fPDR)
     # 
     # analyze 
     print('Num_params', Num_params)
