@@ -30,6 +30,12 @@ fi
 #echo "Go!"
 #exit
 
+
+
+if [[ ! -f "fit_flux_obsframe.dat" ]]; then cp "flux_obsframe.dat" "fit_flux_obsframe.dat"; fi
+
+cp "extracted_flux.txt" "flux_obsframe.dat"
+
 michi2_plot_SED_fitting_results.py "${fitted_file[@]}"
 
 
