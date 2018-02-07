@@ -62,10 +62,10 @@ def lib_file_get_header(Lib_file):
     return Lib_header
 
 
-def lib_file_get_data_block(Lib_file, starting_data_line_index):
+def lib_file_get_data_block(Lib_file, starting_data_line_index, Lib_header = []):
     # starting_data_line_index starts from 0 in the pure data block, i.e., no commented lines accounted. 
     # e.g., starting_data_line_index = 0, means the first SED template in the SED library file. 
-    Lib_header = lib_file_get_header(Lib_file)
+    if Lib_header == []: Lib_header = lib_file_get_header(Lib_file)
     Lib_begin = Lib_header['NLINE'] + starting_data_line_index                         # the line number index (starting from 0) in the Lib_file, which defines the data block of one SED template.
     Lib_end   = Lib_header['NLINE'] + starting_data_line_index + Lib_header['NVAR1']-1 # the line number index (starting from 0) in the Lib_file, which defines the data block of one SED template.
     print('numpy.genfromtxt(Lib_file, skip_header=%d, max_rows=%d)'%(Lib_begin, Lib_header['NVAR1']))
@@ -238,12 +238,14 @@ for iLib in range(Lib_number):
     print(Lib_istr, Lib_i[line_number-1])
     print(Lib_astr, Lib_a[line_number-1])
     #print(chisq_table.getColumn(Lib_icol))
+    Lib_header = lib_file_get_header(Lib_file)
     os.system('echo "%s" > "%s/line_number"'%(line_number, output_dir))
     os.system('echo "%s" > "%s/%s"'%(Lib_i[line_number-1], output_dir, Lib_istr))
     os.system('echo "%s" > "%s/%s"'%(Lib_a[line_number-1], output_dir, Lib_astr))
+    os.system('echo "%d" > "%s/INDEX_LIB%d"'%(Lib_i[line_number-1]/int(Lib_header['NVAR1']), output_dir, iLib+1))
     # 
     # read lib data block from line file, starting from the data line index 'Lib_i[line_number-1]'
-    Lib_arr = lib_file_get_data_block(Lib_file, Lib_i[line_number-1])
+    Lib_arr = lib_file_get_data_block(Lib_file, Lib_i[line_number-1], Lib_header=Lib_header)
     Lib_x = Lib_arr[:,0]
     Lib_y = Lib_arr[:,1] * Lib_a[line_number-1]
     Out_file = output_dir+os.sep+'SED_LIB%d'%(iLib+1)

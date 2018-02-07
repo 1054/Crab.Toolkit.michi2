@@ -64,7 +64,7 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     fi
     # 
     if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "Siebenmorgen" | wc -l) -eq 1 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/lib.SiebenmorgenAGN.SED.zip"
+        unzip -o "${deploy_upper_dir}/data/lib_SED/lib.SiebenmorgenAGN.Extrapolated.SED.zip"
     elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "no AGN" | wc -l) -eq 0 ]]; then
         unzip -o "${deploy_upper_dir}/data/lib_SED/lib.MullaneyAGN.SED.zip"
     fi

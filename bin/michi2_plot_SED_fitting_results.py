@@ -462,6 +462,7 @@ else:
     SourceName = ''
     PlotYRange = []
     PlotMaxSEDNumber = 50
+    FluxFile = ''
     iarg = 1
     while iarg < len(sys.argv):
         TempCmd = sys.argv[iarg].replace('--','-').lower()
@@ -471,7 +472,7 @@ else:
         elif sys.argv[iarg]=='-constrain-by-upper-limits' or sys.argv[iarg]=='-constrain':
             ConstrainByUpperLimits = True
             print('Setting constrain by upper limits!')
-        elif sys.argv[iarg]=='-source-name' or sys.argv[iarg]=='-source':
+        elif sys.argv[iarg]=='-source-name' or sys.argv[iarg]=='-source' or sys.argv[iarg]=='-s':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
                 SourceName = sys.argv[iarg]
@@ -488,6 +489,11 @@ else:
                 iarg = iarg + 1
                 PlotMaxSEDNumber = int(sys.argv[iarg])
                 print('Setting PlotMaxSEDNumber = %s'%(PlotMaxSEDNumber))
+        elif sys.argv[iarg]=='-flux-file' or sys.argv[iarg]=='-flux' or sys.argv[iarg]=='-f':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                FluxFile = sys.argv[iarg]
+                print('Setting FluxFile = %s'%(FluxFile))
         else:
             DataFile = sys.argv[iarg]
         iarg = iarg + 1
@@ -717,8 +723,20 @@ else:
         #break
     # 
     # 
+    # 
+    # 
+    # 
+    # 
+    # Prepare Default FluxFile <TODO><DEBUG>
+    if FluxFile == '' and os.path.isfile('extracted_flux.txt'):
+        FluxFile = 'extracted_flux.txt'
+    # 
+    # 
     # Then plot OBS data points
-    DataTable_obs = asciitable.read(InfoDict['OBS'])
+    if FluxFile == '':
+        DataTable_obs = asciitable.read(InfoDict['OBS'])
+    else:
+        DataTable_obs = asciitable.read(FluxFile)
     #print(type(DataTable_obs))
     try:
         Wavelength_obs = DataTable_obs[DataTable_obs.colnames[0]].data
@@ -737,6 +755,9 @@ else:
     Plot_engine.set_yrange([1e-6,1e4])
     if len(PlotYRange) == 2:
         Plot_engine.set_yrange(PlotYRange)
+    else:
+        if Redshift < 0.1:
+            Plot_engine.set_yrange([1e-3,1e7])
     Plot_engine.set_xtitle('Observing-frame wavelength [um]')
     Plot_engine.set_ytitle('Flux density [mJy]')
     Plot_engine.savepdf(Output_name+'.pdf')
@@ -822,7 +843,8 @@ else:
                 sys.exit()
             # 
             # check stellar mass
-            if InfoDict[Lib_name].find('BC03.Padova1994') >= 0:
+            if InfoDict[Lib_name].find('BC03.Padova1994') >= 0 or \
+                InfoDict[Lib_name].find('FSPS.CSP') >= 0:
                 if 'Mass' == Lib_dict[Key_TPAR]:
                     # Stellar mass SED library Y column unit is solar luminosity per Hertz, 
                     # flux unit is mJy, 

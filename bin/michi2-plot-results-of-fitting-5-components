@@ -12,30 +12,16 @@ if [[ $(type michi2_plot_SED_fitting_results.py 2>/dev/null | wc -l) -eq 0 ]]; t
     fi
 fi
 
-fitted_file=""
-if [[ $# -eq 0 ]]; then
-    echo -n "Please input the fitted file, e.g., \"fit_5.out\": "
-    read fitted_file
-    echo "fitted_file=$fitted_file"
-    if [[ -z "$fitted_file" ]]; then
-        echo "Error! Empty input!"
-        exit
-    fi
-else 
-    fitted_file=("$@")
-fi
-
-#echo "macro read rShift.sm redShift_maskout_LowSNR $1" | sm
-
-#echo "Go!"
-#exit
 
 
 
-if [[ ! -f "fit_flux_obsframe.dat" ]]; then cp "flux_obsframe.dat" "fit_flux_obsframe.dat"; fi
 
-cp "extracted_flux.txt" "flux_obsframe.dat"
+michi2-plot-fitting-results $@
 
-michi2_plot_SED_fitting_results.py "${fitted_file[@]}"
+
+
+
+
+
 
 

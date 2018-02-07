@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+
+if [[ $(type michi2_plot_SED_fitting_results.py 2>/dev/null | wc -l) -eq 0 ]]; then
+    if [[ -f "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash" ]]; then
+        #echo source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        #echo $PATH
+    else
+        echo "Error! \"$(dirname ${BASH_SOURCE[0]})/bin_setup.bash\" was not found!"
+        exit
+    fi
+fi
+
+
+
+#Flux="extracted_flux.txt"
+#Fout="fit_5.out"
+
+if [[ $# -eq 0 ]]; then
+    echo "Usage: "
+    echo "    michi2-plot-fitting-results fit_5.out"
+    echo "    michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source BzK21000"
+    echo "    michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source BzK21000 -only-best"
+    echo "    michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source BzK21000 -only-best -yrange 1e-3 1e7"
+    echo ""
+    echo "Descriptions:"
+    echo "    This code analyzes the SED fitting output chi-square table \"fit_*.out\", creates plots \"fit_*.pdf\", "
+    echo "    and extracts best-fit SEDs (single component and their sum) into sub-folders named \"obj_*\". "
+    echo "    "
+    echo "    Note that the SED fitting info file \"fit_*.out.info\" is necessary for running this code."
+    echo "    "
+    echo "    We can also set the \"-flux\" argument to plot all flux data points therein. For example, if we "
+    echo "    only fitted far-infrared data points, we can still show all-wavelength data points via a command "
+    echo "    -flux \"all_flux.txt\", where \"all_flux.txt\" contains all-wavelength data points. "
+    echo "    "
+    echo "    More arguments: "
+    echo "        -source           --   Setting this will show source name on the SED figure."
+    echo "        -only-best        --   Setting this will plot only the best-fit (least chi-square) SED (one SED)."
+    echo "        -yrange NNN NNN   --   Setting this will adjust the Y axis range of the SED figure."
+    echo "    "
+    echo ""
+    exit
+fi
+
+#echo "macro read rShift.sm redShift_maskout_LowSNR $1" | sm
+
+#echo "Go!"
+#exit
+
+
+
+#if [[ ! -f "fit_flux_obsframe.dat" ]]; then cp "flux_obsframe.dat" "fit_flux_obsframe.dat"; fi
+#
+#cp "extracted_flux.txt" "flux_obsframe.dat"
+
+michi2_plot_SED_fitting_results.py $@
+
+
+
+
+
+
+
+
+
+
+
