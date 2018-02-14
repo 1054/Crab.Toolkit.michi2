@@ -18,13 +18,13 @@ fi
 # 
 if [[ $# -eq 0 ]]; then
     echo "Usage: "
-    echo "    michi2-run-fitting-5-components -redshift 1.5"
-    echo "    michi2-run-fitting-5-components -redshift 1.5 -flux extracted_flux.txt"
-    echo "    michi2-run-fitting-5-components -redshift 1.5 -flux extracted_flux.txt -parallel 2"
+    echo "    michi2-run-fitting-5-components-with-FSPS-and-MullaneyAGN -redshift 1.5"
+    echo "    michi2-run-fitting-5-components-with-FSPS-and-MullaneyAGN -redshift 1.5 -flux extracted_flux.txt"
+    echo "    michi2-run-fitting-5-components-with-FSPS-and-MullaneyAGN -redshift 1.5 -flux extracted_flux.txt -parallel 2"
     echo ""
     echo "Descriptions:"
     echo "    This code fits the input flux data points with two SED components: "
-    echo "        BC03 stellar SED (http://www.bruzual.org/bc03/) with Calzetti2000 attenuation law, "
+    echo "        Chabrier IMF BaSeL isochrons FSPS stellar SED (https://github.com/cconroy20/fsps/) with Calzetti2000 attenuation law, "
     echo "        and Mullaney2011 AGN SED (http://adsabs.harvard.edu/abs/2011MNRAS.414.1082M/). "
     echo "    "
     echo "    The input flux data file should contain three columns separated by white space, "
@@ -42,12 +42,12 @@ if [[ $# -eq 0 ]]; then
     echo "    \"INDEX_LIB1\" in that folder, then we will fix the stellar SED library index to the value therein, "
     echo "    and only fit that single SED library! This is useful, for example, for following procedure: "
     echo "    (1) We first fit the optical to near-infrared flux data with stellar+AGN component with the code "
-    echo "        \"michi2-run-fitting-2-components\", which outputs \"fit_2.out*\" files; "
+    echo "        \"michi2-run-fitting-2-components-with-FSPS-and-MullaneyAGN\", which outputs \"fit_2.out*\" files; "
     echo "    (2) Then we run the code \"michi2-plot-fitting-results\" \"fit_2.out\", which outputs \"obj_*\" folders "
     echo "        and \"best-fit*\" files; "
     echo "    (3) Then we copy \"obj_1\" folder as \"best-fit_stellar_SED\" folder; "
     echo "    (4) Next, we can fit the full optical to millimeter flux data with five component SED fitting with the code "
-    echo "        \"michi2-run-fitting-5-components\", and at this time the stellar SED will be fixed "
+    echo "        \"michi2-run-fitting-5-components-with-FSPS-and-MullaneyAGN\", and at this time the stellar SED will be fixed "
     echo "        to the previously best-fitted single SED library."
     echo "    "
     echo ""
@@ -110,20 +110,6 @@ fi
 
 
 # 
-# Copy SED files
-# 
-#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/BC03_Constant_SFH_at_time_800Myr/lib.BC03.Padova1994.BaSeL.Z0.0190.Age800Myr.EBV.SED .
-#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.HiExCom.Single.qPAH.2.5.SED .
-#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.LoExCom.Single.qPAH.2.5.SED .
-#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.SED .
-#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Extracted.SED .
-#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Single.Hotest.SED .
-#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.RadioPowerlaw.Single.SED .
-#cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filters .
-#cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filter.list .
-
-
-# 
 # Check photometry file
 # 
 if [[ ! -f "fit_5.in" ]]; then
@@ -165,7 +151,7 @@ fi
 # Copy SED LIB
 # 
 echo 
-michi2-deploy-files SED 
+michi2-deploy-files SED Mullaney AGN FSPS CSP
 
 
 # 
@@ -174,7 +160,7 @@ michi2-deploy-files SED
 echo 
 michi2_v04 -obs "fit_5.in" \
            -redshift $Redshift \
-           -lib "lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED" \
+           -lib "lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED" \
                 "lib.MullaneyAGN.SED" \
                 "lib.DL07.HiExCom.SED" \
                 "lib.DL07.LoExCom.SED" \
