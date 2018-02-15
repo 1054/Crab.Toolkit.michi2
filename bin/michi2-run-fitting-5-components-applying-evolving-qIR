@@ -173,6 +173,8 @@ michi2-deploy-files SED
 # set changeto_qIR = 2.35*(1+($1))**(-0.12)+lg(1.91) # changing from default qIR = 2.5 to qIR=2.35*(1+z)**(-0.12)+lg(1.91) (Magnelli 2015A%26A...573A..45M)
 # 
 galaxy_q_IR=$(awk "BEGIN {print (2.35*(1+($Redshift))**(-0.12)+log(1.91)/log(10.0));}")
+echo 
+echo "galaxy_q_IR = $galaxy_q_IR"
 
 
 # 
