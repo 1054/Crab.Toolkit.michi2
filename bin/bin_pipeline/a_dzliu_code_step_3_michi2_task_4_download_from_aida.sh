@@ -3,14 +3,15 @@
 
 
 rsync -ravz --prune-empty-dirs --stats --progress -e "ssh" \
-        --exclude 'list_of_source_names.txt' \
-        --exclude 'list_of_source_redshifts.txt' \
-        --exclude 'a_dzliu_code_*' \
-        --exclude 'BACKUP*' \
-        --exclude '.*' \
-        --include '*' \
+        --include 'SED_fitting_michi2/' \
+        --include 'SED_fitting_michi2/ID_*/' \
+        --include 'SED_fitting_michi2/ID_*/fit_*' \
+        --include 'SED_fitting_michi2/ID_*/Plot_*.pdf' \
+        --include 'SED_fitting_michi2/ID_*/best-fit_*' \
+        --include 'SED_fitting_michi2/ID_*/obj_*/' \
+        --include 'SED_fitting_michi2/ID_*/obj_*/*' \
         --exclude '*' \
-        "149.217.40.110:/disk1/$USER/Works/AlmaCosmos/SED_Fitting/Sample_SpireLines_R52/SED_fitting_michi2/" \
-        "SED_fitting_michi2/" --dry-run
+        "149.217.40.110:/disk1/$USER/Works/DeepFields/Works_co/2017_Emanuele_and_Antonello/20180215_SED_fitting_michi2_evolving_qIR/" \
+        "./" --dry-run
 
 

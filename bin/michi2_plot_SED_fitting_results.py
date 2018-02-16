@@ -464,6 +464,7 @@ else:
     PlotMaxSEDNumber = 50
     UserInputFluxFile = ''
     UserOutputName = ''
+    UserInputText = []
     iarg = 1
     while iarg < len(sys.argv):
         TempCmd = sys.argv[iarg].replace('--','-').lower()
@@ -500,6 +501,11 @@ else:
                 iarg = iarg + 1
                 UserOutputName = sys.argv[iarg]
                 print('Setting UserOutputName = %s'%(UserOutputName))
+        elif sys.argv[iarg]=='-text':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                UserInputText = UserInputText.append(sys.argv[iarg])
+                print('Setting UserInputText += %s'%(sys.argv[iarg]))
         else:
             DataFile = sys.argv[iarg]
         iarg = iarg + 1
@@ -726,13 +732,36 @@ else:
         # show redshift (z) and source name on the figure
         if not SetOnlyPlotBestSED:
             if i == 0:
+                # 
+                PlotTextPosY = 0.95
+                # 
                 Plot_engine.xyouts(0.15, 0.95, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
-            if i == 0 and SourceName != '':
-                Plot_engine.xyouts(0.97, 0.90, SourceName, NormalizedCoordinate=True, fontsize=16, horizontalalignment='right')
+                PlotTextPosY = 0.95
+                # 
+                if SourceName != '':
+                    Plot_engine.xyouts(0.97, 0.90, SourceName, NormalizedCoordinate=True, fontsize=16, horizontalalignment='right')
+                    PlotTextPosY = 0.90
+                # 
+                #<20180216># allow user input text with the "-text" argument
+                if len(UserInputText) > 0:
+                    for UserInputTextIndex in range(len(UserInputText)):
+                        UserInputTextUseTeX = (UserInputText[UserInputTextIndex].find('$')>=0)
+                        Plot_engine.xyouts(0.05, PlotTextPosY-0.05*(UserInputTextIndex+1), UserInputText[UserInputTextIndex], NormalizedCoordinate=True, useTex=UserInputTextUseTeX, fontsize=15, horizontalalignment='right')
         else:
-            if i == 0 and SourceName != '':
-                Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, fontsize=15)
-                Plot_engine.xyouts(0.20, 0.90, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
+            if i == 0:
+                # 
+                PlotTextPosY = 0.95
+                # 
+                if SourceName != '':
+                    Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, fontsize=15)
+                    PlotTextPosY = 0.90
+                # 
+                #Plot_engine.xyouts(0.20, 0.90, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
+                #<20180216># allow user input text with the "-text" argument
+                if len(UserInputText) > 0:
+                    for UserInputTextIndex in range(len(UserInputText)):
+                        UserInputTextUseTeX = (UserInputText[UserInputTextIndex].find('$')>=0)
+                        Plot_engine.xyouts(0.05, PlotTextPosY-0.05*(UserInputTextIndex+1), UserInputText[UserInputTextIndex], NormalizedCoordinate=True, useTex=UserInputTextUseTeX, fontsize=15)
         #break
     # 
     # 
