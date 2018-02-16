@@ -462,7 +462,8 @@ else:
     SourceName = ''
     PlotYRange = []
     PlotMaxSEDNumber = 50
-    FluxFile = ''
+    UserInputFluxFile = ''
+    UserOutputName = ''
     iarg = 1
     while iarg < len(sys.argv):
         TempCmd = sys.argv[iarg].replace('--','-').lower()
@@ -492,8 +493,13 @@ else:
         elif sys.argv[iarg]=='-flux-file' or sys.argv[iarg]=='-flux' or sys.argv[iarg]=='-f':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
-                FluxFile = sys.argv[iarg]
-                print('Setting FluxFile = %s'%(FluxFile))
+                UserInputFluxFile = sys.argv[iarg]
+                print('Setting UserInputFluxFile = %s'%(UserInputFluxFile))
+        elif sys.argv[iarg]=='-output-file' or sys.argv[iarg]=='-output-name' or sys.argv[iarg]=='-output' or sys.argv[iarg]=='-out' or sys.argv[iarg]=='-o':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                UserOutputName = sys.argv[iarg]
+                print('Setting UserOutputName = %s'%(UserOutputName))
         else:
             DataFile = sys.argv[iarg]
         iarg = iarg + 1
@@ -626,6 +632,13 @@ else:
     # 
     # check if output figure already exists or not, see if we overwrite or not.
     Output_name, Output_extension = os.path.splitext(DataFile)
+    if UserOutputName != '':
+        if UserOutputName.endswith('.pdf') or UserOutputName.endswith('.PDF') or \
+           UserOutputName.endswith('.eps') or UserOutputName.endswith('.EPS'):
+            Output_name, Output_extension = os.path.splitext(UserOutputName)
+        else:
+            Output_name = UserOutputName
+            Output_extension = 'pdf'
     # 
     # Get Redshift
     Redshift = float(InfoDict['REDSHIFT'])
@@ -637,7 +650,7 @@ else:
     dump_LIB_SEDs_to_files(chisq_file = DataFile, chisq_array = All_chi2_array, 
                             lib_dict = InfoDict, 
                             dump_indices = All_chi2_indices_sorted[Plot_chi2_indices], 
-                            output_numbers = Plot_chi2_indices+1, 
+                            output_numbers = numpy.array(Plot_chi2_indices)+1, 
                             output_prefix = 'obj', 
                             redshift = Redshift)
     # 
@@ -728,15 +741,15 @@ else:
     # 
     # 
     # Prepare Default FluxFile <TODO><DEBUG>
-    if FluxFile == '' and os.path.isfile('extracted_flux.txt'):
-        FluxFile = 'extracted_flux.txt'
+    if UserInputFluxFile == '' and os.path.isfile('extracted_flux.txt'):
+        UserInputFluxFile = 'extracted_flux.txt'
     # 
     # 
     # Then plot OBS data points
-    if FluxFile == '':
+    if UserInputFluxFile == '':
         DataTable_obs = asciitable.read(InfoDict['OBS'])
     else:
-        DataTable_obs = asciitable.read(FluxFile)
+        DataTable_obs = asciitable.read(UserInputFluxFile)
     #print(type(DataTable_obs))
     try:
         Wavelength_obs = DataTable_obs[DataTable_obs.colnames[0]].data
