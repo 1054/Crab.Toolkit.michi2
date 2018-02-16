@@ -731,6 +731,7 @@ else:
         # 
         # show redshift (z) and source name on the figure
         if not SetOnlyPlotBestSED:
+            # if plot a range of solutions with chi-square lower than then minimum_chisq + delta_chisq
             if i == 0:
                 # 
                 PlotTextPosY = 0.95
@@ -748,6 +749,7 @@ else:
                         UserInputTextUseTeX = (UserInputText[UserInputTextIndex].find('$')>=0)
                         Plot_engine.xyouts(0.05, PlotTextPosY-0.05*(UserInputTextIndex+1), UserInputText[UserInputTextIndex], NormalizedCoordinate=True, useTex=UserInputTextUseTeX, fontsize=15, horizontalalignment='right')
         else:
+            # if only plot the best solution
             if i == 0:
                 # 
                 PlotTextPosY = 0.95
