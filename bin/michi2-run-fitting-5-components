@@ -60,7 +60,10 @@ fi
 # 
 Redshift=""
 Parallel=2
-Flux="extracted_flux.txt" #<TODO># 
+Flux="" #<TODO># 
+if [[ $(hostname) == aida* ]] || [[ $(hostname) == isaac* ]]; then
+    Flux="extracted_flux.txt" #<TODO># 
+fi
 if [[ $# -ge 2 ]]; then
     i=1
     while [[ $i -le $# ]]; do
@@ -103,9 +106,11 @@ fi
 # 
 # Check photometry file
 # 
-if [[ ! -f "$Flux" ]]; then
-    echo "Error! \"$Flux\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
-    exit
+if [[ x"$Flux" != x ]]; then
+    if [[ ! -f "$Flux" ]]; then
+        echo "Error! \"$Flux\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+        exit
+    fi
 fi
 
 

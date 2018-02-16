@@ -126,25 +126,30 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     
     cd "${list_of_source_names[i]}"
     
+    if [[ ! -f "flux_obsframe.dat" ]]; then
+        if [[ -f "extracted_flux.txt" ]]; then
+            michi2_filter_flux_2sigma_no_radio.py extracted_flux.txt flux_obsframe.dat
+        fi
+        if [[ ! -f "flux_obsframe.dat" ]]; then
+            echo "Warning! \"flux_obsframe.dat\" was not found!"
+            continue
+        fi
+    fi
     
     if [[ ! -f "fit_5.out" ]]; then
         
-        #michi2-deploy-files
+        michi2-deploy-files
         
-        michi2-run-fitting-5-components ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 16
+        ./run_fitting_5_components.sh ${list_of_source_redshifts[i]} -parallel 20
         
-        rm -rf obj_* best* Plot_*
-        
-        michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
-        
-        sleep 3
+	sleep 3
     
     else
         
-        echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
-    
+	echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
+	
     fi
-    
+
     cd "../"
     
 done
