@@ -155,6 +155,15 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
         #echo "--$_Source${_SourceW2}--"
     done
     
+    
+    # 
+    # get chisq <20180216>
+    if [[ $i -eq 0 ]]; then
+    echo "# Source${_SourceW1}  chisq" > $output_dir/best-fit_chisq.txt
+    fi
+    echo "$_Source${_SourceW2}  "$(cat ./$_Source/obj_1/chi2.txt | grep -v '^#' | head -n 1) >> $output_dir/best-fit_chisq.txt
+    
+    
 done
 
 

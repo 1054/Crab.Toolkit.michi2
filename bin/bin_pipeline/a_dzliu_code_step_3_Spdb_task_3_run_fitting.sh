@@ -5,7 +5,7 @@
 # 
 # Define output directory
 # 
-dir_of_output="SED_fitting_michi2"
+dir_of_output="SED_fitting_Spdb"
 
 if [[ ! -d "$dir_of_output" ]]; then
     echo "Error! Directory \"$dir_of_output\" was not found!"; exit 1
@@ -20,11 +20,11 @@ cd "$dir_of_output"
 # 
 # Check software dependencies
 # 
-if [[ ! -f "$HOME/Cloud/Github/Crab.Toolkit.michi2/SETUP.bash" ]]; then
-    echo "Error! \"$HOME/Cloud/Github/Crab.Toolkit.michi2/SETUP.bash\" was not found! Please clone from \"https://github.com/1054/Crab.Toolkit.michi2\"!"
+if [[ ! -f "$HOME/Cloud/Github/DeepFields.SuperDeblending/Softwares/SETUP.bash" ]]; then
+    echo "Error! \"$HOME/Cloud/Github/DeepFields.SuperDeblending/Softwares/SETUP.bash\" was not found! Please clone from \"https://github.com/1054/DeepFields.SuperDeblending\"!"
     exit
 fi
-source "$HOME/Cloud/Github/Crab.Toolkit.michi2/SETUP.bash"
+source "$HOME/Cloud/Github/DeepFields.SuperDeblending/Softwares/SETUP.bash"
 
 
 # 
@@ -45,26 +45,25 @@ list_of_source_redshifts=($(cat "$file_of_source_redshifts" | grep -v '^#' | sed
 
 for (( i=0; i<${#list_of_source_names[@]}; i++ )); do
     
-    if [[ ! -f "${list_of_source_names[i]}/fit_5.out" ]]; then
+    if [[ ! -f "${list_of_source_names[i]}/fit_plots_HDFN/Plot_SED_"$(echo ${list_of_source_names[i]} | sed -e 's/ID_//g')".pdf" ]]; then
         # 
         echo 
         echo 
         echo "***********************************************"
         echo "cd \"${list_of_source_names[i]}/\""
         echo "***********************************************"
+        mkdir "${list_of_source_names[i]}"
         cd "${list_of_source_names[i]}/"
         # 
-        echo "michi2_filter_flux_2sigma.py extracted_flux.txt fit_5.in"
-        michi2_filter_flux_2sigma.py extracted_flux.txt fit_5.in
+        cp "../../SED_fitting_michi2/${list_of_source_names[i]}/extracted_flux.txt" datatable_photometry.txt
+        echo "# ID RA Dec z_spec" > datatable_id_ra_dec_zspec.txt
+        echo $(echo ${list_of_source_names[i]} | sed -e 's/ID_//g') 0.0 0.0 ${list_of_source_redshifts[i]} >> datatable_id_ra_dec_zspec.txt
         # 
-        echo "michi2-run-fitting-5-components -redshift ${list_of_source_redshifts[i]} -parallel 12"
-        michi2-run-fitting-5-components -redshift ${list_of_source_redshifts[i]} -parallel 12
+        ~/Cloud/Github/DeepFields.SuperDeblending/Softwares/Galsed_Template/deploy_files
         # 
-        echo "michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source \"${list_of_source_names[i]}\""
-        michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
+        echo "macro read convert_datatable_for_sed_fitting.sm convert_datatable_for_sed_fitting" | sm
         # 
-        echo "michi2-plot-fitting-results fit_5.out -out fit_5.best.pdf -only-best -flux extracted_flux.txt -source \"${list_of_source_names[i]}\""
-        michi2-plot-fitting-results fit_5.out -out fit_5.best.pdf -only-best -flux extracted_flux.txt -source "${list_of_source_names[i]}"
+        ./do_Galsed
         # 
         echo "cd \"../\""
         cd "../"
