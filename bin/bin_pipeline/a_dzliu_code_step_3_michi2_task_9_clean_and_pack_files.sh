@@ -2,7 +2,7 @@
 # 
 
 
-cd "./" # "SED_fitting_michi2"
+cd "SED_fitting_michi2"
 
 
 find . -name "*.bak" -exec rm \{\} \;
