@@ -22,7 +22,7 @@ cd "$dir_of_output"
 # 
 # Run python code to limit the SED fitting S/N no higher than the photometry S/N
 # 
-../$(basename "${BASH_SOURCE[0]}" | sed -e 's/\.sh$//g').py
+$(perl -MCwd -e 'print Cwd::abs_path shift' "${BASH_SOURCE[0]}" | sed -e 's/\.sh$//g').py
 
 
 
