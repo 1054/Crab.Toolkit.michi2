@@ -1,9 +1,9 @@
 # Crab.Toolkit.michi2
 This is a _Crab_ toolkit for minimumizing chi2 for any 1D model fit, for example, galaxy SED fitting, molecular line ladder fitting. 
 
-## Usage ##
+# Usage #
 
-### SED Fitting ###
+## SED Fitting ##
 
 Our SED fitting contains 5 components (or any number of components): BC03, AGN, DL07 warm and cold and radio. The radio are constrainted by the DL07 warm+cold summed rest-frame 8-1000um luminosity, so it is not independent. If you do not want that, you can simply do not include radio data in the SED fitting input file. 
 
@@ -59,12 +59,12 @@ michi2-run-fitting-5-components-applying-evolving-qIR -redshift 1.5 -flux "extra
 # Note that for this example we set redshift to 1.5, and fit with 2 CPU cores. 
 ```
 
-The michi2 SED fitting is currently <span style="color:blue">VERY SLOW</span>. It can easily take three hours on a laptop! It is because it stupidly loops over all the combinations of all input models, so if you fit with 5 components, it takes hours and hours. Currently we parallized it. We will adopt Markov chain Monte Carlo method in the future. For now, for our own, we use it on 100plus-CPU-core machine, so it is still fine. 
+The michi2 SED fitting is currently **VERY SLOW**. It can easily take three hours on a laptop! It is because it stupidly loops over all the combinations of all input models, so if you fit with 5 components, it takes hours and hours. Currently we parallized it. We will adopt Markov chain Monte Carlo method in the future. For now, for our own, we use it on 100plus-CPU-core machine, so it is still fine. 
 
 The output of michi2 SED fitting will be: 
 ```
-ls fit_5.out # a text file, containing chi-square and parameters of each combination of components
-ls fit_5.out.info # a text file, containing basic informations which will be used later on
+ls fit_5.out        # a text file, containing chi-square and parameters of each combination of components
+ls fit_5.out.info   # a text file, containing basic informations which will be used later on
 ```
 
 Then we make SED plots and chi-square plots. 
@@ -79,16 +79,17 @@ michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source YOUR_SOUR
 
 Then the output files will be:
 ```
-ls fit_5.pdf # Yeah, a bunch of best-fit SEDs
-ls fit_5.chisq.pdf # Chi-square histograms
-ls best-fit*.txt # Yeah, fitted parameters
+ls fit_5.pdf          # Yeah, a bunch of best-fit SEDs
+ls fit_5.chisq.pdf    # Chi-square histograms
+ls best-fit*.txt      # Yeah, fitted parameters
 ```
 
 One more step: some times the fitted parameters have too small errors. We need to constrain the fitted parameters to not have higher S/N than the photometric data S/N. 
 
 
 
-### LVG Fitting ###
+
+## LVG Fitting ##
 
 #### Prepare CO ladder, run michi2, make plots ####
 TODO
