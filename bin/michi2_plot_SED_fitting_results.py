@@ -668,6 +668,7 @@ else:
     # 
     # set color styles
     Color_list = ['cyan', 'gold', 'red', 'blue', 'purple']
+    Color_preset = {'DL07.HiExCom': 'red', 'DL07.LoExCom': 'blue', 'Radio': 'purple'}
     Plot_engine = CrabPlot(figure_size=(8.0,5.0))
     Plot_engine.set_margin(top=0.92, bottom=0.16, left=0.12, right=0.96)
     Count_label_chi2 = 0 # to count the chi-square label printed on the figure, make sure there are not too many labels.
@@ -692,28 +693,39 @@ else:
         # 
         # plot each single SED component
         for j in range(int(InfoDict['NLIB'])):
+            
             xclip = None
-            if j == 0: xclip = [(50,numpy.inf)]
-            elif j == 4: xclip = [(-numpy.inf,2e3)]
+            if InfoDict['LIB%d'%(j+1)].find('FSPS')>=0: 
+                xclip = [(50,numpy.inf)]
+            elif InfoDict['LIB%d'%(j+1)].find('BC03')>=0: 
+                xclip = [(50,numpy.inf)]
+            elif InfoDict['LIB%d'%(j+1)].find('Radio')>=0: 
+                xclip = [(-numpy.inf,2e3)]
+            
+            Plot_lib_color = Color_list[j]
+            for Preset_lib_color in Color_preset:
+                if InfoDict['LIB%d'%(j+1)].find(Preset_lib_color)>=0: 
+                    Plot_lib_color = Color_preset[Preset_lib_color]
+            
             Plot_engine.plot_data_file('obj_%d/SED_LIB%d'%(i+1,j+1), xlog=1, ylog=1, xclip=xclip, current=1, \
                                 dataname='obj_%d_SED_LIB%d'%(i+1,j+1), 
                                 redshift = Redshift, 
-                                linestyle='dashed', linewidth=Plot_chi2_linewidth, color=Color_list[j], alpha=Plot_chi2_alpha)
+                                linestyle='dashed', linewidth=Plot_chi2_linewidth, color=Plot_lib_color, alpha=Plot_chi2_alpha)
         # 
         Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.05)
         Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.85)
-        Color_chi2 = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
+        Plot_chi2_color = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
                                                     input_value=Cut_chi2_array[i], 
                                                     log=1, 
                                                     cmap=matplotlib.cm.get_cmap('gray'))
-        #print('Color_chi2: ', Color_chi2)
+        #print('Plot_chi2_color: ', Plot_chi2_color)
         # 
         # 
         # plot total SED
         Plot_engine.plot_data_file('obj_%d/SED_SUM'%(i+1), xlog=1, ylog=1, current=1, \
                             dataname='obj_%d_SED_SUM'%(i+1), 
                             redshift = Redshift, 
-                            linestyle='solid', linewidth=Plot_SED_linewidth, color=Color_chi2, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
+                            linestyle='solid', linewidth=Plot_SED_linewidth, color=Plot_chi2_color, alpha=1.0, zorder=8) # alpha=Plot_chi2_alpha
         # 
         # 
         # count++
@@ -725,11 +737,11 @@ else:
             if i == Cut_chi2_array_size-1:
                 Plot_engine.xyouts(0.05, 0.95, '$\chi^2:$', NormalizedCoordinate=True, useTex=True)
             if i == 0:
-                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '......', NormalizedCoordinate=True, color=Color_chi2)
+                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '......', NormalizedCoordinate=True, color=Plot_chi2_color)
                 Count_label_chi2 = Count_label_chi2 + 1
             if Count_plot_chi2 % int((Cut_chi2_array_size/7)+1) == 0 or i == 0 or i == Cut_chi2_array_size-1:
                 #print('Plotting label at', 0.09, 0.95-0.03*(Cut_chi2_array_size-1-i), 'chi2 = %.1f'%(Cut_chi2_array[i]))
-                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Color_chi2)
+                Plot_engine.xyouts(0.09, 0.95-0.03*(Count_label_chi2), '%.1f'%(Cut_chi2_array[i]), NormalizedCoordinate=True, useTex=True, color=Plot_chi2_color)
                 Count_label_chi2 = Count_label_chi2 + 1
         # 
         # 
