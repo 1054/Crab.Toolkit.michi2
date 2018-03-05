@@ -131,7 +131,7 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
         
         #michi2-deploy-files
         
-        michi2-run-fitting-2-components-with-BC03-MultiAge-and-MullaneyAGN ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 12
+        michi2-run-fitting-2-components-with-BC03-MultiAge-and-MullaneyAGN ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 2
         
         rm -rf obj_* best* Plot_*
         
@@ -156,7 +156,7 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
         
         #michi2-deploy-files
         
-        michi2-run-fitting-5-components ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 12
+        michi2-run-fitting-5-components-with-BC03-MultiAge-and-MullaneyAGN ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 6
         
         rm -rf obj_* best*.* Plot_*
         
