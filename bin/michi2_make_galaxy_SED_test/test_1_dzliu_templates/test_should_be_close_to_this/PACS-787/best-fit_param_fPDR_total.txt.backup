@@ -1,0 +1,5 @@
+            param_median              param_best             param_sigma               param_L68               param_H68    
+                  double                  double                  double                  double                  double    
+                                                                                                                            
+                    null                    null                    null                    null                    null    
+            -1.414909163             -1.37040609           0.06540039667             -1.48030956            -1.349508767    

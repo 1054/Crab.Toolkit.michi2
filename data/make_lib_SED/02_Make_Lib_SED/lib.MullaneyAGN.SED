@@ -8,7 +8,7 @@
 # NVAR2 = 3 # NAXIS2
 # NPAR  = 2 # Parameter 1 2 3 ...
 # TPAR1 = AGN_TYPE
-# TPAR2 = Lbol # integrated over 1-1000um. a*Lbol*4*pi*dL**2 makes the final AGN luminosity in Lsun, where a is the normalization.
+# TPAR2 = Lbol # integrated over 1-1000um. a*Lbol*4*pi*dL**2/(1+z) makes the final AGN luminosity in Lsun, where a is the normalization, dL has Mpc unit.
 # NPAR1 = 3 # 3 types of AGN.
 # NPAR2 = 1 # non-independent.
 # CPAR1 = 3

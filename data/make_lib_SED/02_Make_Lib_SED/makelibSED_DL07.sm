@@ -137,7 +137,7 @@ writeLibHead 01
     print +$1 '\# NPAR  = 3 \# Parameter 1 2 3 ...\n' {}
     print +$1 '\# TPAR1 = Umin\n' {}
     print +$1 '\# TPAR2 = qPAH\n' {}
-    print +$1 '\# TPAR3 = lgLTIR \# log of the integrated flux density over rest-frame 8-1000 um\n' {}
+    print +$1 '\# TPAR3 = lgLTIR \# log of the integrated flux density (mJy*GHz) over rest-frame 8-1000 um\n' {}
     print +$1 '\# NPAR1 = $(dimen(fUmn))\n' {}
     print +$1 '\# NPAR2 = $(dimen(fPAH))\n' {}
     print +$1 '\# NPAR3 = 1 \# non-indepedent\n' {}
@@ -146,7 +146,7 @@ writeLibHead 01
     print +$1 '\# CPAR3 = 5\n' {}
     print +$1 '\# \n' {}
     print +$1 '\#        lambda           flux        Umin        qPAH      lgLTIR\n' {}
-    print +$1 '\#          [um]          [mJy]                            [solLum]\n' {}
+    print +$1 '\#          [um]          [mJy]                           [mJy*GHz]\n' {}
     return
 
 

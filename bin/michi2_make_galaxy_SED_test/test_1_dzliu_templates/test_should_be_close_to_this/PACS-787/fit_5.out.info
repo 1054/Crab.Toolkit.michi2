@@ -1,0 +1,9 @@
+OBS = flux_obsframe.dat
+NLIB = 5
+LIB1 = lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED
+LIB2 = lib.MullaneyAGN.SED
+LIB3 = lib.DL07.HiExCom.SED
+LIB4 = lib.DL07.LoExCom.SED
+LIB5 = RadioPowerlaw.Single.lib.SED
+OUT = fit_5.out
+REDSHIFT = 1.5234
