@@ -15,13 +15,13 @@
 
 # 
 # To run this script on the ISAAC machine -- 
-# srun -N1 -n10 -l a_dzliu_code_for_running_SED_fitting_michi2_on_ISAAC.sh
+# srun -N1 -n10 -l a_dzliu_code_for_running_SED_fitting_michi2_with_two_steps_on_ISAAC.sh
 # or
-# sbatch a_dzliu_code_for_running_SED_fitting_michi2_on_ISAAC.sh
+# sbatch a_dzliu_code_for_running_SED_fitting_michi2_with_two_steps_on_ISAAC.sh
 # or 
 # srun -N1 -n20 --pty bash
 # or
-# sbatch --array=1-6%2 a_dzliu_code_step_2_run_michi2_task_3_run_sbatch_on_isaac.sh
+# sbatch --array=1-6%2 a_dzliu_code_for_running_SED_fitting_michi2_with_two_steps_on_ISAAC.sh
 # 
 
 
