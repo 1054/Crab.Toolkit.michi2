@@ -54,7 +54,11 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "FSPS" | wc -l) -eq 1 ]]; then
         unzip -o "${deploy_upper_dir}/data/lib_SED/lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip"
     elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "no stellar" | wc -l) -eq 0 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip"
+        if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "MultiAge" | wc -l) -eq 1 ]]; then
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.MultiAge.EBV.SED.zip"
+        else
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip"
+        fi
     fi
     # 
     if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "single qPAH" | wc -l) -eq 1 ]]; then
