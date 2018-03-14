@@ -91,8 +91,8 @@ if [[ ! -f "list_of_source_names.txt" ]] || [[ ! -f "list_of_source_redshifts.tx
     echo "Error! \"list_of_source_names.dat\" or \"list_of_source_redshifts.txt\" was not found!"
     exit 1
 fi
-list_of_source_names=($(cat "list_of_source_names.txt" | grep -v '^#' | sed -e 's/^ *//g' | sed -e 's/ *$//g'))
-list_of_source_redshifts=($(cat "list_of_source_redshifts.txt" | grep -v '^#' | sed -e 's/^ *//g' | sed -e 's/ *$//g'))
+list_of_source_names=($(cat "list_of_source_names.txt" | grep -v '^#' | sed -e 's/^ *//g' | sed -e 's/ *$//g' | tr -s ' ' | cut -d ' ' -f 1))
+list_of_source_redshifts=($(cat "list_of_source_redshifts.txt" | grep -v '^#' | sed -e 's/^ *//g' | sed -e 's/ *$//g' | tr -s ' ' | cut -d ' ' -f 1))
 
 
 # 
@@ -157,7 +157,7 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
         
         michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
         
-        michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}" -only-best
+        michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}" -only-best -out fit_5.best.pdf
         
         sleep 3
     

@@ -607,16 +607,16 @@ def recognize_Filter(input_str, special_file_name=''):
         #    Filter_Name = 'Spitzer IRAC ch4'
         #    Filter_Wave = 79594.9 * 1e-4 # um
         # 
-        elif input_str == 'FLUX_IRAC1' or input_str == 'FLUXERR_IRAC1' or input_str.startswith('FLUX_IRAC1_') or input_str.startswith('FLUXERR_IRAC1_') or input_str=='fch1' or input_str=='dfch1': 
+        elif input_str == 'FLUX_IRAC1' or input_str == 'FLUXERR_IRAC1' or input_str.startswith('FLUX_IRAC1_') or input_str.startswith('FLUXERR_IRAC1_') or input_str=='fch1' or input_str=='dfch1' or input_str.lower()=='f_irac1' or input_str.lower()=='df_irac1' or input_str.lower().startswith('f_irac1_') or input_str.lower().startswith('df_irac1_'): 
             Filter_Name = 'Spitzer IRAC ch1'
             Filter_Wave = 35634.3 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC2' or input_str == 'FLUXERR_IRAC2' or input_str.startswith('FLUX_IRAC2_') or input_str.startswith('FLUXERR_IRAC2_') or input_str=='fch2' or input_str=='dfch2': 
+        elif input_str == 'FLUX_IRAC2' or input_str == 'FLUXERR_IRAC2' or input_str.startswith('FLUX_IRAC2_') or input_str.startswith('FLUXERR_IRAC2_') or input_str=='fch2' or input_str=='dfch2' or input_str.lower()=='f_irac2' or input_str.lower()=='df_irac2' or input_str.lower().startswith('f_irac2_') or input_str.lower().startswith('df_irac2_'): 
             Filter_Name = 'Spitzer IRAC ch2'
             Filter_Wave = 45110.1 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC3' or input_str == 'FLUXERR_IRAC3' or input_str.startswith('FLUX_IRAC3_') or input_str.startswith('FLUXERR_IRAC3_') or input_str=='fch3' or input_str=='dfch3': 
+        elif input_str == 'FLUX_IRAC3' or input_str == 'FLUXERR_IRAC3' or input_str.startswith('FLUX_IRAC3_') or input_str.startswith('FLUXERR_IRAC3_') or input_str=='fch3' or input_str=='dfch3' or input_str.lower()=='f_irac3' or input_str.lower()=='df_irac3' or input_str.lower().startswith('f_irac3_') or input_str.lower().startswith('df_irac3_'): 
             Filter_Name = 'Spitzer IRAC ch3'
             Filter_Wave = 57593.4 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC4' or input_str == 'FLUXERR_IRAC4' or input_str.startswith('FLUX_IRAC4_') or input_str.startswith('FLUXERR_IRAC4_') or input_str=='fch4' or input_str=='dfch4': 
+        elif input_str == 'FLUX_IRAC4' or input_str == 'FLUXERR_IRAC4' or input_str.startswith('FLUX_IRAC4_') or input_str.startswith('FLUXERR_IRAC4_') or input_str=='fch4' or input_str=='dfch4' or input_str.lower()=='f_irac4' or input_str.lower()=='df_irac4' or input_str.lower().startswith('f_irac4_') or input_str.lower().startswith('df_irac4_'): 
             Filter_Name = 'Spitzer IRAC ch4'
             Filter_Wave = 79594.9 * 1e-4 # um
         # 
@@ -651,10 +651,20 @@ def recognize_Filter(input_str, special_file_name=''):
         # 
         # 
         if numpy.isnan(Filter_Wave):
-            Pattern_FLUX_1 = re.compile("(FLUX_)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., FLUX_20cm
-            Pattern_FLUXERR_1 = re.compile("(FLUX[_]?ERR_)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)")
-            Pattern_FLUX_2 = re.compile("[^a-zA-Z]*(f[_]?)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., _f1.4ghz or _f_1.4ghz
-            Pattern_FLUXERR_2 = re.compile("[^a-zA-Z]*(df[_]?)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)")
+            # 
+            # Note:
+            #   Column name should like 
+            #      "FLUX_<wavelength>_<instrument>"
+            #      "FLUXERR_<wavelength>_<instrument>"
+            #      "f_<wavelength>_<instrument>"
+            #      "df_<wavelength>_<instrument>"
+            #      "<wavelength>_FLUX_<instrument>"
+            #      "<wavelength>_FLUXERR_<instrument>"
+            # 
+            Pattern_FLUX_1 = re.compile("(FLUX_)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., FLUX_20cm, FLUX_3.6um
+            Pattern_FLUXERR_1 = re.compile("(FLUX[_]?ERR_)([0-9Ee.+-]+)([^0-9.+-]*.*)")
+            Pattern_FLUX_2 = re.compile("[^a-zA-Z]*(f[_]?)([0-9Ee.+-]+)([^0-9.+-]*.*)") # e.g., _f1.4ghz or _f_1.4ghz
+            Pattern_FLUXERR_2 = re.compile("[^a-zA-Z]*(df[_]?)([0-9Ee.+-]+)([^0-9.+-]*.*)")
             Pattern_FLUX_3 = re.compile("(.*)(_FLUX)(_.*)") # e.g. SPLASH_1_FLUX_Laigle
             Pattern_FLUXERR_3 = re.compile("(.*)(_FLUX[_]?ERR)(_.*)")
             Pattern_FLUX_4 = re.compile("[_]?(f_)([^_]+)(.*)") # e.g., f_K_Jin
@@ -773,6 +783,8 @@ def recognize_Filter(input_str, special_file_name=''):
                         Filter_Name = 'JCMT AzTEC'
                     elif Matched_str_3.upper().find('MAMBO')>=0:
                         Filter_Name = 'IRAM 30m MAMBO'
+                    elif Matched_str_3.upper().find('_VLA_')>=0:
+                        Filter_Name = 'VLA'
                     #if Matched_str_2 == '814' and Matched_str_3.startswith('W'):
                     #    Filter_Name = 'HST F814W'
                     #    Matched_str_3 = Matched_str_3[1:]
