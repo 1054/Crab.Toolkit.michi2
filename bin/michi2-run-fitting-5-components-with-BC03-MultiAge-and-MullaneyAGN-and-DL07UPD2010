@@ -172,7 +172,7 @@ fi
 # Copy SED LIB
 # 
 echo 
-michi2-deploy-files SED BC03 MultiAge
+michi2-deploy-files SED BC03 MultiAge DL07UPD2010
 
 
 # 
@@ -183,8 +183,8 @@ michi2_v04 -obs "fit_5.in" \
            -redshift $Redshift \
            -lib "lib.BC03.Padova1994.BaSeL.Z0.0190.MultiAge.EBV.SED" \
                 "lib.MullaneyAGN.SED" \
-                "lib.DL07.HiExCom.SED" \
-                "lib.DL07.LoExCom.SED" \
+                "lib.DL07.2010.03.18.HiExCom.SED" \
+                "lib.DL07.2010.03.18.LoExCom.SED" \
                 "RadioPowerlaw.Single.lib.SED" \
            -out "fit_5.out" \
            -parallel $Parallel \

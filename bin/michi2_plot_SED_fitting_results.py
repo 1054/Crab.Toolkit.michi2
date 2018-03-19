@@ -105,7 +105,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
                 param_log = True
         # 
         # crab_bin_compute_param_chisq_histogram for delta_chisq = 2.3 (2p)
-        param_stats_2p = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, delta_chisq = 2.3, log = param_log)
+        param_stats_2p = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, delta_chisq = 2.3, log = param_log, verbose = 1)
         if 'Par_file' in param_dict:
             # remove previous file
             if os.path.isfile('best-fit_param_'+param_dict['Par_file']+'.txt'):
@@ -140,6 +140,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         yrange = param_stats['yrange']
         #xrange = [xrange[0]-(xrange[1]-xrange[0])*0.50, xrange[1]+(xrange[1]-xrange[0])*0.50] # extend the range for plotting.
         if param_stats['valid']:
+            # zoomed in xrange (right panel)
             xrange = [ param_stats['L68'] - 10*param_stats['bin_step'], 
                        param_stats['H68'] + 10*param_stats['bin_step'] ]
         ##if xrange[0] < param_stats['min']: xrange[0] = param_stats['min']
@@ -178,9 +179,12 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         print('plotting xrange', xrange)
         print('plotting yrange', yrange)
         print('param_stats_2p.valid', param_stats_2p['valid'])
-        print('param_stats_2p.global_min_chisq', param_stats_2p['global_min_chisq'])
-        print('param_stats_2p.in_range_min_chisq', param_stats_2p['in_range_min_chisq'])
+        print('param_stats_2p.threshold_chisq', param_stats_2p['threshold_chisq'], '1/x', 1/param_stats_2p['threshold_chisq'])
+        print('param_stats_2p.xrange', param_stats_2p['xrange']) # L68
+        print('param_stats_2p.yrange', param_stats_2p['yrange']) # H68
+        print('param_stats_2p.global_min_chisq', param_stats_2p['global_min_chisq'], '1/x', 1/param_stats_2p['global_min_chisq'])
         print('param_stats_2p.global_best', param_stats_2p['global_best'])
+        print('param_stats_2p.in_range_min_chisq', param_stats_2p['in_range_min_chisq'])
         print('param_stats_2p.in_range_best', param_stats_2p['in_range_best'])
         print('param_stats_2p.in_range_min', param_stats_2p['in_range_min'])
         print('param_stats_2p.in_range_max', param_stats_2p['in_range_max'])
@@ -188,11 +192,19 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         print('param_stats_2p.max', param_stats_2p['max'])
         print('param_stats_2p.median', param_stats_2p['median'])
         print('param_stats_2p.best', param_stats_2p['best'])
+        print('param_stats_2p.sigma', param_stats_2p['sigma'])
         print('param_stats_2p.L68', param_stats_2p['L68'])
         print('param_stats_2p.H68', param_stats_2p['H68'])
         #--
         #--TODO--20180123-10h44m-- when param_log is True, param_min can be zero!
         #--
+        # 
+        # 20180319: prevent param_stats_2p['xrange'] from being too small (1/20.0 of the plotting xrange in right panel) <TODO>
+        if param_stats_2p['xrange'][1] - param_stats_2p['xrange'][0] < numpy.abs(xrange[1]-xrange[0])/20.0:
+            param_stats_2p['xrange'][0] = param_stats_2p['median'] - numpy.abs(xrange[1]-xrange[0])/20.0
+            param_stats_2p['xrange'][1] = param_stats_2p['median'] + numpy.abs(xrange[1]-xrange[0])/20.0
+            print('param_stats_2p.xrange', param_stats_2p['xrange']) # optimized xrange for L68-H68
+            print('param_stats_2p.yrange', param_stats_2p['yrange']) # optimized xrange for L68-H68
         # 
         # Initialize a plot
         if Plot_engine is None:
@@ -222,8 +234,9 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
             # Plot Cut_chi2 line (2p = 2.3)
             Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(param_stats_2p['threshold_chisq']), 
                                     param_stats_2p['xrange'][1], 1/(param_stats_2p['threshold_chisq']), 
-                                    overplot = True, color='#1e90ff', linestyle = 'dotted')
+                                    overplot = True, color='#1e90ff', linestyle = '--', dashes=(0.5,0.25), linewidth = 4.0, alpha = 0.8) # dashes=(0.5,0.1) means length of 0.5, space of 0.25
                                     # color: http://www.color-hex.com/color/1e90ff
+                                    # https://stackoverflow.com/questions/35099130/change-spacing-of-dashes-in-dashed-line-in-matplotlib
         else:
             Plot_engine.plot_text(1.0-0.02, 1.00-0.02, ' (zoomed) ', NormalizedCoordinate=True, overplot=False, horizontalalignment='right', verticalalignment='top')
             Plot_engine.plot_text(0.5, 0.5, ' (No valid data) ', NormalizedCoordinate=True, overplot=True, horizontalalignment='center', verticalalignment='center')
@@ -679,6 +692,7 @@ else:
     for i in Plot_chi2_indices:
         # 
         # alpha by chi2
+        if i >= len(Cut_chi2_array): continue
         print('Plotting chi2=%s obj_%d'%(Cut_chi2_array[i], i+1))
         Min_chi2_log = numpy.log10(Min_chi2)
         Max_chi2_log = numpy.log10(Max_chi2)
@@ -919,7 +933,7 @@ else:
                     Stellar_mass_dict['range'] = numpy.power(10,[8.0,13.5])
                     Stellar_mass_dict['value'] = DataArray['a%d'%(j+1)] / (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * DataTable.getColumn(Col_number) / (1+Redshift)
                     Stellar_mass_dict['chisq'] = DataArray['chi2']
-            elif InfoDict[Lib_name].find('DL07.HiExCom') >= 0:
+            elif InfoDict[Lib_name].find('DL07.') >= 0 and InfoDict[Lib_name].find('.HiExCom') > 0:
                 if 'lgLTIR' == Lib_dict[Key_TPAR]:
                     LTIR_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     LTIR_warm_dust_dict['Lib_name'] = Lib_name
@@ -940,6 +954,7 @@ else:
                     Umin_warm_dust_dict['Col_numb'] = Col_number
                     Umin_warm_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
                     Umin_warm_dust_dict['range'] = [0.08,30.0]
+                    if InfoDict[Lib_name].find('DL07.2010.03.18') > 0: Umin_warm_dust_dict['range'][1] = 90.0 #<20180319>#
                     Umin_warm_dust_dict['value'] = DataTable.getColumn(Col_number)
                     Umin_warm_dust_dict['chisq'] = DataArray['chi2']
                     # 
@@ -954,7 +969,7 @@ else:
                     Mass_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * dL**2 / (1+Redshift) # Mdust #NOTE# no need to multiply a '4*pi'!
                     Mass_warm_dust_dict['chisq'] = DataArray['chi2']
                     # 
-            elif InfoDict[Lib_name].find('DL07.LoExCom') >= 0:
+            elif InfoDict[Lib_name].find('DL07.') >= 0 and InfoDict[Lib_name].find('.LoExCom') > 0:
                 if 'lgLTIR' == Lib_dict[Key_TPAR]:
                     LTIR_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     LTIR_cold_dust_dict['Lib_name'] = Lib_name
@@ -975,6 +990,7 @@ else:
                     Umin_cold_dust_dict['Col_numb'] = Col_number
                     Umin_cold_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
                     Umin_cold_dust_dict['range'] = [0.08,30.0]
+                    if InfoDict[Lib_name].find('DL07.2010.03.18') > 0: Umin_cold_dust_dict['range'][1] = 90.0 #<20180319>#
                     Umin_cold_dust_dict['value'] = DataTable.getColumn(Col_number)
                     Umin_cold_dust_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1079,6 +1095,7 @@ else:
         Umean_total_dust_dict['Par_name'] = '$\\left<U\\right>$ (total)'
         Umean_total_dust_dict['Par_file'] = 'Umean_total'
         Umean_total_dust_dict['range'] = [0.08,50.0]
+        if InfoDict[Mass_warm_dust_dict['Lib_name']].find('DL07.2010.03.18') > 0: Umean_total_dust_dict['range'][1] = 90.0 #<20180319>#
         # 
         # Note: calc_Umean
         #   set Umin = 1.0

@@ -1,0 +1,27 @@
+# 
+# Change dir
+# 
+cd /home/dzliu/Softwares/magphys/test_dzliu/ID564_GN20_magphys_highz_20160730/
+
+# 
+# Prepare multi-wavlength flux data file
+# 
+ls flux_obsframe.dat
+
+# 
+# Prepare filter and flux data files with supermongo
+# 
+gedit do_dzliu_convert_flux_to_magphys_zgrid.sm & # source, zgrid
+echo "macro read do_dzliu_convert_flux_to_magphys_zgrid.sm convert_flux_to_magphys_zgrid" | sm
+
+# 
+# Set magphys environment variables
+# 
+export USER_FILTERS="$PWD/magphys_input_filters.dat"
+export USER_OBS="$PWD/magphys_input_fluxes.dat"
+
+# 
+# Run magphys
+# 
+/home/dzliu/Softwares/magphys/magphys_highz/do_dzliu_autorun.bash
+

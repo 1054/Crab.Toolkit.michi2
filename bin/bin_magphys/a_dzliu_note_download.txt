@@ -1,0 +1,45 @@
+# 201803
+
+lowz
+    http://www.iap.fr/magphys/ewExternalFiles/magphys.tar.gz
+
+lowz CB07 library (not recommended)
+    http://www.iap.fr/magphys/ewExternalFiles/CB07_libraries.tar.gz
+
+highz
+    http://www.iap.fr/magphys/ewExternalFiles/magphys_highz.tar-2.gz
+
+highz Last updated: September 2017 (minor bug in fitting code fixed: you can download the new version of the fitting code alone here)
+    http://www.iap.fr/magphys/ewExternalFiles/fit_sed_highz.f
+
+Latest filter file, 513 filters (new filters include Subaru HSC and JWST NIRCam+MIRI), Last updated: March 2018
+    http://www.iap.fr/magphys/ewExternalFiles/latest_magphys_filters.tar-2.gz
+
+
+
+
+
+
+
+
+
+
+
+# 201712
+
+http://www.iap.fr/magphys/magphys.tar.gz
+
+http://www.iap.fr/magphys/OptiLIB_bc03.tar.gz
+
+http://www.iap.fr/magphys/magphys/MAGPHYS_files/updated_magphys_filters.tar.gz
+
+http://www.iap.fr/magphys/magphys/MAGPHYS_files/magphys_highz.tar.gz
+
+
+
+
+
+
+
+
+

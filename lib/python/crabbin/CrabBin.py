@@ -26,7 +26,7 @@ from pprint import pprint
 from copy import copy
 
 
-def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = None, max = None, nbin = None, step = None, log = False, delta_chisq = 2.3, verbose = 1):
+def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = None, max = None, nbin = None, nbinmax = 20000, step = None, log = False, delta_chisq = 2.3, verbose = 1):
     # 
     # compute chisq min
     chisq_array_copy = numpy.array(copy(chisq_array))
@@ -142,6 +142,12 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = None,
     if step is not None:
         param_bin_step = step
         param_bin_numb = int((param_max-param_min)/param_bin_step)+1 #<TODO># int()
+    # 
+    # apply user input nbinmax
+    if nbinmax is not None:
+        if param_bin_numb > nbinmax:
+            param_bin_numb = nbinmax
+            param_bin_step = float(param_max - param_min) / param_bin_numb
     # 
     # optimize yrange
     yrange = numpy.array([chisq_min, chisq_min+delta_chisq]) # [1/(chisq_min+delta_chisq), 1/(chisq_min)]
