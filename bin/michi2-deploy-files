@@ -64,8 +64,8 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "single qPAH" | wc -l) -eq 1 ]]; then
         unzip -o "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
     elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "DL07UPD2010" | wc -l) -eq 1 ]]; then
-        cp /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/data/make_lib_SED/02_Make_Lib_SED/DL07_2014_updates/lib.DL07.2010.03.18.HiExCom.SED .
-        cp /Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/data/make_lib_SED/02_Make_Lib_SED/DL07_2014_updates/lib.DL07.2010.03.18.LoExCom.SED .
+        cp "${deploy_upper_dir}/data/make_lib_SED/02_Make_Lib_SED/DL07_2014_updates/lib.DL07.2010.03.18.HiExCom.SED" .
+        cp "${deploy_upper_dir}/data/make_lib_SED/02_Make_Lib_SED/DL07_2014_updates/lib.DL07.2010.03.18.LoExCom.SED" .
     elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "no dust" | wc -l) -eq 0 ]]; then
         unzip -o "${deploy_upper_dir}/data/lib_SED/lib.DL07.DuoCom.SED.zip"
     fi
