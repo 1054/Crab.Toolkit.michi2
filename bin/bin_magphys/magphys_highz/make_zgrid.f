@@ -19,8 +19,8 @@ c       ========================================================================
 	integer nmax,galmax,nzmax,n_obs !galmax: maximum number of galaxies in one input file
 	parameter(nmax=200,galmax=20000)  !nmax: maxium number of photometric points/filters
 	integer nfilt,filt_id(nmax),fit(nmax),ifilt
-	character*10 gal_name(galmax)
-	character*50 filt_name(nmax)
+	character*29 gal_name(galmax)
+	character*29 filt_name(nmax)
 	real*8 redshift(galmax),lambda_eff(nmax)
 	real*8 flux_obs(galmax,nmax),sigma(galmax,nmax)	
 	parameter(nzmax=100000)

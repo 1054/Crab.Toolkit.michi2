@@ -45,13 +45,13 @@ c     parameter(nmax=50,galmax=5000) !nmax: maxium number of photometric points/
       integer nfilt,filt_id(nmax),fit(nmax),ifilt
       parameter(nmod=1155000,nprop_sfh=27,nprop_ir=16) !nmod=1155000
 c     character*12 filt_name(nmax) ! dzliu modified
-      character*50 filt_name(nmax) ! dzliu modified
+      character*29 filt_name(nmax) ! dzliu modified
 c     character*10 outfile1,outfile2 ! dzliu modified
       character*255 outfile1,outfile2 ! dzliu modified
 c     character*500 filter_header ! dzliu modified
-      character*10000 filter_header ! dzliu modified
+      character*6000 filter_header ! dzliu modified, support up to 200 filters
 c     character*8 gal_name(galmax),aux_name ! dzliu modified
-      character*255 gal_name(galmax),aux_name ! dzliu modified
+      character*29 gal_name(galmax),aux_name ! dzliu modified
       character*6 numz
 c     character optlib*34,irlib*26,cat*1 ! dzliu modified
       character optlib*255,irlib*255,cat*1 ! dzliu modified
@@ -1074,7 +1074,7 @@ c     --------------------------------------------------------------------------
      +        k=nfilt_sfh-nfilt_mix+1,nfilt_sfh),
      +        (a_sav*flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav),
      +        k=nfilt_sfh+1,nfilt)
- 701     format(1p,200(e12.3,' ')) ! dzliu modified, add space between values, and 50(e12.3) --> 200(e12.3)
+ 701     format(1p,200(e29.3,' ')) ! dzliu modified, add space between values, and 50(e12.3) --> 200(e12.3)
 
          write(31,703)
          write(31,805)

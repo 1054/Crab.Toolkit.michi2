@@ -32,9 +32,9 @@ c       character infile*80,outfile*80,user_filt*80
 c	parameter(nmax=50) ! dzliu modified
 	parameter(nmax=200) ! dzliu modified
 c	character*10 filt_name(nmax) ! dzliu modified
-	character*50 filt_name(nmax) ! dzliu modified
+	character*29 filt_name(nmax) ! dzliu modified
 c	character filter_header*250 ! dzliu modified
-	character filter_header*10000 ! dzliu modified
+	character filter_header*6000 ! dzliu modified, support up to 200 filters
         integer i,nc,imod,k
 	integer k_use(nmax),filt_id_use(nmax)
         real z,xaux(nmax),mags(nmax),irlums(3)

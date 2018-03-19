@@ -23,7 +23,7 @@ c      character infile(2)*80,outfile*80,user_filt*80 ! dzliu commented original
 c      parameter(nmax=50) ! dzliu commented original
        parameter(nmax=200) ! dzliu modified 20180319, can support 200 filters
 c      character*10 filt_name(nmax) ! dzliu commented original
-       character*50 filt_name(nmax) ! dzliu modified 20180319
+       character*29 filt_name(nmax) ! dzliu modified 20180319
 c      character filter_header*500 ! dzliu commented original
        character filter_header*10000 ! dzliu modified 20180319, can support 200 filters
        integer niw,nage,index,io,nfilt_use,kfile
