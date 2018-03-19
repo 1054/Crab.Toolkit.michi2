@@ -53,7 +53,8 @@ c     character*500 filter_header ! dzliu modified
 c     character*8 gal_name(galmax),aux_name ! dzliu modified
       character*255 gal_name(galmax),aux_name ! dzliu modified
       character*6 numz
-      character optlib*34,irlib*26,cat*1
+c     character optlib*34,irlib*26,cat*1 ! dzliu modified
+      character optlib*255,irlib*255,cat*1 ! dzliu modified
 c     character filters*80,obs*80 ! dzliu modified 20160720
       character filters*255,obs*255 
 c     redshift libs
