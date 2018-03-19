@@ -751,7 +751,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
             done
             # 
             # write to the MAGPHYS input filter file
-            k_FilterGood=$(awk "BEGIN {if (($k_FilterFlux)>=3.0*($k_FilterFErr) && ($k_FilterFlux)>0.0) print 1 else print 0;}")
+            k_FilterGood=$(awk "BEGIN {if (($k_FilterFlux)>=3.0*($k_FilterFErr) && ($k_FilterFlux)>0.0) print 1; else print 0;}")
             printf "%28s %18g %18d %18d\n" "$m_FilterName" "$m_FilterWave" "$m_FilterCode" "$k_FilterGood" >> "$t_OutputDir/magphys_input_filters.dat"
             # 
             # prepare string that will be written to the MAGPHYS input flux file
