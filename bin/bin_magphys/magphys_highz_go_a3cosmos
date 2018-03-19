@@ -712,7 +712,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                     t_FilterFErr=$(awk "BEGIN {print ($t_FilterFlux)/5.0}") #<TODO># If no flux error given, set flux error to S/N=5
                 fi
                 if [[ ${#t_FilterNameData[@]} -gt $t_i ]]; then
-                    if [[ "${t_FilterNameData[t_i]}" == "*ALMA*" ]]; then
+                    if [[ "${t_FilterNameData[t_i]}" == *"ALMA"* ]]; then
                         t_CheckALMA=1
                     fi
                 else
@@ -735,7 +735,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                     fi
                     # if observing data filter name contains "ALMA", then also make sure librray filter name contains "ALMA".
                     if [[ $t_CheckALMA -eq 1 ]]; then
-                        if [[ "$m_FilterName" != "*ALMA*" ]]; then
+                        if [[ "$m_FilterName" != *"ALMA"* ]]; then
                             t_CheckOK=0
                         fi
                     fi
