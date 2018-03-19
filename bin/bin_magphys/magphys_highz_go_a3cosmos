@@ -711,15 +711,19 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                 else
                     t_FilterFErr=$(awk "BEGIN {print ($t_FilterFlux)/5.0}") #<TODO># If no flux error given, set flux error to S/N=5
                 fi
+                # 
+                # do flux conversion
+                if [[ 1 == 1 ]]; then t_FilterFlux=$(awk "BEGIN {print ($t_FilterFlux)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
+                if [[ 1 == 1 ]]; then t_FilterFErr=$(awk "BEGIN {print ($t_FilterFErr)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
+                # 
+                # check if the observed data is ALMA data
+                t_CheckALMA=0
                 if [[ ${#t_FilterNameData[@]} -gt $t_i ]]; then
+                    echo "Matching observed data ${t_FilterNameData[t_i]} to filter library $m_FilterName (debug)"
                     if [[ "${t_FilterNameData[t_i]}" == *"ALMA"* ]]; then
                         t_CheckALMA=1
                     fi
-                else
-                    t_CheckALMA=0
                 fi
-                if [[ 1 == 1 ]]; then t_FilterFlux=$(awk "BEGIN {print ($t_FilterFlux)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
-                if [[ 1 == 1 ]]; then t_FilterFErr=$(awk "BEGIN {print ($t_FilterFErr)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
                 # 
                 # search in the observed data
                 if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= (0.1*($m_FilterWave)));}") -eq 1 ]]; then
@@ -733,7 +737,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                             t_CheckOK=1
                         fi
                     fi
-                    # if observing data filter name contains "ALMA", then also make sure librray filter name contains "ALMA".
+                    # if observing data filter name contains "ALMA", then also make sure library filter name contains "ALMA".
                     if [[ $t_CheckALMA -eq 1 ]]; then
                         if [[ "$m_FilterName" != *"ALMA"* ]]; then
                             t_CheckOK=0
