@@ -152,39 +152,40 @@ function Run_Magphys() {
         for (( magphys_i=0; magphys_i<${#magphys_zgrid[@]}; magphys_i++ )); do
             #<TODO># re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
-            if [[ -f "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" && -f "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters" ]]; then
-                if [[ $(diff "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters" "$USER_FILTERS" | wc -l) -eq 0 ]]; then
-                    echo " re-using \"starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\""
+            magphys_zstr=$(printf '%0.4f' ${magphys_zgrid[magphys_i]})
+            if [[ -f "starformhist_bc03_z$magphys_zstr.lbr" && -f "starformhist_bc03_z$magphys_zstr.filters" ]]; then
+                if [[ $(diff "starformhist_bc03_z$magphys_zstr.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]; then
+                    echo " re-using \"starformhist_bc03_z$magphys_zstr.lbr\""
                     magphys_reuse=1
                 fi
             fi
-            if [[ $magphys_reuse -eq 0 || ! -f "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
+            if [[ $magphys_reuse -eq 0 || ! -f "starformhist_bc03_z$magphys_zstr.lbr" ]]; then
                 echo " " >> "get_optic_colors_highz.log"
                 echo " Input redshift = ${magphys_zgrid[magphys_i]}" >> "get_optic_colors_highz.log"
                 echo " get_optic_colors_highz ${magphys_zgrid[magphys_i]}"
                 echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_optic_colors_highz >> "get_optic_colors_highz.log"
-                if [[ -f "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
-                    cp "$USER_FILTERS" "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters"
+                if [[ -f "starformhist_bc03_z$magphys_zstr.lbr" ]]; then
+                    cp "$USER_FILTERS" "starformhist_bc03_z$magphys_zstr.filters"
                 else
-                    echo "Error! Failed to run \"get_optic_colors_highz\" and generate \"starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\"!"
+                    echo "Error! Failed to run \"get_optic_colors_highz\" and generate \"starformhist_bc03_z$magphys_zstr.lbr\"!"
                     exit 1
                 fi
             fi
             #<TODO># re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
-            if [[ -f "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" && -f "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters" ]]; then
-                if [[ $(diff "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters" "$USER_FILTERS" | wc -l) -eq 0 ]]; then
-                    echo " re-using \"infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\""
+            if [[ -f "infrared_dce08_z$magphys_zstr.lbr" && -f "infrared_dce08_z$magphys_zstr.filters" ]]; then
+                if [[ $(diff "infrared_dce08_z$magphys_zstr.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]; then
+                    echo " re-using \"infrared_dce08_z$magphys_zstr.lbr\""
                     magphys_reuse=1
                 fi
             fi
-            if [[ $magphys_reuse -eq 0 || ! -f "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
+            if [[ $magphys_reuse -eq 0 || ! -f "infrared_dce08_z$magphys_zstr.lbr" ]]; then
                 echo " get_infrared_colors_highz ${magphys_zgrid[magphys_i]}"
                 echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_infrared_colors_highz >> "get_infrared_colors_highz.log"
-                if [[ -f "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
-                    cp "$USER_FILTERS" "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters"
+                if [[ -f "infrared_dce08_z$magphys_zstr.lbr" ]]; then
+                    cp "$USER_FILTERS" "infrared_dce08_z$magphys_zstr.filters"
                 else
-                    echo "Error! Failed to run \"get_infrared_colors_highz\" and generate \"infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\"!"
+                    echo "Error! Failed to run \"get_infrared_colors_highz\" and generate \"infrared_dce08_z$magphys_zstr.lbr\"!"
                     exit 1
                 fi
             fi
@@ -745,7 +746,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                         fi
                     fi
                     # apply the matched wave, flux, ferr 
-                    if [[ $t_CheckOK -gt 0 ]]; then
+                    if [[ $t_CheckOK -eq 1 ]]; then
                         k_FilterWave="${t_FilterWave}"
                         k_FilterFlux="${t_FilterFlux}"
                         k_FilterFErr="${t_FilterFErr}"
@@ -753,7 +754,10 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                     #printf "%28s %18g %18d %18d\n" "${m_FiltersNames[m_i]}" "$t_FilterWave" "${m_FiltersCodes[m_i]}" 1 >> "$t_OutputDir/magphys_input_filters.dat"
                     #break
                 fi
-                echo ""
+                # 
+                if [[ $t_CheckALMA -eq 1 ]]; then
+                    echo ""
+                fi
             done
             # 
             # write to the MAGPHYS input filter file
