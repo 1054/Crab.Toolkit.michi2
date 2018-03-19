@@ -190,6 +190,11 @@ function Run_Magphys() {
         cp "get_infrared_colors_highz.log" "$magphys_outdir/" 2>/dev/null
         echo ""
         
+        # Prepare output file
+        if [[ -f "$magphys_outdir/fit_chisq_z.out" ]]; then
+            mv "$magphys_outdir/fit_chisq_z.out" "$magphys_outdir/fit_chisq_z.out.backup"
+        fi
+        
         # Run source fitting
         #tcsh -c "source fit_sample"
         magphys_slist=($(cat "$USER_OBS" | sed -e 's/^ *//g' | grep -v "#" | tr -s ' ' | cut -d ' ' -f 1)) # ($(cat "$USER_OBS" | sed -e 's/^ *//g' | grep -v "#" | perl -p -e 's/^\s*(\S*)\s*.*$/\1\n/g'))
@@ -217,17 +222,11 @@ function Run_Magphys() {
                 mv "${magphys_slist[magphys_i]}.jpg" "$magphys_outdir/"
                 # 
                 # make chi2 table
-                magphys_sname=$(echo "${magphys_slist[magphys_i]}" | perl -p -e 's/(.*)(_z)([0-9.]+)/\1/g')
-                printf "# %8s %9s %9s %11s\n" "i_sfh" "i_ir" "chi2" "redshift" > "$magphys_outdir/fit_chisq_z.out"
-                grep -h -A1 "BEST FIT MODEL" "$magphys_outdir/${magphys_sname}_z"*".fit" | grep -v "^#" | grep -v "^--$" >> "$magphys_outdir/fit_chisq_z.out"
-                # 
-                # sort chi2 table
-                cat "$magphys_outdir/fit_chisq_z_${magphys_slist[magphys_i]}.out" | sort -n -k 3 > "$magphys_outdir/fit_chisq_z_sorted_${magphys_slist[magphys_i]}.out"
-                # 
-                # get miminum chisq z
-                fit_best_z=$(cat "$magphys_outdir/fit_chisq_z_sorted_${magphys_slist[magphys_i]}.out" | grep -v "^#" | head -n 1 | sed -e 's/^ *//g' | tr -s ' ' | cut -d ' ' -f 4)
-                cp "$magphys_outdir/${magphys_sname}_z${fit_best_z}.sed" "fit_best_SED_${magphys_slist[magphys_i]}.sed"
-                cp "$magphys_outdir/${magphys_sname}_z${fit_best_z}.pdf" "fit_best_SED_${magphys_slist[magphys_i]}.pdf"
+                if [[ ! -f "$magphys_outdir/fit_chisq_z.out" ]]; then
+                    printf "# %8s %9s %9s %11s %25s\n" "i_sfh" "i_ir" "chi2" "redshift" "obj_name" > "$magphys_outdir/fit_chisq_z.out"
+                fi
+                obj_name_str=$(printf "%25s" "${magphys_slist[magphys_i]}")
+                grep -h -A1 "BEST FIT MODEL" "$magphys_outdir/${magphys_slist[magphys_i]}.fit" | grep -v "^#" | grep -v "^--$" | sed -e "s/$/ $obj_name_str/g" >> "$magphys_outdir/fit_chisq_z.out"
             else
                 echo ""
                 echo "Warning! Failed to run magphys! \"${magphys_slist[magphys_i]}.sed\" was not found under \"$magphys\"! Skip and continue!"
@@ -235,6 +234,16 @@ function Run_Magphys() {
                 magphys_status=-1
             fi
         done
+        # 
+        # sort chi2 table
+        cat "$magphys_outdir/fit_chisq_z.out" | sort -n -k 3 > "$magphys_outdir/fit_chisq_z_sorted.out"
+        # 
+        # get miminum chisq z
+        best_fit_obj_name=$(cat "$magphys_outdir/fit_chisq_z_sorted.out" | grep -v "^#" | head -n 1 | sed -e 's/^ *//g' | tr -s ' ' | cut -d ' ' -f 5)
+        cp "$magphys_outdir/${best_fit_obj_name}.sed" "$magphys_outdir/best-fit_SED.sed"
+        cp "$magphys_outdir/${best_fit_obj_name}.pdf" "$magphys_outdir/best-fit_SED.pdf"
+        # 
+        # copy log file
         cp "fit_sed_highz.log" "$magphys_outdir/" 2>/dev/null
         echo ""
         
@@ -624,7 +633,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         # Convert wave flux ferr data files into "magphys_input_filters.dat" and "magphys_input_fluxes.dat"
         # 
         t_OutputDir="$m_OutputDir/fit_${t_SourName}_with_"$(basename ${m_DataFiles[i]} | sed -e 's/\.[^.]*$//g')
-        mkdir "$t_OutputDir"
+        mkdir -p "$t_OutputDir"
         
         if [[ ${m_WaveColNo[i]} -gt 0 ]]; then t_WaveColNo=${m_WaveColNo[i]}; else t_WaveColNo=1; fi
         if [[ ${m_FluxColNo[i]} -gt 0 ]]; then t_FluxColNo=${m_FluxColNo[i]}; else t_FluxColNo=2; fi
