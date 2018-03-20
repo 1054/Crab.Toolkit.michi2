@@ -166,7 +166,7 @@ function Run_Magphys() {
                 echo " Input redshift = ${magphys_zgrid[magphys_i]}" >> "get_optic_colors_highz.log"
                 echo " get_optic_colors_highz ${magphys_zgrid[magphys_i]}"
                 echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_optic_colors_highz >> "get_optic_colors_highz.log"
-                if [[ -f "starformhist_bc03_z$magphys_zstr.lbr" ]]; then
+                if [[ -f "starformhist_bc03_z$magphys_zstr.lbr" ]] && [[ $? -eq 0 ]]; then
                     cp "$USER_FILTERS" "starformhist_bc03_z$magphys_zstr.filters"
                 else
                     echo "Error! Failed to run \"get_optic_colors_highz\" and generate \"starformhist_bc03_z$magphys_zstr.lbr\"!"
@@ -186,7 +186,7 @@ function Run_Magphys() {
             if [[ $magphys_reuse -eq 0 || ! -f "infrared_dce08_z$magphys_zstr.lbr" ]]; then
                 echo " get_infrared_colors_highz ${magphys_zgrid[magphys_i]}"
                 echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_infrared_colors_highz >> "get_infrared_colors_highz.log"
-                if [[ -f "infrared_dce08_z$magphys_zstr.lbr" ]]; then
+                if [[ -f "infrared_dce08_z$magphys_zstr.lbr" ]] && [[ $? -eq 0 ]]; then
                     cp "$USER_FILTERS" "infrared_dce08_z$magphys_zstr.filters"
                 else
                     echo "Error! Failed to run \"get_infrared_colors_highz\" and generate \"infrared_dce08_z$magphys_zstr.lbr\"!"

@@ -1,34 +1,34 @@
-c       ===========================================================================
+c	===========================================================================
  	PROGRAM GET_INFRARED_COLORS
-c       ---------------------------------------------------------------------------
-c               Authors :   E. da Cunha & S. Charlot
-c       Latest revision :   Sep. 15th, 2010
-c       ---------------------------------------------------------------------------
-c       Computes AB magnitudes of a library of near-infrared-to-submm model
-c       spectra for a given set of photometric bands, at a given redshift.
+c	---------------------------------------------------------------------------
+c	Authors :   E. da Cunha & S. Charlot
+c	Latest revision :   Sep. 15th, 2010
+c	---------------------------------------------------------------------------
+c	Computes AB magnitudes of a library of near-infrared-to-submm model
+c	spectra for a given set of photometric bands, at a given redshift.
 c
-c       INPUTS: - model library [default: InfraredLIB_newmir.bin]
-c               - cosmological parameters [default: 70,30,30]
-c               - redshift
-c               - filter file - define USER_FILTERS in
-
-c       OUTPUT: .lbr file containing: physical parameters + magnitudes
-c       
-c       REVISION HISTORY:
-c       - Aug. 2009 - L. Dunne:
-c       program has been modified to fix bugs with the MIPS filters. For SHADES/SWIRE
-c       MIPS fluxes are calibrated as for IRAC and so the BB part has been commented out.
-c       Some integrations have been taken out of the main loop to speed things up.
+c	INPUTS: - model library [default: InfraredLIB_newmir.bin]
+c	        - cosmological parameters [default: 70,30,30]
+c	        - redshift
+c	        - filter file - define USER_FILTERS in
 c
-c       Version: Feb 16, 2011
-c       changed to include new IR SEDs extending out to the radio
-c       number of points in SED: 6450 -> 6750
-c       ===========================================================================
+c	OUTPUT: .lbr file containing: physical parameters + magnitudes
+c	
+c	REVISION HISTORY:
+c	- Aug. 2009 - L. Dunne:
+c	program has been modified to fix bugs with the MIPS filters. For SHADES/SWIRE
+c	MIPS fluxes are calibrated as for IRAC and so the BB part has been commented out.
+c	Some integrations have been taken out of the main loop to speed things up.
+c
+c	Version: Feb 16, 2011
+c	changed to include new IR SEDs extending out to the radio
+c	number of points in SED: 6450 -> 6750
+c	===========================================================================
 
 	implicit none
-c       character infile*80,outfile*80,user_filt*80
-        character infile*255,outfile*255,user_filt*255 ! dzliu modified 20160720
-        integer niw,io,nfilt_use,nmax,iz,index
+c	character infile*80,outfile*80,user_filt*80
+	character infile*255,outfile*255,user_filt*255 ! dzliu modified 20160720
+	integer niw,io,nfilt_use,nmax,iz,index
 c	parameter(nmax=50) ! dzliu modified
 	parameter(nmax=200) ! dzliu modified
 c	character*10 filt_name(nmax) ! dzliu modified
@@ -44,21 +44,24 @@ c	character filter_header*250 ! dzliu modified
 	real xi_pah,xi_mir,xi_warm,xi_cold,tdust
 	character*6 numz
 	integer nfilt,filt_id(200),fit(200),ifilt ! dzliu modified
-        real h,omega,omega_lambda,clambda,q,cosmol_c,t,tu,dm,dismod
-        data h/70./,omega/0.30/,omega_lambda/0.70/
+	real h,omega,omega_lambda,clambda,q,cosmol_c,t,tu,dm,dismod
+	data h/70./,omega/0.30/,omega_lambda/0.70/
 
-c       INPUT file: spectral library (dust emission)
+c	INPUT file: spectral library (dust emission)
 	call getenv('IRLIB',infile)
+	write (*,*) 'IRLIB = '//infile ! dzliu debug
 
-c       INPUT redshift
-        write (6,'(x,a,$)') 'Enter redshift = '
-        read (5,*,end=1) z
+c	INPUT redshift
+	write (6,'(x,a,$)') 'Enter redshift = '
+	read (5,*,end=1) z
+	write (*,'(a,f7.4') 'z = ',z ! dzliu debug
 
-c       OUTPUT file: catalogue of parameters & magnitudes @ redshift z
+c	OUTPUT file: catalogue of parameters & magnitudes @ redshift z
 	write(numz,'(f6.4)') z
 	outfile='infrared_dce08_z'//numz//'.lbr'
+	write (*,*) 'outfile = '//outfile ! dzliu debug
 	close (30)
-        open (30,file=outfile,status='unknown')
+	open (30,file=outfile,status='unknown')
 
 c       Cosmological parameters
         write (6,'(/x,a,f4.0,a,f5.3,a,$)') 'Enter Cosmology [default: 70.,0.3,0.7]'
@@ -86,6 +89,7 @@ c       Distance modulus
 
 c       Read filter file
 	call getenv('USER_FILTERS',user_filt)
+	write (*,*) 'USER_FILTERS = '//user_filt ! dzliu debug
 	close(22)
 	open(22,file=user_filt,status='old')
 	do i=1,1
