@@ -628,8 +628,8 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
     m_FiltersFluxs=()
     m_FiltersFErrs=()
     for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
-        m_FiltersFluxs+=("0") # initialize
-        m_FiltersFErrs+=("0") # initialize
+        m_FiltersFluxs+=("0") # initialize # if it's a non-positive value, MAGPHYS will not fit it. see "fit_sed_highz.f" "if (flux_obs(i_gal,k).gt.0) then"
+        m_FiltersFErrs+=("0") # initialize # if it's a non-positive value, MAGPHYS will not fit it. see "fit_sed_highz.f" "if (flux_obs(i_gal,k).gt.0) then"
     done
     
     # 
