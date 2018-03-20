@@ -194,30 +194,30 @@ c       Store parameters + magnitudes of each model in output file
      +			   age_wm,age_wr,aux,aux,aux,aux,
      +                     lha,lhb,aux,aux,ldtot,fmu,fbc,tbc,a_v,lh_mstar,
      +                     lk_mstar
-		 read (29) nage,(age(i),sfr(i),i=1,nage),(sfrav(i),i=1,5)
-		 read (29) (fprop(i),fprop0(i),i=1,niw)
-                 read (29) (tmin(i),tmax(i),sfh(i),i=1,10)
-		 if (tform.le.tu) then !only keep models if tform<age of the Universe @ z
-		    sampled=.true.
-		    call model_ab_color(z,wl,fprop,fprop0,niw,nfilt_use,filt_id_use,filt_lambda_use,filt_name_use,mags) ! dzliu added argument ",filt_lambda_use,filt_name_use"
-c                   write output file:
-		    write (30,200) index,tform,gamma,zmet,tauv0,mu,mstr1,mstr0,
+			read (29) nage,(age(i),sfr(i),i=1,nage),(sfrav(i),i=1,5)
+			read (29) (fprop(i),fprop0(i),i=1,niw)
+			read (29) (tmin(i),tmax(i),sfh(i),i=1,10)
+			if (tform.le.tu) then !only keep models if tform<age of the Universe @ z
+				sampled=.true.
+				call model_ab_color(z,wl,fprop,fprop0,niw,nfilt_use,filt_id_use,filt_lambda_use,filt_name_use,mags) ! dzliu added argument ",filt_lambda_use,filt_name_use"
+c				write output file:
+				write (30,200) index,tform,gamma,zmet,tauv0,mu,mstr1,mstr0,
      +                    (sfrav(i),i=1,5),
      +                    tlastburst,(fburst(i),i=1,5),
      +                    age_wm,age_wr,ldtot,fmu,lha,lhb,a_v,lh_mstar,lk_mstar,
      +                    (mags(i),i=1,nfilt_use)
- 200	  format(i10,1pe10.2,0p6f10.4,1p14e10.2,0pf10.4,1p2e10.2,0pf10.4,1p2e10.2,3X,0p,200(f10.4,20X)) ! dzliu 0p50f10.4--> 3X,0p,200(f10.4,20X)
-		 endif
-	      enddo
-	   enddo
+200				format(i10,1pe10.2,0p6f10.4,1p14e10.2,0pf10.4,1p2e10.2,0pf10.4,1p2e10.2,3X,0p,200(f10.4,20X)) ! dzliu 0p50f10.4--> 3X,0p,200(f10.4,20X)
+			endif
+		enddo
+	enddo
 
 
-1       if (kfile.eq.1) then
-	   goto 2
-	   else if (kfile.eq.2) then
-	      stop
-	   endif
-
+1	if (kfile.eq.1) then
+		goto 2
+	else if (kfile.eq.2) then
+		stop
+	endif
+	
 	end
 
 
