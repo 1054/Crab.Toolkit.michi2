@@ -282,13 +282,13 @@ c			Compute flux below filter.
 			fx(i)=(wfilt(i)*(1.+z))**2 * fx(i) / 2.997925e+18 ! convert to Lsun Hz-1(?), see code in SUBROUTINE F_MEAN
 c			F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
 			fx(i)=fx(i)/(1.+z)
-			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' Lsun Hz-1 (direct interpolation)' ! dzliu debug
+c			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' Lsun Hz-1 (direct interpolation)' ! dzliu debug
 			if (ifilt(i).gt.0) then
 				fx(i)=f_mean(ifilt(i),x,ys_new,inw,z)
 c				dzliu note: inw is the number of wavelengths, ys_new is the model SED flux (attenuated)
 c				dzliu note: if filter number is zero, we should output a direct average value over the bandpass!
 c				dzliu added: if (ifilt(i).eq.0) then ... endif
-				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' Lsun Hz-1 (applied filter curve)' ! dzliu debug
+c				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' Lsun Hz-1 (applied filter curve)' ! dzliu debug
 			endif
 		enddo
 
