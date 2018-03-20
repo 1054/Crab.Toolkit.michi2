@@ -696,6 +696,7 @@ c	Interpolates linearly the function y(x) at x=x0
 c       ---------------------------------------------------------------------------
 	REAL X(N),Y(N),X0
 	data ierr/0/
+	write(*,*) 'debug before before IPLACE'
 	IF (I0) 21,20,20
 	write(*,*) 'debug before IPLACE'
  20	I=IPLACE(X0,X,MAX0(1,I0),N)
