@@ -114,7 +114,8 @@ c       count nr of filters to use: nfilt_use
 	   endif
 	enddo
 
-	write(filter_header,*) (filt_name(k_use(k)),k=1,nfilt_use)
+c	write(filter_header,*) (filt_name(k_use(k)),k=1,nfilt_use) ! dzliu modified
+	write(filter_header,*) (filt_name(k_use(k))//' ',k=1,nfilt_use) ! dzliu modified, add space between headers
 
 	do k=1,nfilt_use
 	   filt_id_use(k)=filt_id(k_use(k))
@@ -123,7 +124,7 @@ c       count nr of filters to use: nfilt_use
 c       Output File Header
 c       Store cosmological parameters
 c       List of model parameters and predicted fluxes
-	   write (30,'(8(a10),9(a12),a4,a250)')
+	   write (30,'(8(a10),9(a12),a4,a6000)')
      +  '#    index',   ! 0: index in the InfraredLIB library
      +  '       fmu',   ! 1: fraction of Ld(tot) contributed by the diffuse ISM
      +  '   xiC_ISM',   ! 2: contribution of cold dust to total ISM luminosity
@@ -174,7 +175,7 @@ c     Tdust_average = ( xi_W^tot * T_W^BC + xi_C^tot * T_C^ISM + 0.07 * 45 * fmu
 c                write output file:
                  write (30,200) index,(irprop(i),i=1,9),irlums(2),irlums(3),
      +                          tdust,xi_pah,xi_mir,xi_warm,xi_cold,(mags(i),i=1,nfilt_use)
-200              format(i10,0p7f10.3,1pe12.3,0pf10.3,1p2e12.3,0p5f12.4,0p200f10.4) ! dzliu modified 0p25f10.4 --> 0p200f10.4
+200              format(i10,0p7f10.3,1pe12.3,0pf12.3,1p2e12.3,0p5f12.4,0p200(f10.4,20X)) ! dzliu modified 0pf10.3 --> 0pf12.3 (q_IR), 0p25f10.4 --> 0p200(f10.4,20X)
         enddo
 1       stop
 

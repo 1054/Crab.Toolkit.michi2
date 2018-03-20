@@ -25,7 +25,7 @@ c      parameter(nmax=50) ! dzliu commented original
 c      character*10 filt_name(nmax) ! dzliu commented original
        character*29 filt_name(nmax) ! dzliu modified 20180319
 c      character filter_header*500 ! dzliu commented original
-       character filter_header*10000 ! dzliu modified 20180319, can support 200 filters
+       character filter_header*6000 ! dzliu modified 20180319, can support 200 filters
        integer niw,nage,index,io,nfilt_use,kfile
        integer k_use(nmax),filt_id_use(nmax)
        integer i,nc,imod,nburst,k,aux_read
@@ -120,7 +120,8 @@ c     if (lambda_rest(i).lt.10.) then
 	   endif
 	enddo
 
-	write(filter_header,*) (filt_name(k_use(k)),k=1,nfilt_use)
+c	write(filter_header,*) (filt_name(k_use(k)),k=1,nfilt_use) ! dzliu modified
+	write(filter_header,*) (filt_name(k_use(k))//' ',k=1,nfilt_use) ! dzliu modified, add space between headers
 
 	do k=1,nfilt_use
 	   filt_id_use(k)=filt_id(k_use(k))
@@ -128,7 +129,7 @@ c     if (lambda_rest(i).lt.10.) then
 
 c       Output File Header
 c       Store cosmological parameters	 
-	   write (30,'(28(a10),a4,a10000)')
+	   write (30,'(28(a10),a4,a6000)')
      +  '#    index',   ! 0: index in the OptiLIB/OptiLIBis library
      +  '  tform/yr',   ! 1: formation time of the galaxy (years)
      +  '     gamma',   ! 2: timescale of ecponentially-declining SF (Gyr^-1)
@@ -202,7 +203,7 @@ c                   write output file:
      +                    tlastburst,(fburst(i),i=1,5),
      +                    age_wm,age_wr,ldtot,fmu,lha,lhb,a_v,lh_mstar,lk_mstar,
      +                    (mags(i),i=1,nfilt_use)
- 200	  format(i10,1pe10.2,0p6f10.4,1p14e10.2,0pf10.4,1p2e10.2,0pf10.4,1p2e10.2,0p200f10.4) ! dzliu 0p50f10.4--> 0p200f10.4
+ 200	  format(i10,1pe10.2,0p6f10.4,1p14e10.2,0pf10.4,1p2e10.2,0pf10.4,1p2e10.2,0p200(f10.4,20X)) ! dzliu 0p50f10.4--> 0p200(f10.4,20X)
 		 endif
 	      enddo
 	   enddo

@@ -154,7 +154,9 @@ function Run_Magphys() {
             magphys_reuse=0
             magphys_zstr=$(printf '%0.4f' ${magphys_zgrid[magphys_i]})
             if [[ -f "starformhist_bc03_z$magphys_zstr.lbr" && -f "starformhist_bc03_z$magphys_zstr.filters" ]]; then
-                if [[ $(diff "starformhist_bc03_z$magphys_zstr.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]; then
+                #if [[ $(diff "starformhist_bc03_z$magphys_zstr.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]
+                if [[ $(diff <(awk '{print $1,$2,$3}' "starformhist_bc03_z$magphys_zstr.filters") <(awk '{print $1,$2,$3}' "$USER_FILTERS") | wc -l) -eq 0 ]]; then
+                    # -- diff on columns of two files in shell -- https://stackoverflow.com/questions/38372561/diff-on-columns-of-two-files-in-shell
                     echo " re-using \"starformhist_bc03_z$magphys_zstr.lbr\""
                     magphys_reuse=1
                 fi
@@ -174,7 +176,9 @@ function Run_Magphys() {
             #<TODO># re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
             if [[ -f "infrared_dce08_z$magphys_zstr.lbr" && -f "infrared_dce08_z$magphys_zstr.filters" ]]; then
-                if [[ $(diff "infrared_dce08_z$magphys_zstr.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]; then
+                #if [[ $(diff "infrared_dce08_z$magphys_zstr.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]
+                if [[ $(diff <(awk '{print $1,$2,$3}' "infrared_dce08_z$magphys_zstr.filters") <(awk '{print $1,$2,$3}' "$USER_FILTERS") | wc -l) -eq 0 ]]; then
+                    # -- diff on columns of two files in shell -- https://stackoverflow.com/questions/38372561/diff-on-columns-of-two-files-in-shell
                     echo " re-using \"infrared_dce08_z$magphys_zstr.lbr\""
                     magphys_reuse=1
                 fi
