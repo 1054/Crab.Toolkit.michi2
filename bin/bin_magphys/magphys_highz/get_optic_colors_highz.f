@@ -268,7 +268,6 @@ c       Zero flux blueward of Lyman limit (absorption by ISM)
 
 c	Compute flux through each of nb filters
 		do i=1,nf
-			write(*,'(a,i0,a,i0,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' ' ! dzliu debug
 			fx(i)=f_mean(ifilt(i),x,ys_new,inw,z)
 c			dzliu note: inw is the number of wavelengths, ys_new is the model SED flux (attenuated)
 c			dzliu note: if filter number is zero, we should output a direct average value over the bandpass!
@@ -280,6 +279,7 @@ c				Compute flux below filter.
 c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
 				fx(i)=fx(i)/(1.+z)
 			endif
+			write(*,'(a,i0,a,i0,a,a,1pe0.6,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' filter name ',fid(i),' flux = ',fx(i),' mJy' ! dzliu debug
 		enddo
 
 c       Compute absolute (k-shifted) AB magnitude
