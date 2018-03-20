@@ -35,9 +35,10 @@ c	character*10 filt_name(nmax) ! dzliu modified
 	character*29 filt_name(nmax),filt_name_use(nmax) ! dzliu modified
 c	character filter_header*250 ! dzliu modified
 	character filter_header*6000 ! dzliu modified, support up to 200 filters
-        integer i,nc,imod,k
-	integer k_use(nmax),filt_id_use(nmax),filt_lambda_use(nmax)
-        real z,xaux(nmax),mags(nmax),irlums(3)
+	integer i,nc,imod,k
+	integer k_use(nmax),filt_id_use(nmax)
+	real filt_lambda_use(nmax) ! dzliu added
+	real z,xaux(nmax),mags(nmax),irlums(3)
 	real wl(6750),irsed(6750),irprop(9),redshift(161)
 	real lambda_eff(nmax),lambda_rest(nmax)
 	real xi_pah,xi_mir,xi_warm,xi_cold,tdust

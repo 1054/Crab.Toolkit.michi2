@@ -27,7 +27,8 @@ c      character*10 filt_name(nmax) ! dzliu commented original
 c      character filter_header*500 ! dzliu commented original
        character filter_header*6000 ! dzliu modified 20180319, can support 200 filters
        integer niw,nage,index,io,nfilt_use,kfile
-       integer k_use(nmax),filt_id_use(nmax),filt_lambda_use(nmax)
+       integer k_use(nmax),filt_id_use(nmax)
+       real filt_lambda_use(nmax) ! dzliu added
        integer i,nc,imod,nburst,k,aux_read
        real z,tform,gamma,zmet,tauv0,mu,mstr1,mstr0,mstry
        real tlastburst,age_wm,age_wr,xaux(24)
