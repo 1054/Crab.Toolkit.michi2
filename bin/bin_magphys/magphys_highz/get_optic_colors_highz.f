@@ -245,7 +245,7 @@ c       ------------------------------------------------------------------------
 	real z,f_mean,dl,tauIGM,factor
         real*8 mag(nf)
         real xaux,ys_new(inw),abs_igm
-	read LINEAR ! dzliu added, will call this subroutine
+	real LINEAR ! dzliu added, will call this subroutine
 	data icall/0/
 
 
