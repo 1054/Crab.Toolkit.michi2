@@ -191,23 +191,23 @@ c			write output file:
 c       ===========================================================================
 
 
-c       ===========================================================================
+c	===========================================================================
 	SUBROUTINE MODEL_AB_COLOR(z,x,yd,inw,nf,ifilt,wfilt,sfilt,mag)
-c       ===========================================================================
+c	===========================================================================
 c	Computes AB magnitude of each model at given z in each band
-c       ---------------------------------------------------------------------------
-c       z    : redshift
-c       x    : wavelength vector (in A)
-c       yd   : total dust SED L_lambda (in Lsun/A)
-c       inw  : number of wavelength points
-c       nf   : number of photometric bands (filters)
-c       ifilt: array containing the indexes of the filters in response file
-c       mags : magnitudes
-c       dzliu added "wfilt"
-c       ---------------------------------------------------------------------------
-        implicit none
-        integer nf
-        integer i,inw,icall
+c	---------------------------------------------------------------------------
+c	z    : redshift
+c	x    : wavelength vector (in A)
+c	yd   : total dust SED L_lambda (in Lsun/A)
+c	inw  : number of wavelength points
+c	nf   : number of photometric bands (filters)
+c	ifilt: array containing the indexes of the filters in response file
+c	mags : magnitudes
+c	dzliu added "wfilt"
+c	---------------------------------------------------------------------------
+	implicit none
+	integer nf
+	integer i,inw,icall
 	integer ifilt(200) ! dzliu modified, now support up to 200 filters
 	real wfilt(200) ! dzliu added argument ",wfilt(200)"
 	character*29 sfilt(200) ! dzliu added argument ",sfilt(200)"
@@ -231,6 +231,7 @@ c			dzliu note: if filter number is zero, we should output a direct average valu
 c			dzliu added: if (ifilt(i).eq.0) then ... endif
 			if (ifilt(i).eq.0) then
 				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA' ! dzliu debug
+				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA (before LINEAR)' ! dzliu debug
 				fx(i)=LINEAR(wfilt(i),x,yd,inw,0) ! do interpolation in rest-frame, AA wavelength unit
 				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA (after LINEAR)' ! dzliu debug
 c				Compute flux below filter.

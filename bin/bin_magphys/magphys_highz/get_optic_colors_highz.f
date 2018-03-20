@@ -239,17 +239,17 @@ c       tauIGM: effective optical depth of the IGM
 c       VERSION June 7th, 2012: Add IGM varying absorption
 c       dzliu added "wfilt"
 c       ---------------------------------------------------------------------------
-        implicit none
-        integer nf,n,id,nter
-        parameter(n=100,nter=2)
-        integer i,inw,icall,iread,jread,ireset
+	implicit none
+	integer nf,n,id,nter
+	parameter(n=100,nter=2)
+	integer i,inw,icall,iread,jread,ireset
 	integer ifilt(200) ! dzliu modified, now support up to 200 filters
 	real wfilt(200) ! dzliu added argument ",wfilt(200)"
 	character*29 sfilt(200) ! dzliu added argument ",sfilt(200)"
 	real x(inw),ys(inw),y0s(inw),fx(nf)
 	real z,f_mean,dl,tauIGM,factor
-        real*8 mag(nf)
-        real xaux,ys_new(inw),abs_igm
+	real*8 mag(nf)
+	real xaux,ys_new(inw),abs_igm
 	real LINEAR ! dzliu added, will call this subroutine
 	integer largo ! dzliu added, will call this subroutine
 	data icall/0/
