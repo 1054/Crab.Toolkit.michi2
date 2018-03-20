@@ -47,7 +47,6 @@ c       !CB93,CB07 -- 6918; CB08 -- 7324
        logical sampled
        data h/70./,omega/0.30/,omega_lambda/0.70/
        data kfile/1/,aux_read/0/
-       read LINEAR ! dzliu added, will call this subroutine
 
 
 c       INPUT files: spectral libraries (stellar populations + dust attenuation)
@@ -246,6 +245,7 @@ c       ------------------------------------------------------------------------
 	real z,f_mean,dl,tauIGM,factor
         real*8 mag(nf)
         real xaux,ys_new(inw),abs_igm
+	read LINEAR ! dzliu added, will call this subroutine
 	data icall/0/
 
 

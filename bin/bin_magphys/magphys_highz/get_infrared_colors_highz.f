@@ -204,6 +204,7 @@ c       ------------------------------------------------------------------------
 	integer ifilt(nf),wfilt(nf) ! dzliu modified, now support up to 200 filters ! dzliu added argument ",wfilt(nf)"
 	real x(inw),yd(inw),fx(nf)
 	real z,f_mean,dl,mag(nf)
+	read LINEAR ! dzliu added, will call this subroutine
 	data icall/0/
 
 	if (icall.eq.0) then
