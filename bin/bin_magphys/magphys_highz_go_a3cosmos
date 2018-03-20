@@ -628,8 +628,8 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
     m_FiltersFluxs=()
     m_FiltersFErrs=()
     for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
-        m_FiltersFluxs+=("-99") # initialize
-        m_FiltersFErrs+=("-99") # initialize
+        m_FiltersFluxs+=("0") # initialize
+        m_FiltersFErrs+=("0") # initialize
     done
     
     # 
