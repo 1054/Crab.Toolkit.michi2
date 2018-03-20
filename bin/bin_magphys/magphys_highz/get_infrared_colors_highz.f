@@ -215,6 +215,7 @@ c	---------------------------------------------------------------------------
 	real z,f_mean,dl,mag(nf)
 	real LINEAR ! dzliu added, will call this subroutine
 	integer largo ! dzliu added, will call this subroutine
+	integer l ! dzliu added
 	data icall/0/
 
 	if (icall.eq.0) then

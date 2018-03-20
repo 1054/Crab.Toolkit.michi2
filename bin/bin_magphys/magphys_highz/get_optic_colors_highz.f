@@ -252,6 +252,7 @@ c       ------------------------------------------------------------------------
 	real xaux,ys_new(inw),abs_igm
 	real LINEAR ! dzliu added, will call this subroutine
 	integer largo ! dzliu added, will call this subroutine
+	integer l ! dzliu added
 	data icall/0/
 
 
