@@ -286,17 +286,18 @@ c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
 			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' Lsun Hz-1' ! dzliu debug
 		enddo
 
-c       Compute absolute (k-shifted) AB magnitude
-c       10 pc in units of Mpc
-        dl=1.e-5
-	do i=1,nf
-	   mag(i)=-2.5*alog10(fx(i))-48.6
-	   mag(i)=mag(i)+(5.*alog10(1.7684e+08*dl)) ![this factor is SQRT(4*pi*(3.0856E24)^2/Lsun)]
-	   !deal with INFs because SED doesnt have optical
-	   if (mag(i).gt.10000) then
-	      mag(i)=-99.
-	   endif
-	enddo
+c		Compute absolute (k-shifted) AB magnitude
+c		10 pc in units of Mpc
+		dl=1.e-5
+		do i=1,nf
+			mag(i)=-2.5*alog10(fx(i))-48.6
+			mag(i)=mag(i)+(5.*alog10(1.7684e+08*dl)) ![this factor is SQRT(4*pi*(3.0856E24)^2/Lsun)]
+			!deal with INFs because SED doesnt have optical
+			if (mag(i).gt.10000) then
+				mag(i)=-99.
+			endif
+			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, mag = ',mag(i) ! dzliu debug
+		enddo
 
         return
 	end
