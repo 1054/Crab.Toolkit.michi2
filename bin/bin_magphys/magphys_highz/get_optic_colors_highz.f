@@ -286,7 +286,7 @@ c				Compute flux below filter.
 c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
 				fx(i)=fx(i)/(1.+z)
 			endif
-			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' Lsun Hz-1' ! dzliu debug
+c			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' Lsun Hz-1' ! dzliu debug
 		enddo
 
 c		Compute absolute (k-shifted) AB magnitude
@@ -299,7 +299,7 @@ c		10 pc in units of Mpc
 			if (mag(i).gt.10000) then
 				mag(i)=-99.
 			endif
-			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, mag = ',mag(i) ! dzliu debug
+c			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, mag = ',mag(i) ! dzliu debug
 		enddo
 
         return
