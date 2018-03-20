@@ -232,7 +232,8 @@ c			dzliu added: if (ifilt(i).eq.0) then ... endif
 			if (ifilt(i).eq.0) then
 				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA' ! dzliu debug
 				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA (before LINEAR)' ! dzliu debug
-				fx(i)=LINEAR(wfilt(i),x,yd,inw,0) ! do interpolation in rest-frame, AA wavelength unit
+				l=0
+				fx(i)=LINEAR(wfilt(i),x,yd,inw,l) ! do interpolation in rest-frame, AA wavelength unit
 				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA (after LINEAR)' ! dzliu debug
 c				Compute flux below filter.
                 fx(i)=(wfilt(i))**2 * fx(i)/2.997925e+18 ! convert to Lsun Hz-1(?), see code in SUBROUTINE F_MEAN
@@ -696,9 +697,7 @@ c	Interpolates linearly the function y(x) at x=x0
 c       ---------------------------------------------------------------------------
 	REAL X(N),Y(N),X0
 	data ierr/0/
-	write(*,*) 'debug before before IPLACE'
 	IF (I0) 21,20,20
-	write(*,*) 'debug before IPLACE'
  20	I=IPLACE(X0,X,MAX0(1,I0),N)
 	GOTO 22
  21	I=-I0
