@@ -625,6 +625,12 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
     m_FiltersWaves=($(cat "$(dirname ${BASH_SOURCE[0]})/m_Filters.txt" | tr -s ' ' | cut -d ' ' -f 1))
     m_FiltersCodes=($(cat "$(dirname ${BASH_SOURCE[0]})/m_Filters.txt" | tr -s ' ' | cut -d ' ' -f 2))
     m_FiltersNames=($(cat "$(dirname ${BASH_SOURCE[0]})/m_Filters.txt" | tr -s ' ' | cut -d ' ' -f 3))
+    m_FiltersFluxs=()
+    m_FiltersFErrs=()
+    for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
+        m_FiltersFluxs+=("-99") # initialize
+        m_FiltersFErrs+=("-99") # initialize
+    done
     
     # 
     # Loop each source
@@ -679,53 +685,53 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         
         t_ObsDataString=""
         
-        # instead of matching Filters list to obs list, we match obs list to Filter list
-        for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
+        # loop each observed data point and match to a filter
+        for (( t_i = 0; t_i<${#t_WaveData[@]}; t_i++ )); do
             # 
-            # store current FilterWave
-            m_FilterName="${m_FiltersNames[m_i]}"
-            m_FilterWave="${m_FiltersWaves[m_i]}"
-            m_FilterCode="${m_FiltersCodes[m_i]}"
+            # get observed data
+            t_FilterWave="${t_WaveData[t_i]}"
+            if [[ ${m_WaveInLog[i]} -gt 0 ]]; then 
+                t_FilterWave=$(awk "BEGIN {print (10)^($t_FilterWave)}") # convert log to linear if needed
+            fi
+            t_FilterFlux="${t_FluxData[t_i]}"
+            if [[ ${m_FluxInLog[i]} -gt 0 ]]; then 
+                t_FilterFlux=$(awk "BEGIN {print (10)^($t_FilterFlux)}") # convert log to linear if needed
+            fi
+            if [[ ${#t_FErrData[@]} -gt $t_i ]]; then 
+                t_FilterFErr="${t_FErrData[t_i]}"
+                if [[ ${m_FluxInLog[i]} -gt 0 ]]; then 
+                    t_FilterFErr=$(awk "BEGIN {print ($t_FilterFErr)*($t_FilterFlux)/1.08;}") # convert log to linear if needed
+                fi
+            else
+                t_FilterFErr=$(awk "BEGIN {print ($t_FilterFlux)/5.0}") #<TODO># If no flux error given, set flux error to S/N=5
+            fi
             # 
-            # prepare to search in the observed data
+            # do flux conversion
+            if [[ 1 == 1 ]]; then t_FilterFlux=$(awk "BEGIN {print ($t_FilterFlux)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
+            if [[ 1 == 1 ]]; then t_FilterFErr=$(awk "BEGIN {print ($t_FilterFErr)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
+            # 
+            # check if the observed data is ALMA data
+            t_CheckALMA=0
+            if [[ ${#t_FilterNameData[@]} -gt $t_i ]]; then
+                if [[ "${t_FilterNameData[t_i]}" == *"ALMA"* ]]; then
+                    t_CheckALMA=1
+                fi
+            fi
+            # 
+            # prepare to search in the filter list
+            k_FilterIndex="-99"
             k_FilterWave="-99"
             k_FilterFlux="-99" # if it's a negative value, then MAGPHYS will not fit it.
             k_FilterFErr="-99" # if it's a negative value, then MAGPHYS will not fit it.
             # 
-            # check if obs data is valid for this Filter
-            for (( t_i = 0; t_i<${#t_WaveData[@]}; t_i++ )); do
+            # search in the filter list
+            for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
                 # 
-                # get observed data
-                t_FilterWave="${t_WaveData[t_i]}"
-                if [[ ${m_WaveInLog[i]} -gt 0 ]]; then 
-                    t_FilterWave=$(awk "BEGIN {print (10)^($t_FilterWave)}") # convert log to linear if needed
-                fi
-                t_FilterFlux="${t_FluxData[t_i]}"
-                if [[ ${m_FluxInLog[i]} -gt 0 ]]; then 
-                    t_FilterFlux=$(awk "BEGIN {print (10)^($t_FilterFlux)}") # convert log to linear if needed
-                fi
-                if [[ ${#t_FErrData[@]} -gt $t_i ]]; then 
-                    t_FilterFErr="${t_FErrData[t_i]}"
-                    if [[ ${m_FluxInLog[i]} -gt 0 ]]; then 
-                        t_FilterFErr=$(awk "BEGIN {print ($t_FilterFErr)*($t_FilterFlux)/1.08;}") # convert log to linear if needed
-                    fi
-                else
-                    t_FilterFErr=$(awk "BEGIN {print ($t_FilterFlux)/5.0}") #<TODO># If no flux error given, set flux error to S/N=5
-                fi
+                # get current FilterWave
+                m_FilterName="${m_FiltersNames[m_i]}"
+                m_FilterWave="${m_FiltersWaves[m_i]}"
+                m_FilterCode="${m_FiltersCodes[m_i]}"
                 # 
-                # do flux conversion
-                if [[ 1 == 1 ]]; then t_FilterFlux=$(awk "BEGIN {print ($t_FilterFlux)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
-                if [[ 1 == 1 ]]; then t_FilterFErr=$(awk "BEGIN {print ($t_FilterFErr)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
-                # 
-                # check if the observed data is ALMA data
-                t_CheckALMA=0
-                if [[ ${#t_FilterNameData[@]} -gt $t_i ]]; then
-                    if [[ "${t_FilterNameData[t_i]}" == *"ALMA"* ]]; then
-                        t_CheckALMA=1
-                    fi
-                fi
-                # 
-                # search in the observed data
                 if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= (0.1*($m_FilterWave)));}") -eq 1 ]]; then
                     t_CheckOK=0
                     # if previously no match, but current wavelength difference is smaller than 10%, we consider it as a match
@@ -748,24 +754,37 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                     fi
                     # apply the matched wave, flux, ferr 
                     if [[ $t_CheckOK -eq 1 ]]; then
-                        k_FilterWave="${t_FilterWave}"
-                        k_FilterFlux="${t_FilterFlux}"
-                        k_FilterFErr="${t_FilterFErr}"
+                        k_FilterIndex="${m_i}"
                     fi
-                    #printf "%28s %18g %18d %18d\n" "${m_FiltersNames[m_i]}" "$t_FilterWave" "${m_FiltersCodes[m_i]}" 1 >> "$t_OutputDir/magphys_input_filters.dat"
-                    #break
                 fi
-                # 
             done
             # 
+            # see if we matched to any filter
+            if [[ "$k_FilterIndex" != "-99" ]]; then
+                m_FiltersFluxs[$k_FilterIndex]="t_FilterFlux"
+                m_FiltersFErrs[$k_FilterIndex]="t_FilterFErr"
+            else
+                echo "Warning! The observed data at wavelength $t_FilterWave um has no matched filter in our filter list!!!"
+            fi
+        done
+        
+        # then we loop all filters (instead of just matched filters)
+        for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
+            # 
+            # get current FilterWave
+            m_FilterName="${m_FiltersNames[m_i]}"
+            m_FilterWave="${m_FiltersWaves[m_i]}"
+            m_FilterCode="${m_FiltersCodes[m_i]}"
+            m_FilterFlux="${m_FiltersFluxs[m_i]}"
+            m_FilterFErr="${m_FiltersFErrs[m_i]}"
+            # 
             # write to the MAGPHYS input filter file
-            k_FilterGood=$(awk "BEGIN {if (($k_FilterFlux)>=3.0*($k_FilterFErr) && ($k_FilterFlux)>0.0) print 1; else print 0;}")
-            printf "%28s %18g %18d %18d\n" "$m_FilterName" "$m_FilterWave" "$m_FilterCode" "$k_FilterGood" >> "$t_OutputDir/magphys_input_filters.dat"
+            m_FilterGood=$(awk "BEGIN {if (($m_FilterFlux)>=3.0*($m_FilterFErr) && ($m_FilterFlux)>0.0) print 1; else print 0;}")
+            printf "%28s %18g %18d %18d\n" "$m_FilterName" "$m_FilterWave" "$m_FilterCode" "$m_FilterGood" >> "$t_OutputDir/magphys_input_filters.dat"
             # 
             # prepare string that will be written to the MAGPHYS input flux file
-            t_ObsDataString="$t_ObsDataString"$(printf "%18g" "$t_FilterFlux") # >> "$t_OutputDir/magphys_input_fluxes.dat"
-            t_ObsDataString="$t_ObsDataString"$(printf "%18g" "$t_FilterFErr") # >> "$t_OutputDir/magphys_input_fluxes.dat"
-            
+            t_ObsDataString="$t_ObsDataString"$(printf "%18g" "$m_FilterFlux") # >> "$t_OutputDir/magphys_input_fluxes.dat"
+            t_ObsDataString="$t_ObsDataString"$(printf "%18g" "$m_FilterFErr") # >> "$t_OutputDir/magphys_input_fluxes.dat"
         done
         # 
         # write to the MAGPHYS input flux file

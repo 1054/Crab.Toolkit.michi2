@@ -1035,7 +1035,7 @@ c     --------------------------------------------------------------------------
  702     format('# OBSERVED FLUXES (and errors):')
          
          write(filter_header,*) (filt_name(k)//' ',k=1,nfilt)         ! dzliu modified, add space between headers
-         write(31,'(a)') '# '//filter_header(1:largo(filter_header))  ! dzliu modified, add space between headers
+         write(31,'(a)') '#'//filter_header(1:largo(filter_header))   ! dzliu modified, add space between headers ! note that it should be '#'//filter_header instead of '# '//filter_header
          write(31,701) (flux_orig(i_gal,k),k=1,nfilt)                 ! dzliu modified, add space between values
          write(31,701) (sigma_orig(i_gal,k),k=1,nfilt)                ! dzliu modified, add space between values
          write(31,703)
@@ -1067,14 +1067,14 @@ c     --------------------------------------------------------------------------
      +        ssfr(sfh_sav)*a_sav,av(sfh_sav),age(sfh_sav),tdust(ir_sav),
      +        m_lh(sfh_sav),m_lk(sfh_sav)
 
-         write(31,'(a)') '# '//filter_header(1:largo(filter_header))   ! dzliu modified, add space between headers
+         write(31,'(a)') '#'//filter_header(1:largo(filter_header))   ! dzliu modified, add space between headers ! note that it should be '#'//filter_header instead of '# '//filter_header
          write(31,701) (a_sav*flux_sfh(sfh_sav,k),k=1,nfilt_sfh-nfilt_mix),
      +        (a_sav*(flux_sfh(sfh_sav,k)
      +        +flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav)),
      +        k=nfilt_sfh-nfilt_mix+1,nfilt_sfh),
      +        (a_sav*flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav),
      +        k=nfilt_sfh+1,nfilt)
- 701     format(1p,200(e12.6,'                  ')) ! dzliu modified, add space between values, and 50(e12.3) --> 200(e12.3)
+ 701     format('   ',1p,200(e12.6,'                  ')) ! dzliu modified, add space between values, and 50(e12.3) --> 200(e12.6,''*18)
 
          write(31,703)
          write(31,805)
