@@ -240,7 +240,7 @@ c       ------------------------------------------------------------------------
         integer nf,n,id,nter
         parameter(n=100,nter=2)
         integer i,inw,icall,iread,jread,ireset
-	integer ifilt(nf),wfilt(nf) ! dzliu modified, now support up to 200 filters ! dzliu added argument ",wfilt(nf)"
+	integer ifilt(200),wfilt(200) ! dzliu modified, now support up to 200 filters ! dzliu added argument ",wfilt(nf)"
 	real x(inw),ys(inw),y0s(inw),fx(nf)
 	real z,f_mean,dl,tauIGM,factor
         real*8 mag(nf)
