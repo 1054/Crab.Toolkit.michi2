@@ -205,6 +205,7 @@ c       ------------------------------------------------------------------------
 	real x(inw),yd(inw),fx(nf)
 	real z,f_mean,dl,mag(nf)
 	real LINEAR ! dzliu added, will call this subroutine
+	INCLUDE 'filter.dec' ! dzliu added, for fid(i)
 	data icall/0/
 
 	if (icall.eq.0) then

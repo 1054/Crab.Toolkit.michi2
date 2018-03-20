@@ -246,6 +246,7 @@ c       ------------------------------------------------------------------------
         real*8 mag(nf)
         real xaux,ys_new(inw),abs_igm
 	real LINEAR ! dzliu added, will call this subroutine
+	INCLUDE 'filter.dec' ! dzliu added, for fid(i)
 	data icall/0/
 
 
