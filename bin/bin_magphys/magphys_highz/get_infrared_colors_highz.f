@@ -225,6 +225,7 @@ c		Compute flux through each of nb filters
 		do i=1,nf
 			write(*,'(a,i0,a,i0)') 'Compute flux through filter ',i,', filter number ',ifilt(i)
 			fx(i)=f_mean(ifilt(i),x,yd,inw,z)
+			write(*,'(a,i0,a,i0,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i), ' (after f_mean)'
 c			dzliu note: inw is the number of wavelengths, yd is the model SED flux (dust)
 c			dzliu note: if filter number is zero, we should output a direct average value over the bandpass!
 c			dzliu added: if (ifilt(i).eq.0) then ... endif
