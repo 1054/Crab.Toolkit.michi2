@@ -202,8 +202,9 @@ c       ------------------------------------------------------------------------
         implicit none
         integer nf
         integer i,inw,icall
-	integer ifilt(200),wfilt(200) ! dzliu modified, now support up to 200 filters ! dzliu added argument ",wfilt(nf)"
-	character*29 sfilt(200) ! dzliu added
+	integer ifilt(200) ! dzliu modified, now support up to 200 filters
+	real wfilt(200) ! dzliu added argument ",wfilt(200)"
+	character*29 sfilt(200) ! dzliu added argument ",sfilt(200)"
 	real x(inw),yd(inw),fx(nf)
 	real z,f_mean,dl,mag(nf)
 	real LINEAR ! dzliu added, will call this subroutine
