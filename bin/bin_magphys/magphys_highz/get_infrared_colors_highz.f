@@ -207,6 +207,7 @@ c       ------------------------------------------------------------------------
 	real x(inw),yd(inw),fx(nf)
 	real z,f_mean,dl,mag(nf)
 	real LINEAR ! dzliu added, will call this subroutine
+	integer largo ! dzliu added, will call this subroutine
 	data icall/0/
 
 	if (icall.eq.0) then
@@ -227,7 +228,7 @@ c				Compute flux below filter.
 c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
                 fx(i)=fx(i)/(1.+z)
 			endif
-			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' filter name ',largo(sfilt(i)),' flux = ',fx(i),' mJy' ! dzliu debug
+			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' filter name ',sfilt(i)(1:largo(sfilt(i))),' flux = ',fx(i),' mJy' ! dzliu debug
 		enddo
 
 c       Compute absolute (k-shifted) AB magnitude
