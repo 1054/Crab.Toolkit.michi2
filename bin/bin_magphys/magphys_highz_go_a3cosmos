@@ -687,7 +687,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         
         printf "# %26s %18s %18s %18s\n" "filter_name" "lambda_eff" "filter_id" "fit?" > "$t_OutputDir/magphys_input_filters.dat"
         
-        t_ObsHeadString=$(printf "# %-23s %-10s " "obj_name" "z")
+        t_ObsHeadString=$(printf "# %23s %10s " "obj_name" "z")
         t_ObsDataString=""
         
         # loop each observed data point and match to a filter
