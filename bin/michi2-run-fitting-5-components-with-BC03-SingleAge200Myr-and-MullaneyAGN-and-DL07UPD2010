@@ -172,7 +172,7 @@ fi
 # Copy SED LIB
 # 
 echo 
-michi2-deploy-files SED BC03 DL07UPD2010
+michi2-deploy-files SED BC03 MullaneyAGN DL07UPD2010
 
 
 # 
