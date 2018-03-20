@@ -147,40 +147,42 @@ c       List of model parameters and predicted fluxes
      +  '   xiC_tot',   !16: Ld(cold)/Ld(tot)
      +  '    ',filter_header  !17--nfilt_use: model AB magnitudes at redshift z
 
-c       ---------------------------------------------------------------------------       
-c       Read .bin file (300 models)
-c       Compute magnitude for each model
-c       Store parameters + magnitudes of each model in output file
+c		---------------------------------------------------------------------------
+c		Read .bin file (300 models)
+c		Compute magnitude for each model
+c		Store parameters + magnitudes of each model in output file
 
-	close (29)
-	open (29,file=infile,status='old',form='unformatted')
+		write (*,*)  'Ready to read '//infile
 
-        read (29) niw,(wl(i),i=1,niw)
-        write (*,*)  'Number of wavelength points = ',niw
+		close (29)
+		open (29,file=infile,status='old',form='unformatted')
 
-	index=0
-        do imod=1,25000
-	   index=index+1
-              read (29,end=1) (irprop(i),i=1,9)
-	      read (29) (irsed(i),i=1,niw)
-	      read (29) (irlums(i),i=1,3)
-c     re-define xi parameters as contributions to the total IR luminosity
-c     Re-define IR parameters: xi^tot
-	 xi_pah=irprop(5)*(1.-irprop(1))+0.550*(1-irprop(2))*irprop(1)  ! xi_PAH^tot Ld(PAH)/Ld(tot)
-         xi_mir=irprop(6)*(1.-irprop(1))+0.275*(1-irprop(2))*irprop(1)  ! xi_MIR^tot Ld(MIR)/Ld(tot)
-         xi_warm=irprop(7)*(1.-irprop(1))+0.175*(1-irprop(2))*irprop(1) ! xi_W^tot Ld(warm)/Ld(tot)
-         xi_cold=irprop(1)*irprop(2)                                    ! xi_C^tot Ld(cold)/Ld(tot)
-c     compute average (luminosity-weighted) dust temperature
-c     Tdust_average = ( xi_W^tot * T_W^BC + xi_C^tot * T_C^ISM + 0.07 * 45 * fmu) / (xi_W^tot + xi_C^tot + 0.07*fmu)
-         tdust=xi_warm*irprop(3) + xi_cold*irprop(4) + 0.07*45.*irprop(1)
-         tdust=tdust/(xi_warm+xi_cold+0.07*irprop(1))
-                 call model_ab_color(z,wl,irsed,niw,nfilt_use,filt_id_use,filt_lambda_use,filt_name_use,mags) ! dzliu added argument ",filt_lambda_use,filt_name_use"
-c                write output file:
-                 write (30,200) index,(irprop(i),i=1,9),irlums(2),irlums(3),
-     +                          tdust,xi_pah,xi_mir,xi_warm,xi_cold,(mags(i),i=1,nfilt_use)
-200              format(i10,0p7f10.3,1pe12.3,0pf12.3,1p2e12.3,0p5f12.4,1X,0p,200(f10.4,20X)) ! dzliu modified 0pf10.3 --> 0pf12.3 (q_IR), 0p25f10.4 --> 1X,0p,200(f10.4,20X)
-        enddo
-1       stop
+		read (29) niw,(wl(i),i=1,niw)
+		write (*,*)  'Number of wavelength points = ',niw
+
+		index=0
+		do imod=1,25000
+			index=index+1
+			read (29,end=1) (irprop(i),i=1,9)
+			read (29) (irsed(i),i=1,niw)
+			read (29) (irlums(i),i=1,3)
+c			re-define xi parameters as contributions to the total IR luminosity
+c			Re-define IR parameters: xi^tot
+			xi_pah=irprop(5)*(1.-irprop(1))+0.550*(1-irprop(2))*irprop(1)  ! xi_PAH^tot Ld(PAH)/Ld(tot)
+			xi_mir=irprop(6)*(1.-irprop(1))+0.275*(1-irprop(2))*irprop(1)  ! xi_MIR^tot Ld(MIR)/Ld(tot)
+			xi_warm=irprop(7)*(1.-irprop(1))+0.175*(1-irprop(2))*irprop(1) ! xi_W^tot Ld(warm)/Ld(tot)
+			xi_cold=irprop(1)*irprop(2)                                    ! xi_C^tot Ld(cold)/Ld(tot)
+c			compute average (luminosity-weighted) dust temperature
+c			Tdust_average = ( xi_W^tot * T_W^BC + xi_C^tot * T_C^ISM + 0.07 * 45 * fmu) / (xi_W^tot + xi_C^tot + 0.07*fmu)
+			tdust=xi_warm*irprop(3) + xi_cold*irprop(4) + 0.07*45.*irprop(1)
+			tdust=tdust/(xi_warm+xi_cold+0.07*irprop(1))
+			call model_ab_color(z,wl,irsed,niw,nfilt_use,filt_id_use,filt_lambda_use,filt_name_use,mags) ! dzliu added argument ",filt_lambda_use,filt_name_use"
+c			write output file:
+			write (30,200) index,(irprop(i),i=1,9),irlums(2),irlums(3),
+	+                          tdust,xi_pah,xi_mir,xi_warm,xi_cold,(mags(i),i=1,nfilt_use)
+200			format(i10,0p7f10.3,1pe12.3,0pf12.3,1p2e12.3,0p5f12.4,1X,0p,200(f10.4,20X)) ! dzliu modified 0pf10.3 --> 0pf12.3 (q_IR), 0p25f10.4 --> 1X,0p,200(f10.4,20X)
+		enddo
+1	stop
 
 	end
 c       ===========================================================================
