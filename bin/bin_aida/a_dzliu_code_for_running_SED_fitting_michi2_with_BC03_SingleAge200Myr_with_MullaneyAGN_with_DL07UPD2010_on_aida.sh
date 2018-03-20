@@ -147,7 +147,7 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     #fi
     
     
-    if [[ ! -f "fit_5.out" ]]; then
+    if [[ ! -f "fit_5.out" ]] || [[ ! -f "fit_5.pdf" ]]; then
         
         #michi2-deploy-files
         
