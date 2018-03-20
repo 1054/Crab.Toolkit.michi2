@@ -275,7 +275,7 @@ c       Zero flux blueward of Lyman limit (absorption by ISM)
 c	Compute flux through each of nb filters
 		do i=1,nf
 			fx(i)=f_mean(ifilt(i),x,ys_new,inw,z)
-			write(*,'(a,i0,a,i0)') 'Compute flux through filter ',i,' filter number ',ifilt(i)
+c			write(*,'(a,i0,a,i0)') 'Compute flux through filter ',i,' filter number ',ifilt(i)
 c			dzliu note: inw is the number of wavelengths, ys_new is the model SED flux (attenuated)
 c			dzliu note: if filter number is zero, we should output a direct average value over the bandpass!
 c			dzliu added: if (ifilt(i).eq.0) then ... endif
