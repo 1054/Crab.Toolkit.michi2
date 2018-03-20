@@ -683,6 +683,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         
         printf "# %26s %18s %18s %18s\n" "filter_name" "lambda_eff" "filter_id" "fit?" > "$t_OutputDir/magphys_input_filters.dat"
         
+        t_ObsHeadString=$(printf "# %-23s %-10s " "obj_name" "z")
         t_ObsDataString=""
         
         # loop each observed data point and match to a filter
@@ -783,17 +784,20 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
             printf "%28s %18g %18d %18d\n" "$m_FilterName" "$m_FilterWave" "$m_FilterCode" "$m_FilterGood" >> "$t_OutputDir/magphys_input_filters.dat"
             # 
             # prepare string that will be written to the MAGPHYS input flux file
-            t_ObsDataString="$t_ObsDataString"$(printf "%18g" "$m_FilterFlux") # >> "$t_OutputDir/magphys_input_fluxes.dat"
-            t_ObsDataString="$t_ObsDataString"$(printf "%18g" "$m_FilterFErr") # >> "$t_OutputDir/magphys_input_fluxes.dat"
+            t_ObsHeadString="${t_ObsHeadString}"$(printf "%-15s" "$m_FilterName" | cut -c 1-15)"   "
+            t_ObsHeadString="${t_ObsHeadString}E_"$(printf "%-15s" "$m_FilterName" | cut -c 1-15)" "
+            t_ObsDataString="${t_ObsDataString}"$(printf "%-18g" "$m_FilterFlux") # >> "$t_OutputDir/magphys_input_fluxes.dat"
+            t_ObsDataString="${t_ObsDataString}"$(printf "%-18g" "$m_FilterFErr") # >> "$t_OutputDir/magphys_input_fluxes.dat"
         done
         # 
         # write to the MAGPHYS input flux file
-        printf "# \n" > "$t_OutputDir/magphys_input_fluxes.dat"
+        #printf "# \n" > "$t_OutputDir/magphys_input_fluxes.dat"
+        printf "${t_ObsHeadString}\n" > "$t_OutputDir/magphys_input_fluxes.dat"
         # 
         # check if there are multiple redshifts or not
         if [[ ${#t_Redshifts[@]} -eq 1 ]]; then
             printf "%25s %10.4f " "${t_SourName}" "${t_Redshifts[0]}" >> "$t_OutputDir/magphys_input_fluxes.dat"
-            printf "$t_ObsDataString" >> "$t_OutputDir/magphys_input_fluxes.dat"
+            printf "${t_ObsDataString}" >> "$t_OutputDir/magphys_input_fluxes.dat"
             printf "\n" >> "$t_OutputDir/magphys_input_fluxes.dat"
         else
             for (( t_i = 0; t_i<${#t_Redshifts[@]}; t_i++ )); do 

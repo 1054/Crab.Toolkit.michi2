@@ -1074,7 +1074,7 @@ c     --------------------------------------------------------------------------
      +        k=nfilt_sfh-nfilt_mix+1,nfilt_sfh),
      +        (a_sav*flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav),
      +        k=nfilt_sfh+1,nfilt)
- 701     format('   ',1p,200(e12.6,'                  ')) ! dzliu modified, add space between values, and 50(e12.3) --> 200(e12.6,''*18)
+ 701     format('  ',1p,200(e12.6,'                  ')) ! dzliu modified, add space between values, and 50(e12.3) --> 200(e12.6,''*18)
 
          write(31,703)
          write(31,805)
