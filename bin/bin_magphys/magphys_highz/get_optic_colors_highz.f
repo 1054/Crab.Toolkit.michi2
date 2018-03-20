@@ -126,7 +126,7 @@ c	write(filter_header,*) (filt_name(k_use(k)),k=1,nfilt_use) ! dzliu modified
 
 	do k=1,nfilt_use
 	   filt_id_use(k)=filt_id(k_use(k))
-	   filt_lambda_use(k)=lambda_rest(k_use(k))*1.e-4 ! dzliu added, convert to AA
+	   filt_lambda_use(k)=lambda_rest(k_use(k))/1.e-4 ! dzliu added, convert to AA
 	   filt_name_use(k)=filt_name(k_use(k)) ! dzliu added
 	enddo
 
