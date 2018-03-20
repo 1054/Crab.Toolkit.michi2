@@ -695,7 +695,7 @@ c       ========================================================================
 c	Interpolates linearly the function y(x) at x=x0
 c       ---------------------------------------------------------------------------
 	write(*,*) 'debug starting LINEAR'
-	REAL X(N),Y(N),X0
+	REAL X(N),Y(N)
 	data ierr/0/
 	IF (I0) 21,20,20
 	write(*,*) 'debug before IPLACE'
