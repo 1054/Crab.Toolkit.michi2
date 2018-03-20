@@ -54,7 +54,7 @@ c	INPUT file: spectral library (dust emission)
 c	INPUT redshift
 	write (6,'(x,a,$)') 'Enter redshift = '
 	read (5,*,end=1) z
-	write (*,'(a,f7.4') 'z = ',z ! dzliu debug
+	write (*,'(a,f7.4)') 'z = ',z ! dzliu debug
 
 c	OUTPUT file: catalogue of parameters & magnitudes @ redshift z
 	write(numz,'(f6.4)') z
