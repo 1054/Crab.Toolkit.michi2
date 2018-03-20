@@ -230,7 +230,8 @@ c			dzliu note: inw is the number of wavelengths, yd is the model SED flux (dust
 c			dzliu note: if filter number is zero, we should output a direct average value over the bandpass!
 c			dzliu added: if (ifilt(i).eq.0) then ... endif
 			if (ifilt(i).eq.0) then
-                fx(i)=LINEAR(wfilt(i),x,yd,inw,0) ! do interpolation in rest-frame, AA wavelength unit
+				write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA' ! dzliu debug
+				fx(i)=LINEAR(wfilt(i),x,yd,inw,0) ! do interpolation in rest-frame, AA wavelength unit
 c				Compute flux below filter.
                 fx(i)=(wfilt(i))**2 * fx(i)/2.997925e+18 ! convert to Lsun Hz-1(?), see code in SUBROUTINE F_MEAN
 c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
