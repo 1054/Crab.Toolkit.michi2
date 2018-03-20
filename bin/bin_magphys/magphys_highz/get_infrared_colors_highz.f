@@ -179,7 +179,7 @@ c			Tdust_average = ( xi_W^tot * T_W^BC + xi_C^tot * T_C^ISM + 0.07 * 45 * fmu) 
 			call model_ab_color(z,wl,irsed,niw,nfilt_use,filt_id_use,filt_lambda_use,filt_name_use,mags) ! dzliu added argument ",filt_lambda_use,filt_name_use"
 c			write output file:
 			write (30,200) index,(irprop(i),i=1,9),irlums(2),irlums(3),
-	+                          tdust,xi_pah,xi_mir,xi_warm,xi_cold,(mags(i),i=1,nfilt_use)
+		+                          tdust,xi_pah,xi_mir,xi_warm,xi_cold,(mags(i),i=1,nfilt_use)
 200			format(i10,0p7f10.3,1pe12.3,0pf12.3,1p2e12.3,0p5f12.4,1X,0p,200(f10.4,20X)) ! dzliu modified 0pf10.3 --> 0pf12.3 (q_IR), 0p25f10.4 --> 1X,0p,200(f10.4,20X)
 		enddo
 1	stop
