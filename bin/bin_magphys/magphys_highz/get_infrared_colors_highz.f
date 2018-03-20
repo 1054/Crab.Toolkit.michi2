@@ -228,7 +228,7 @@ c			write(*,'(a,i0,a,i0)') 'Compute flux through filter ',i,', filter number ',i
             l=0
             fx(i)=LINEAR(wfilt(i),x,yd,inw,l) ! do interpolation in rest-frame, AA wavelength unit
 c			Compute flux below filter.
-            fx(i)=(wfilt(i))**2 * fx(i)/2.997925e+18 ! convert to Lsun Hz-1(?), see code in SUBROUTINE F_MEAN
+            fx(i)=(wfilt(i)*(1.+z))**2 * fx(i) / 2.997925e+18 ! convert to Lsun Hz-1(?), see code in SUBROUTINE F_MEAN
 c			F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
             fx(i)=fx(i)/(1.+z)
             write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' Lsun Hz-1 (direct interpolation)' ! dzliu debug
