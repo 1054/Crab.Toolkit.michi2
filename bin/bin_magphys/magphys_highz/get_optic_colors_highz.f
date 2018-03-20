@@ -203,7 +203,7 @@ c                   write output file:
      +                    tlastburst,(fburst(i),i=1,5),
      +                    age_wm,age_wr,ldtot,fmu,lha,lhb,a_v,lh_mstar,lk_mstar,
      +                    (mags(i),i=1,nfilt_use)
- 200	  format(i10,1pe10.2,0p6f10.4,1p14e10.2,0pf10.4,1p2e10.2,0pf10.4,1p2e10.2,0p200(f10.4,20X)) ! dzliu 0p50f10.4--> 0p200(f10.4,20X)
+ 200	  format(i10,1pe10.2,0p6f10.4,1p14e10.2,0pf10.4,1p2e10.2,0pf10.4,1p2e10.2,0p,200(f10.4,20X)) ! dzliu 0p50f10.4--> 0p,200(f10.4,20X)
 		 endif
 	      enddo
 	   enddo
