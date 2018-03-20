@@ -32,7 +32,7 @@ c       character infile*80,outfile*80,user_filt*80
 c	parameter(nmax=50) ! dzliu modified
 	parameter(nmax=200) ! dzliu modified
 c	character*10 filt_name(nmax) ! dzliu modified
-	character*29 filt_name(nmax) ! dzliu modified
+	character*29 filt_name(nmax),filt_name_use(nmax) ! dzliu modified
 c	character filter_header*250 ! dzliu modified
 	character filter_header*6000 ! dzliu modified, support up to 200 filters
         integer i,nc,imod,k
@@ -120,6 +120,7 @@ c	write(filter_header,*) (filt_name(k_use(k)),k=1,nfilt_use) ! dzliu modified
 	do k=1,nfilt_use
 	   filt_id_use(k)=filt_id(k_use(k))
 	   filt_lambda_use(k)=lambda_rest(k_use(k))*1.e-4 ! dzliu added, convert to AA
+	   filt_name_use(k)=filt_name(k_use(k)) ! dzliu added
 	enddo
 	  
 c       Output File Header
@@ -172,7 +173,7 @@ c     compute average (luminosity-weighted) dust temperature
 c     Tdust_average = ( xi_W^tot * T_W^BC + xi_C^tot * T_C^ISM + 0.07 * 45 * fmu) / (xi_W^tot + xi_C^tot + 0.07*fmu)
          tdust=xi_warm*irprop(3) + xi_cold*irprop(4) + 0.07*45.*irprop(1)
          tdust=tdust/(xi_warm+xi_cold+0.07*irprop(1))
-                 call model_ab_color(z,wl,irsed,niw,nfilt_use,filt_id_use,filt_lambda_use,mags) ! dzliu added argument "filt_lambda_use"
+                 call model_ab_color(z,wl,irsed,niw,nfilt_use,filt_id_use,filt_lambda_use,filt_name_use,mags) ! dzliu added argument ",filt_lambda_use,filt_name_use"
 c                write output file:
                  write (30,200) index,(irprop(i),i=1,9),irlums(2),irlums(3),
      +                          tdust,xi_pah,xi_mir,xi_warm,xi_cold,(mags(i),i=1,nfilt_use)
@@ -185,7 +186,7 @@ c       ========================================================================
 
 
 c       ===========================================================================
-	SUBROUTINE MODEL_AB_COLOR(z,x,yd,inw,nf,ifilt,wfilt,mag)
+	SUBROUTINE MODEL_AB_COLOR(z,x,yd,inw,nf,ifilt,wfilt,sfilt,mag)
 c       ===========================================================================
 c	Computes AB magnitude of each model at given z in each band
 c       ---------------------------------------------------------------------------
@@ -202,10 +203,10 @@ c       ------------------------------------------------------------------------
         integer nf
         integer i,inw,icall
 	integer ifilt(200),wfilt(200) ! dzliu modified, now support up to 200 filters ! dzliu added argument ",wfilt(nf)"
+	character*29 sfilt(200) ! dzliu added
 	real x(inw),yd(inw),fx(nf)
 	real z,f_mean,dl,mag(nf)
 	real LINEAR ! dzliu added, will call this subroutine
-	INCLUDE 'filter.dec' ! dzliu added, for fid(i)
 	data icall/0/
 
 	if (icall.eq.0) then
@@ -225,7 +226,7 @@ c				Compute flux below filter.
 c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
                 fx(i)=fx(i)/(1.+z)
 			endif
-			write(*,'(a,i0,a,i0,a,a,1pe11.6,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' filter name ',fid(i),' flux = ',fx(i),' mJy' ! dzliu debug
+			write(*,'(a,i0,a,i0,a,a,1pe11.6,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' filter name ',sfilt(i),' flux = ',fx(i),' mJy' ! dzliu debug
 		enddo
 
 c       Compute absolute (k-shifted) AB magnitude
