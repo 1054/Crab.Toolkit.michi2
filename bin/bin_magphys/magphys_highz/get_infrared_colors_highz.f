@@ -36,7 +36,7 @@ c	character*10 filt_name(nmax) ! dzliu modified
 c	character filter_header*250 ! dzliu modified
 	character filter_header*6000 ! dzliu modified, support up to 200 filters
         integer i,nc,imod,k
-	integer k_use(nmax),filt_id_use(nmax)
+	integer k_use(nmax),filt_id_use(nmax),filt_lambda_use(nmax)
         real z,xaux(nmax),mags(nmax),irlums(3)
 	real wl(6750),irsed(6750),irprop(9),redshift(161)
 	real lambda_eff(nmax),lambda_rest(nmax)
@@ -119,6 +119,7 @@ c	write(filter_header,*) (filt_name(k_use(k)),k=1,nfilt_use) ! dzliu modified
 
 	do k=1,nfilt_use
 	   filt_id_use(k)=filt_id(k_use(k))
+	   filt_lambda_use(k)=lambda_rest(k_use(k))*1.e-4 ! dzliu added, convert to AA
 	enddo
 	  
 c       Output File Header
@@ -171,11 +172,11 @@ c     compute average (luminosity-weighted) dust temperature
 c     Tdust_average = ( xi_W^tot * T_W^BC + xi_C^tot * T_C^ISM + 0.07 * 45 * fmu) / (xi_W^tot + xi_C^tot + 0.07*fmu)
          tdust=xi_warm*irprop(3) + xi_cold*irprop(4) + 0.07*45.*irprop(1)
          tdust=tdust/(xi_warm+xi_cold+0.07*irprop(1))
-                 call model_ab_color(z,wl,irsed,niw,nfilt_use,filt_id_use,mags)
+                 call model_ab_color(z,wl,irsed,niw,nfilt_use,filt_id_use,filt_lambda_use,mags) ! dzliu added argument "filt_lambda_use"
 c                write output file:
                  write (30,200) index,(irprop(i),i=1,9),irlums(2),irlums(3),
      +                          tdust,xi_pah,xi_mir,xi_warm,xi_cold,(mags(i),i=1,nfilt_use)
-200              format(i10,0p7f10.3,1pe12.3,0pf12.3,1p2e12.3,0p5f12.4,0p,200(f10.4,20X)) ! dzliu modified 0pf10.3 --> 0pf12.3 (q_IR), 0p25f10.4 --> 0p,200(f10.4,20X)
+200              format(i10,0p7f10.3,1pe12.3,0pf12.3,1p2e12.3,0p5f12.4,1X,0p,200(f10.4,20X)) ! dzliu modified 0pf10.3 --> 0pf12.3 (q_IR), 0p25f10.4 --> 1X,0p,200(f10.4,20X)
         enddo
 1       stop
 
@@ -184,7 +185,7 @@ c       ========================================================================
 
 
 c       ===========================================================================
-	SUBROUTINE MODEL_AB_COLOR(z,x,yd,inw,nf,ifilt,mag)
+	SUBROUTINE MODEL_AB_COLOR(z,x,yd,inw,nf,ifilt,wfilt,mag)
 c       ===========================================================================
 c	Computes AB magnitude of each model at given z in each band
 c       ---------------------------------------------------------------------------
@@ -195,6 +196,7 @@ c       inw  : number of wavelength points
 c       nf   : number of photometric bands (filters)
 c       ifilt: array containing the indexes of the filters in response file
 c       mags : magnitudes
+c       dzliu added "wfilt"
 c       ---------------------------------------------------------------------------
         implicit none
         integer nf
@@ -209,9 +211,20 @@ c       ------------------------------------------------------------------------
 	endif
 
 c	Compute flux through each of nb filters
-        do i=1,nf
-	   fx(i)=f_mean(ifilt(i),x,yd,inw,z)
-        enddo
+		do i=1,nf
+			write(*,'(a,i0,a,i0,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' ' ! dzliu debug
+			fx(i)=f_mean(ifilt(i),x,yd,inw,z)
+c			dzliu note: inw is the number of wavelengths, ys_new is the model SED flux (attenuated)
+c			dzliu note: if filter number is zero, we should output a direct average value over the bandpass!
+c			dzliu added: if (ifilt(i).eq.0) then ... endif
+			if (ifilt(i).eq.0) then
+                fx(i)=LINEAR(wfilt(i),x,ys_new,inw,0) ! do interpolation in rest-frame, AA wavelength unit
+c				Compute flux below filter.
+                fx(i)=(wfilt(i))**2 * fx(i)/2.997925e+18 ! convert to mJy, see code in SUBROUTINE F_MEAN
+c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
+                fx(i)=fx(i)/(1.+z)
+			endif
+		enddo
 
 c       Compute absolute (k-shifted) AB magnitude
 c       10 pc in units of Mpc
@@ -366,7 +379,7 @@ c	Sort (xf,rf) arrays according to xf
 c	Store sorted arrays
 	do k=1,m
 	ntot=ntot+1
-	xlam(ntot)=xf(k)
+	xlam(ntot)=xf(k) ! rest-frame
 	rlam(ntot)=rf(k)
 	enddo
 
@@ -387,7 +400,7 @@ c	Interpolate sed at shifted wavelength of filter
 	do j=pos_i(k),pos_f(k)
 	   m=m+1
 c	   take wavelength in detector frame
-	   xf(m)=xlam(j)*z1
+	   xf(m)=xlam(j)*z1 ! obs-frame
 	   rfa(m)=rlam(j)*xf(m)*LINEAR(xlam(j),x,y,n,l)
 	   rfb(m)=rlam(j)
 	   enddo

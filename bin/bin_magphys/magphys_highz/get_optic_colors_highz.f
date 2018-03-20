@@ -27,7 +27,7 @@ c      character*10 filt_name(nmax) ! dzliu commented original
 c      character filter_header*500 ! dzliu commented original
        character filter_header*6000 ! dzliu modified 20180319, can support 200 filters
        integer niw,nage,index,io,nfilt_use,kfile
-       integer k_use(nmax),filt_id_use(nmax)
+       integer k_use(nmax),filt_id_use(nmax),filt_lambda_use(nmax)
        integer i,nc,imod,nburst,k,aux_read
        real z,tform,gamma,zmet,tauv0,mu,mstr1,mstr0,mstry
        real tlastburst,age_wm,age_wr,xaux(24)
@@ -47,6 +47,7 @@ c       !CB93,CB07 -- 6918; CB08 -- 7324
        logical sampled
        data h/70./,omega/0.30/,omega_lambda/0.70/
        data kfile/1/,aux_read/0/
+       read LINEAR ! dzliu added, will call this subroutine
 
 
 c       INPUT files: spectral libraries (stellar populations + dust attenuation)
@@ -125,6 +126,7 @@ c	write(filter_header,*) (filt_name(k_use(k)),k=1,nfilt_use) ! dzliu modified
 
 	do k=1,nfilt_use
 	   filt_id_use(k)=filt_id(k_use(k))
+	   filt_lambda_use(k)=lambda_rest(k_use(k))*1.e-4 ! dzliu added, convert to AA
 	enddo
 
 c       Output File Header
@@ -196,14 +198,14 @@ c       Store parameters + magnitudes of each model in output file
                  read (29) (tmin(i),tmax(i),sfh(i),i=1,10)
 		 if (tform.le.tu) then !only keep models if tform<age of the Universe @ z
 		    sampled=.true.
-		    call model_ab_color(z,wl,fprop,fprop0,niw,nfilt_use,filt_id_use,mags)
+		    call model_ab_color(z,wl,fprop,fprop0,niw,nfilt_use,filt_id_use,filt_lambda_use,mags) ! dzliu added argument "filt_lambda_use"
 c                   write output file:
 		    write (30,200) index,tform,gamma,zmet,tauv0,mu,mstr1,mstr0,
      +                    (sfrav(i),i=1,5),
      +                    tlastburst,(fburst(i),i=1,5),
      +                    age_wm,age_wr,ldtot,fmu,lha,lhb,a_v,lh_mstar,lk_mstar,
      +                    (mags(i),i=1,nfilt_use)
- 200	  format(i10,1pe10.2,0p6f10.4,1p14e10.2,0pf10.4,1p2e10.2,0pf10.4,1p2e10.2,0p,200(f10.4,20X)) ! dzliu 0p50f10.4--> 0p,200(f10.4,20X)
+ 200	  format(i10,1pe10.2,0p6f10.4,1p14e10.2,0pf10.4,1p2e10.2,0pf10.4,1p2e10.2,3X,0p,200(f10.4,20X)) ! dzliu 0p50f10.4--> 3X,0p,200(f10.4,20X)
 		 endif
 	      enddo
 	   enddo
@@ -219,7 +221,7 @@ c                   write output file:
 
 
 c       ===========================================================================
-	SUBROUTINE MODEL_AB_COLOR(z,x,ys,y0s,inw,nf,ifilt,mag)
+	SUBROUTINE MODEL_AB_COLOR(z,x,ys,y0s,inw,nf,ifilt,wfilt,mag)
 c       ===========================================================================
 c	Computes AB magnitude of each model at given z in each band
 c       ---------------------------------------------------------------------------
@@ -233,12 +235,13 @@ c       ifilt: array containing the indexes of the filters in response file
 c       mags : magnitudes
 c       tauIGM: effective optical depth of the IGM
 c       VERSION June 7th, 2012: Add IGM varying absorption
+c       dzliu added "wfilt"
 c       ---------------------------------------------------------------------------
         implicit none
         integer nf,n,id,nter
         parameter(n=100,nter=2)
         integer i,inw,icall,iread,jread,ireset
-	integer ifilt(200)
+	integer ifilt(nf),lambda_rest(nf) ! dzliu modified, now support up to 200 filters ! dzliu added argument ",lambda_rest(nf)"
 	real x(inw),ys(inw),y0s(inw),fx(nf)
 	real z,f_mean,dl,tauIGM,factor
         real*8 mag(nf)
@@ -264,9 +267,20 @@ c       Zero flux blueward of Lyman limit (absorption by ISM)
        enddo
 
 c	Compute flux through each of nb filters
-        do i=1,nf
-	   fx(i)=f_mean(ifilt(i),x,ys_new,inw,z)
-        enddo
+		do i=1,nf
+			write(*,'(a,i0,a,i0,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' ' ! dzliu debug
+			fx(i)=f_mean(ifilt(i),x,ys_new,inw,z)
+c			dzliu note: inw is the number of wavelengths, ys_new is the model SED flux (attenuated)
+c			dzliu note: if filter number is zero, we should output a direct average value over the bandpass!
+c			dzliu added: if (ifilt(i).eq.0) then ... endif
+			if (ifilt(i).eq.0) then
+				fx(i)=LINEAR(wfilt(i),x,ys_new,inw,0) ! do interpolation in rest-frame, AA wavelength unit
+c				Compute flux below filter.
+				fx(i)=(wfilt(i))**2 * fx(i)/2.997925e+18 ! convert to mJy, see code in SUBROUTINE F_MEAN
+c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
+				fx(i)=fx(i)/(1.+z)
+			endif
+		enddo
 
 c       Compute absolute (k-shifted) AB magnitude
 c       10 pc in units of Mpc
@@ -509,6 +523,7 @@ c	Check filter number
 	elseif (i.le.0) then
 c       [Introduced to allow computation of K-correction with routine ~/is/k_correct.f]
 		f_mean=1.
+c		dzliu note: if filter number is zero, we should output a direct average value over the bandpass!
 		return
 	endif
 
@@ -539,7 +554,7 @@ c	Extract ith-filter. Shift by (1+z)
 	m=0
 	do k=ni(i),nl(i)
 	m=m+1
-	xf(m)=r(k,1)/z1
+	xf(m)=r(k,1)/z1 ! rest-frame
 	rf(m)=r(k,2)
 
 	rfc(m)=rf(m)*xf(m)
@@ -548,7 +563,7 @@ c	Extract ith-filter. Shift by (1+z)
 	enddo
 
 c       Effective wavelength of the filter:
-	xeff(i)=z1*TRAPZ1(xf,rfc,m)/TRAPZ1(xf,rfd,m)
+	xeff(i)=z1*TRAPZ1(xf,rfc,m)/TRAPZ1(xf,rfd,m) ! obs-frame
 
 c	Add wavelength points in the sed.
 	l=0
@@ -570,7 +585,7 @@ c	Sort (xf,rf) arrays according to xf
 c	Store sorted arrays
 	do k=1,m
 	ntot=ntot+1
-	xlam(ntot)=xf(k)
+	xlam(ntot)=xf(k) ! rest-frame
 	rlam(ntot)=rf(k)
 	enddo
 
@@ -591,7 +606,7 @@ c	Interpolate sed at shifted wavelength of filter
 	do j=pos_i(k),pos_f(k)
 	m=m+1
 c	take wavelength in detector frame
-	xf(m)=xlam(j)*z1
+	xf(m)=xlam(j)*z1 ! obs-frame
 	rfa(m)=rlam(j)*xf(m)*LINEAR(xlam(j),x,y,n,l)
 	rfb(m)=rlam(j)/xf(m)
 	enddo
