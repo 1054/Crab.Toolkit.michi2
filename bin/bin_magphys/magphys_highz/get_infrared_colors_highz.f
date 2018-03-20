@@ -228,7 +228,7 @@ c				Compute flux below filter.
 c				F(lambda)*dlambda = F[lambda/(1+z)]*dlambda/(1+z)
                 fx(i)=fx(i)/(1.+z)
 			endif
-			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a)') 'Compute flux through filter ',i,' filter number ',ifilt(i),' filter name ',sfilt(i)(1:largo(sfilt(i))),' flux = ',fx(i),' mJy' ! dzliu debug
+			write(*,'(a,i0,a,i0,a,a,a,1pe12.5,a,1pe12.5,a)') 'Compute flux through filter ',i,', filter number ',ifilt(i),', name ',sfilt(i)(1:largo(sfilt(i))),', lambda = ',wfilt(i),' AA, flux = ',fx(i),' mJy' ! dzliu debug
 		enddo
 
 c       Compute absolute (k-shifted) AB magnitude
