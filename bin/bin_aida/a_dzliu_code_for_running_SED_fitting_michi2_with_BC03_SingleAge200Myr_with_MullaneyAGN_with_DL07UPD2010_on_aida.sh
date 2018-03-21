@@ -147,7 +147,7 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     #fi
     
     
-    if [[ ! -f "fit_5.out" ]] || [[ ! -f "fit_5.pdf" ]]; then
+    if [[ ! -f "fit_5.out" ]]; then
         
         #michi2-deploy-files
         
@@ -157,11 +157,24 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
         
         rm -rf obj_* best*.* Plot_*
         
+        sleep 3
+    
+    else
+        
+        echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
+    
+    fi
+    
+    
+    if [[ ! -f "fit_5.pdf" ]]; then
+        
+        rm -rf obj_* best*.* Plot_*
+        
         michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
         
         michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}" -only-best -out fit_5.best.pdf
         
-        sleep 3
+        sleep 1
     
     else
         

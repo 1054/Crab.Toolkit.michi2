@@ -1,0 +1,29 @@
+data "../obj_1/SED_SUM"
+read {w_um 1 f_mJy 2}
+data "../redshift.txt"
+read z 1
+set w_um = w_um * (1+z)
+print SED_SUM_REDSHIFTED '%15.6e %15.6e\n' {w_um f_mJy}
+QUIT
+data "../obj_1/SED_SUM"
+read {w_um 1 f_mJy 2}
+data "../obj_1/redshift.txt"
+read z 1
+set w_um = w_um * (1+z)
+print SED_SUM_REDSHIFTED '%15.6e %15.6e\n' {w_um f_mJy}
+QUIT
+calc lg(4.594E+08)
+calc 8.980532544-8.662190991
+calc 10**0.318341553
+quit
+calc lg(4.594E+08)
+quit
+data "../obj_1/SED_SUM"
+read {w_um 1 f_mJy 2}
+data "../obj_1/redshift.txt"
+read z 1
+set w_um = w_um * (1+z)
+print SED_SUM_REDSHIFTED '%15.6e %15.6e\n' {w_um f_mJy}
+QUIT
+calc lg(6.652E+08)
+quit

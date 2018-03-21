@@ -36,27 +36,20 @@ c     ==========================================================================
        implicit none
       integer isave,i,j,k,i_gal,io,largo
       integer nmax,galmax,nmod
-c     parameter(nmax=50,galmax=5000) !nmax: maxium number of photometric points/filters ! dzliu modified
-      parameter(nmax=200,galmax=5000) !nmax: maxium number of photometric points/filters ! dzliu modified
+      parameter(nmax=50,galmax=5000) !nmax: maxium number of photometric points/filters
       integer n_obs,n_models,ibin,ibin1,ibin2,ibin3,ibin4,ibin5,ibin6  !galmax: maximum number of galaxies in one input file
       integer kfilt_sfh(nmax),kfilt_ir(nmax),nfilt_sfh,nfilt_ir,nfilt_mix
       integer nprop_sfh,nprop_ir
       integer n_sfh,n_ir,i_ir,i_sfh,ir_sav,sfh_sav
       integer nfilt,filt_id(nmax),fit(nmax),ifilt
       parameter(nmod=1155000,nprop_sfh=27,nprop_ir=16) !nmod=1155000
-c     character*12 filt_name(nmax) ! dzliu modified
-      character*29 filt_name(nmax) ! dzliu modified
-c     character*10 outfile1,outfile2 ! dzliu modified
-      character*255 outfile1,outfile2 ! dzliu modified
-c     character*500 filter_header ! dzliu modified
-      character*6000 filter_header ! dzliu modified, support up to 200 filters
-c     character*8 gal_name(galmax),aux_name ! dzliu modified
-      character*29 gal_name(galmax),aux_name ! dzliu modified
+      character*29 filt_name(nmax)
+      character*255 outfile1,outfile2
+      character*500 filter_header
+      character*29 gal_name(galmax),aux_name
       character*6 numz
-c     character optlib*34,irlib*26,cat*1 ! dzliu modified
-      character optlib*255,irlib*255,cat*1 ! dzliu modified
-c     character filters*80,obs*80 ! dzliu modified 20160720
-      character filters*255,obs*255 
+      character optlib*34,irlib*26,cat*1
+      character filters*255,obs*255
 c     redshift libs
       integer nz,nzmax
       parameter(nzmax=5000)
@@ -67,7 +60,7 @@ c     observations, filters, etc.
       real*8 flux_obs(galmax,nmax),sigma(galmax,nmax),aux,nsig
       real*8 flux_obs_cat(galmax,nmax),sigma_cat(galmax,nmax)
       real*8 flux_sfh(nmod,nmax),ssfr(nmod),z(nmod),flux_best(galmax,nmax)
-      real*8 lambda_eff(nmax),lambda_rest(nmax)
+      real*8 lambda_eff(nmax),lambda_rest(nmax),fwrite(nmax)
       real*8 flux_orig(galmax,nmax),sigma_orig(galmax,nmax)
 c     model libraries, parameters, etc.
       integer n_flux,indx_sfh(nmod),indx_ir(nmod),indx(nmod)
@@ -160,8 +153,6 @@ c     cosmological parameters
       real*8 h,omega,omega_lambda,clambda,q
       real*8 cosmol_c,dl  
 c     histogram parameters: min,max,bin width
-c     dzliu modified: data tbg1_min/30./,tbg1_max/60.0125/,dtbg/0.025/ -> tbg1_max/90.0125/,dtbg/0.05/
-c     dzliu modified: data tbg2_min/15./,tbg2_max/25.0125/,dtbg/0.025/ -> tbg2_max/55.0125/,dtbg/0.05/
       data fmu_min/0./,fmu_max/1.0005/,dfmu/0.001/
       data fmuism_min/0./,fmuism_max/1.0005/,dfmu_ism/0.001/       
       data mu_min/0./,mu_max/1.0005/,dmu/0.001/
@@ -169,12 +160,12 @@ c     dzliu modified: data tbg2_min/15./,tbg2_max/25.0125/,dtbg/0.025/ -> tbg2_m
       data av_min/0./,av_max/20./,dav/0.025/
       data ssfr_min/-13./,ssfr_max/-5.9975/,dssfr/0.05/
       data sfr_min/-2./,sfr_max/4.5005/,dsfr/0.005/
-      data a_min/8./,a_max/14.0025/,da/0.005/
+      data a_min/6./,a_max/13.0025/,da/0.005/
       data ld_min/8./,ld_max/14.0025/,dldust/0.005/
-      data tbg1_min/30./,tbg1_max/90.0125/,dtbg/0.05/
-      data tbg2_min/15./,tbg2_max/55.0125/,dtbg/0.05/
+      data tbg1_min/30./,tbg1_max/60.0125/,dtbg/0.025/
+      data tbg2_min/15./,tbg2_max/25.0125/
       data xi_min/0./,xi_max/1.0001/,dxi/0.001/
-      data md_min/6./,md_max/12./,dmd/0.005/
+      data md_min/4./,md_max/10./,dmd/0.005/
       data z_min/0./,z_max/10./,dz/0.05/
       data age_min/5.5/,age_max/10.5/,dage/0.005/
       data td_min/10./,td_max/80./,dtd/0.1/
@@ -278,7 +269,7 @@ c     Obtain cosmological constant and q
 c     Compute distance in Mpc from the redshifts z
 
       dist(i_gal)=dl(h,q,redshift(i_gal))
-      dist(i_gal)=dist(i_gal)*3.086e+24/dsqrt(1.+redshift(i_gal))   ! dzliu note: redshift to restframe by 1/(1+z)
+      dist(i_gal)=dist(i_gal)*3.086e+24/dsqrt(1.+redshift(i_gal))
       
 c     OUTPUT FILES
 c     name.fit: fit results, PDFs etc
@@ -322,7 +313,7 @@ c     --------------------------------------------------------------------------
          nfilt_ir=0             !nr of filters sampling the dust emission
          nfilt_mix=0            !nr of filters sampling stellar+dust emission
          do i=1,nfilt
-            lambda_rest(i)=lambda_eff(i)/(1.+redshift(i_gal))   ! dzliu note: redshift to restframe by 1/(1+z)
+            lambda_rest(i)=lambda_eff(i)/(1.+redshift(i_gal))
             if (lambda_rest(i).lt.30.) then
                nfilt_sfh=nfilt_sfh+1
                kfilt_sfh(nfilt_sfh)=i
@@ -393,20 +384,20 @@ c     Relevant physical parameters
                   lssfr(i_sfh)=dlog10(ssfr(i_sfh))              ! log(SSFR_0.01Gyr)
                   tvism(i_sfh)=mu(i_sfh)*tauv(i_sfh)            ! mu*tauV=V-band optical depth for ISM
                   av(i_sfh)=fprop_sfh(i_sfh,25)                 ! A_V
-                  m_lh(i_sfh)=dlog10(1./fprop_sfh(i_sfh,26))    ! log(M*/L_H)
-                  m_lk(i_sfh)=dlog10(1./fprop_sfh(i_sfh,27))    ! log(M*/L_K)
-                  age(i_sfh)=dlog10(fprop_sfh(i_sfh,19))        ! stellar mass-weighted age in yrs
-                  ldust(i_sfh)=ldust(i_sfh)                ! dzliu test *0.0 <TODO>
-                  logldust(i_sfh)=logldust(i_sfh)          ! dzliu test <TODO>
+                  m_lh(i_sfh)=dlog10(1./fprop_sfh(i_sfh,26))    !log(M*/L_H)
+                  m_lk(i_sfh)=dlog10(1./fprop_sfh(i_sfh,27))    !log(M*/L_K)
+                  age(i_sfh)=dlog10(fprop_sfh(i_sfh,19))      ! stellar mass-weighted age in yrs
 c     .lbr contains absolute AB magnitudes -> convert to fluxes Fnu in Lo/Hz
 c     Convert all magnitudes to Lo/Hz (except H lines luminosity: in Lo)
 c     Normalise SEDs to stellar mass
                   do k=1,nfilt_sfh
-                     flux_sfh(i_sfh,k)=3.117336e+6
+                      if (flux_sfh(i_sfh,k).gt.-98.) then
+                          flux_sfh(i_sfh,k)=3.117336e+6
      +                    *10**(-0.4*(flux_sfh(i_sfh,k)+48.6))
-                     flux_sfh(i_sfh,k)=flux_sfh(i_sfh,k)/mstr1(i_sfh)
+                          flux_sfh(i_sfh,k)=flux_sfh(i_sfh,k)/mstr1(i_sfh)
 c     1+z factor which is required in model fluxes
-                     flux_sfh(i_sfh,k)=flux_sfh(i_sfh,k)/(1+redshift(i_gal))   ! dzliu note: redshift to obsframe by 1/(1+z) <TODO> why? equivalent to multiplying (1+z) to the derived quantities e.g. Mdust Ldust etc.
+                          flux_sfh(i_sfh,k)=flux_sfh(i_sfh,k)/(1+redshift(i_gal))
+                      endif
                   enddo
                endif
             enddo
@@ -427,21 +418,21 @@ c     READ IRLIB
                read(20,*,iostat=io) indx_ir(i_ir),(fprop_ir(i_ir,j),j=1,nprop_ir),
      +              (flux_ir(i_ir,j),j=1,nfilt_ir)
 c     IR model parameters
-               fmu_ir(i_ir)=fprop_ir(i_ir,1)        ! fmu parameter Ld(ISM)/Ld(tot) - infrared
+               fmu_ir(i_ir)=fprop_ir(i_ir,1)       ! fmu parameter Ld(ISM)/Ld(tot) - infrared
                fmu_ism(i_ir)=fprop_ir(i_ir,16)      ! xi_C^tot [cont. cold dust to Ld(tot)]
-               tbg2(i_ir)=fprop_ir(i_ir,4)          ! T_C^ISM [eq. temp. cold dust in ISM]
-               tbg1(i_ir)=fprop_ir(i_ir,3)          ! T_W^BC [eq. temp. warm dust in birth clouds]
+               tbg2(i_ir)=fprop_ir(i_ir,4)         ! T_C^ISM [eq. temp. cold dust in ISM]
+               tbg1(i_ir)=fprop_ir(i_ir,3)         ! T_W^BC [eq. temp. warm dust in birth clouds]
                xi1(i_ir)=fprop_ir(i_ir,13)          ! xi_PAH^BC Ld(PAH)/Ld(tot)
                xi2(i_ir)=fprop_ir(i_ir,14)          ! xi_MIR^BC Ld(MIR)/Ld(tot)
                xi3(i_ir)=fprop_ir(i_ir,15)          ! xi_W^BC Ld(warm)/Ld(tot)
-               mdust(i_ir)=fprop_ir(i_ir,8)         ! dust mass
-               tdust(i_ir)=fprop_ir(i_ir,12)        ! luminosity-weighted dust temperature
+               mdust(i_ir)=fprop_ir(i_ir,8) !dust mass
+               tdust(i_ir)=fprop_ir(i_ir,12) !luminosity-weighted dust temperature
 c     .lbr contains absolute AB magnitudes -> convert to fluxes Fnu in Lo/Hz
 c     Convert all magnitudes to Lo/Hz
                do k=1,nfilt_ir
                   flux_ir(i_ir,k)=3.117336e+6
      +                 *10**(-0.4*(flux_ir(i_ir,k)+48.6))
-                  flux_ir(i_ir,k)=flux_ir(i_ir,k)/(1+redshift(i_gal))   ! dzliu note: redshift to obsframe by 1/(1+z) <TODO> why? equivalent to multiplying (1+z) to the derived quantities e.g. Mdust Ldust etc.
+                  flux_ir(i_ir,k)=flux_ir(i_ir,k)/(1+redshift(i_gal))
                enddo
             enddo
  201        format(0p7f12.3,1pe12.3,1p14e12.3,1p3e12.3)
@@ -469,7 +460,7 @@ c            write(*,*) k, filt_name(k),flux_obs(i_gal,k), sigma(i_gal,k)
 c            enddo
 c            stop
 
-c     Observed fluxes: Jy -> Lsun/Hz   ! dzliu note: redshift to restframe, dist()**2 already contains a factor of 1/(1+z)
+c     Observed fluxes: Jy -> Lsun/Hz
          do k=1,nfilt
             if (flux_obs(i_gal,k).gt.0) then
                flux_obs(i_gal,k)=flux_obs(i_gal,k)*1.e-23
@@ -665,8 +656,8 @@ c     Check progress of the fit...
             else if (i_sfh/n_sfh.eq.1) then
                write (*,*) '100% done...', n_sfh, " opt. models - fit finished"
             endif
-
-            df=0.20             !fmu_opt=fmu_ir +/- dfmu   ! dzliu test: df=0.20, try df=1.00 (i.e. do not constrain ISM/BirthCloud ratio between stellar attenuation and dust emission)
+            
+            df=0.20             !fmu_opt=fmu_ir +/- dfmu 
 
 c     Search for the IR models with f_mu within the range set by df
             DO i_ir=1,n_ir
@@ -676,6 +667,7 @@ c     Search for the IR models with f_mu within the range set by df
                chi2=0.
                chi2_opt=0.
                chi2_ir=0.
+               
 
                if (abs(fmu_sfh(i_sfh)-fmu_ir(i_ir)).le.df.and.xi1(i_ir).lt.0.15.and.fmu_sfh(i_sfh).lt.0.9) then
 
@@ -735,6 +727,11 @@ c     Best fit model
                      a_sav=a
                      chi2_sav_opt=chi2_new_opt
                      chi2_sav_ir=chi2_new_ir
+                     do k=1,nfilt
+                         if (flux_mod(k).gt.0) then
+                             fwrite(k)=a_sav*flux_mod(k)
+                         endif
+                     enddo
                   endif
 
 c     MARGINAL PROBABILITY DENSITY FUNCTIONS
@@ -949,20 +946,20 @@ c     New histogram parameters
          sfr_min=-2.
          sfr_max=4.
          da=0.10
-         a_min=8.0
-         a_max=14.0
-         dtbg=1. ! dzliu modified: dtbg=1. -> dtbg=2.
+         a_min=6.0
+         a_max=13.0
+         dtbg=1.
          tbg2_min=15.
-         tbg2_max=55. ! dzliu modified: tbg2_max=25. -> tbg2_max=55.
+         tbg2_max=25.
          tbg1_min=30.
-         tbg1_max=90. ! dzliu modified: tbg1_max=60. -> tbg1_max=90.
+         tbg1_max=60.
          td_min=10.
          td_max=80.
          dtd=5.
          dxi=0.05
          dmd=0.10
-         md_min=6.
-         md_max=12.
+         md_min=4.
+         md_max=10.
          dz=0.2
          z_min=0.
          z_max=8.
@@ -1036,8 +1033,8 @@ c     --------------------------------------------------------------------------
          
          write(filter_header,*) (filt_name(k)//' ',k=1,nfilt)         ! dzliu modified, add space between headers
          write(31,'(a)') '#'//filter_header(1:largo(filter_header))   ! dzliu modified, add space between headers ! note that it should be '#'//filter_header instead of '# '//filter_header
-         write(31,701) (flux_orig(i_gal,k),k=1,nfilt)                 ! dzliu modified, add space between values
-         write(31,701) (sigma_orig(i_gal,k),k=1,nfilt)                ! dzliu modified, add space between values
+         write(31,701) (flux_orig(i_gal,k),k=1,nfilt)
+         write(31,701) (sigma_orig(i_gal,k),k=1,nfilt)
          write(31,703)
  703     format('#')
 
@@ -1068,13 +1065,8 @@ c     --------------------------------------------------------------------------
      +        m_lh(sfh_sav),m_lk(sfh_sav)
 
          write(31,'(a)') '#'//filter_header(1:largo(filter_header))   ! dzliu modified, add space between headers ! note that it should be '#'//filter_header instead of '# '//filter_header
-         write(31,701) (a_sav*flux_sfh(sfh_sav,k),k=1,nfilt_sfh-nfilt_mix),
-     +        (a_sav*(flux_sfh(sfh_sav,k)
-     +        +flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav)),
-     +        k=nfilt_sfh-nfilt_mix+1,nfilt_sfh),
-     +        (a_sav*flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav),
-     +        k=nfilt_sfh+1,nfilt)
- 701     format('  ',1p,200(e12.6,'                  ')) ! dzliu modified, add space between values, and 50(e12.3) --> 200(e12.6,''*18)
+         write(31,701) (fwrite(k),k=1,nfilt)
+ 701     format(1p,50(e16.6,18X))
 
          write(31,703)
          write(31,805)
@@ -1685,8 +1677,7 @@ c      outfile : .sed file (output)
 c     ===========================================================================
       implicit none
       character infile1*80,infile2*80
-c     character*10 outfile ! dzliu modified
-      character*255 outfile ! dzliu modified
+      character*255 outfile
       integer nage,niw_opt,niw_ir,niw_tot
       integer i,imod,nburst,k,nmodels
       integer i_opt,i_ir,indx_sfh,indx_ir,indx
@@ -1748,7 +1739,7 @@ c     Normalise Optical SED by stellar mass of the model
                fopt(i)=opt_sed(i)/mstr1
                fopt0(i)=opt_sed0(i)/mstr1
             enddo
-            ldust=ldtot/mstr1 ! dzliu test *0.0 <TODO>
+            ldust=ldtot/mstr1
             goto 2
          endif
       enddo 
