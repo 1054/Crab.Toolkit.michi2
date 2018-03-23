@@ -58,11 +58,12 @@ fi
 
 
 # 
-# Read Parallel, Redshift, Flux
+# Read Parallel, Redshift, Flux, Umin
 # 
 Redshift=""
 Parallel=2
-Flux="" #<TODO># 
+Flux=""
+Umin="" # Added on 2018-03-23 to put an additional constraint on Umin
 if [[ $(hostname) == aida* ]] || [[ $(hostname) == isaac* ]]; then
     Flux="extracted_flux.txt" #<TODO># 
 fi
@@ -90,6 +91,13 @@ if [[ $# -ge 2 ]]; then
                 Flux="${!i}"
                 echo 
                 echo Flux="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-umin" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Umin="${!i}"
+                echo 
+                echo Umin="${!i}"
             fi
         fi
         i=$((i+1))
@@ -169,6 +177,15 @@ fi
 
 
 # 
+# Determine whether this is a starburst galaxy so that we constrain the Umin
+# 
+constrain_dust_Umin=()
+if [[ x"$Umin" != x ]]; then
+    constrain_dust_Umin=(-constraint LIB3 PAR1 GE VALUE $Umin)
+fi
+
+
+# 
 # Copy SED LIB
 # 
 echo 
@@ -183,12 +200,13 @@ michi2_v04 -obs "fit_5.in" \
            -redshift $Redshift \
            -lib "lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED" \
                 "lib.MullaneyAGN.SED" \
-                "lib.DL07.2010.03.18.HiExCom.SED" \
-                "lib.DL07.2010.03.18.LoExCom.SED" \
+                "lib.DL07.2010.03.18.spec.2.0.HiExCom.SED" \
+                "lib.DL07.2010.03.18.spec.2.0.LoExCom.SED" \
                 "RadioPowerlaw.Single.lib.SED" \
            -out "fit_5.out" \
            -parallel $Parallel \
            ${constrain_stellar_index[@]} \
+           ${constrain_dust_Umin[@]} \
            -constraint LIB3 INDEX EQ LIB4 INDEX \
            -constraint LIB5 NORM EQ SED "((LIB3*(10^LIB3_PAR3))+(LIB4*(10^LIB4_PAR3)))*40.31970/3750/10^2.4" \
            -filter filter.list
