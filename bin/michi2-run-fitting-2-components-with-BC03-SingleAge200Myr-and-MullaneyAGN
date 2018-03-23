@@ -1,0 +1,180 @@
+#!/bin/bash
+#
+
+if [[ $(type michi2_v04 2>/dev/null | wc -l) -eq 0 ]]; then
+    if [[ -f "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash" ]]; then
+        #echo source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        #echo $PATH
+    else
+        echo "Error! \"$(dirname ${BASH_SOURCE[0]})/bin_setup.bash\" was not found!"
+        exit
+    fi
+fi
+
+
+# 
+# Check user input
+# 
+if [[ $# -eq 0 ]]; then
+    echo "Usage: "
+    echo "    michi2-run-fitting-2-components -redshift 1.5"
+    echo "    michi2-run-fitting-2-components -redshift 1.5 -flux extracted_flux.txt"
+    echo "    michi2-run-fitting-2-components -redshift 1.5 -flux extracted_flux.txt -parallel 2"
+    echo ""
+    echo "Descriptions:"
+    echo "    This code fits the input flux data points with two SED components: "
+    echo "        BC03 stellar SED (http://www.bruzual.org/bc03/) with Calzetti2000 attenuation law, "
+    echo "        and Mullaney2011 AGN SED (https://adsabs.harvard.edu/abs/2011MNRAS.414.1082M/). "
+    echo "    "
+    echo "    The input flux data file should contain three columns separated by white space, "
+    echo "    with header lines commented out by sharp (#) character, and the three columns should be: "
+    echo "        wavelength in micron meter unit"
+    echo "        flux density in mJy unit"
+    echo "        and error in flux density also in mJy unit"
+    echo "    "
+    echo "    The default input flux data file name is \"extracted_flux.txt\"."
+    echo "    We will try to filter out non-stellar-nor-AGN data points and produce a filtered flux data file \"fit_2.in\"."
+    echo "    However, if a \"fit_2.in\" file already exists, we will directly use that and ignore any input of flux file!"
+    echo "    So make sure you delete \"fit_2.in\" file if you want a fresh new fitting with new input flux data file!"
+    echo "    "
+    echo "    A new feature: if we prepared a folder named \"best-fit_stellar_SED\", and if there is a file named "
+    echo "    \"INDEX_LIB1\" in that folder, then we will fix the stellar SED library index to the value therein, "
+    echo "    and only fit that single SED library! This is useful, for example, for following procedure: "
+    echo "    (1) We first fit the optical to near-infrared flux data with stellar+AGN component with the code "
+    echo "        \"michi2-run-fitting-2-components\", which outputs \"fit_2.out*\" files; "
+    echo "    (2) Then we run the code \"michi2-plot-fitting-results\" \"fit_2.out\", which outputs \"obj_*\" folders "
+    echo "        and \"best-fit*\" files; "
+    echo "    (3) Then we copy \"obj_1\" folder as \"best-fit_stellar_SED\" folder; "
+    echo "    (4) Next, we can fit the full optical to millimeter flux data with five component SED fitting with the code "
+    echo "        \"michi2-run-fitting-5-components\", and at this time the stellar SED will be fixed "
+    echo "        to the previously best-fitted single SED library."
+    echo "    "
+    echo ""
+    exit
+fi
+
+
+# 
+# Read Parallel, Redshift, Flux
+# 
+Redshift=""
+Parallel=2
+Flux="extracted_flux.txt" #<TODO># 
+if [[ $# -ge 2 ]]; then
+    i=1
+    while [[ $i -le $# ]]; do
+        Strcmd=$(echo "${!i}" | sed -e 's/^--/-/g' | tr '[:upper:]' '[:lower:]')
+        if [[ "$Strcmd" == "-parallel" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Parallel="${!i}"
+                echo 
+                echo Parallel="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-redshift" ]] || [[ "$Strcmd" == "-z" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Redshift="${!i}"
+                echo 
+                echo Redshift="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-flux" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Flux="${!i}"
+                echo 
+                echo Flux="${!i}"
+            fi
+        fi
+        i=$((i+1))
+    done
+fi
+
+
+# 
+# If no redshift given by "-redshift" argument, then just take first argumetn as the redshift
+# 
+if [[ x"$Redshift" == x"" ]]; then
+    Redshift="$1"
+fi
+
+
+# 
+# Check photometry file
+# 
+if [[ ! -f "$Flux" ]]; then
+    echo "Error! \"$Flux\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+    exit
+fi
+
+
+# 
+# Check photometry file
+# 
+if [[ ! -f "fit_2.in" ]]; then
+    if [[ -f "$Flux" ]]; then
+        echo ""
+        echo ""
+        echo "Warning! \"fit_2.in\" was not found! But found \"$Flux\"! Will run: "
+        echo "michi2_filter_flux_2sigma_no_dust_no_radio.py \"$Flux\" \"fit_2.in\""
+        echo "to filter flux data points for SED fitting."
+        echo ""
+        michi2_filter_flux_2sigma_no_dust_no_radio.py "$Flux" "fit_2.in"
+        echo ""
+        echo ""
+    fi
+fi
+if [[ ! -f "fit_2.in" ]]; then
+    echo 
+    echo "Error! \"fit_2.in\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+    exit
+fi
+
+
+# 
+# Detect if we have best-fit stellar SED folder
+# 
+constrain_stellar_index=()
+if [[ -d "best-fit_stellar_SED" ]]; then
+    if [[ -f "best-fit_stellar_SED/INDEX_LIB1" ]]; then
+        best_fit_stellar_index=$(cat best-fit_stellar_SED/INDEX_LIB1)
+        echo 
+        echo "Found \"best-fit_stellar_SED\" folder! Will fix stellar library index to ${best_fit_stellar_index}!"
+        constrain_stellar_index=(-constraint LIB1 INDEX EQ VALUE $best_fit_stellar_index)
+        echo ${constrain_stellar_index[@]}
+    fi
+fi
+
+
+# 
+# Copy SED LIB
+# 
+echo 
+michi2-deploy-files SED no radio no dust Mullaney AGN BC03
+#unzip -o $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/lib_SED/lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip
+#unzip -o $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/lib_SED/lib.MullaneyAGN.SED.zip
+
+
+# 
+# Run michi2
+# 
+echo 
+michi2_v04 -obs "fit_2.in" \
+           -redshift $Redshift \
+           -lib "lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED" \
+                "lib.MullaneyAGN.SED" \
+           -out "fit_2.out" \
+           -parallel $Parallel \
+           ${constrain_stellar_index[@]} \
+           -filter filter.list
+           
+           # -debug -debug | tee log_michi2_v04.txt
+
+
+
+
+
+
+
+
