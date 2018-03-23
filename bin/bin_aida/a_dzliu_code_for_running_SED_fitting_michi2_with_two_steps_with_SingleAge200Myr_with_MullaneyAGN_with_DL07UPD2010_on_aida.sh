@@ -157,7 +157,7 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
         
         #michi2-deploy-files
         
-        michi2-run-fitting-5-components-with-BC03-SingleAge200Myr-and-MullaneyAGN-and-DL07UPD2010 ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 8
+        michi2-run-fitting-5-components-with-BC03-SingleAge200Myr-and-MullaneyAGN-and-DL07UPD2010 ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 8 -Umin 5
         
         rm -rf obj_* best*.* Plot_*
         
