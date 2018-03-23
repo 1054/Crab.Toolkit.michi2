@@ -119,6 +119,9 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     cp ./$_Source/fit_5.best.pdf      $output_dir/${_Source}_fit_5_components.best.pdf
     cp ./$_Source/fit_5.chisq.pdf     $output_dir/${_Source}_fit_5_components.chisq.pdf
     
+    if [[ -f ./$_Source/fit_2.pdf ]]; then cp ./$_Source/fit_2.pdf $output_dir/${_Source}_fit_2_components.pdf; fi
+    if [[ -f ./$_Source/fit_2.chisq.pdf ]]; then cp ./$_Source/fit_2.pdf $output_dir/${_Source}_fit_2_components.chisq.pdf; fi
+    
     # 
     # Copy SED fitting best-fit ascii file
     if [[ ! -d $output_dir/${_Source}_fit_5_component_SEDs ]]; then 
