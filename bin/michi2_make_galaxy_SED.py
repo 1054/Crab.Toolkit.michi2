@@ -282,6 +282,10 @@ while iarg < len(sys.argv):
         if iarg+1 < len(sys.argv):
             iarg = iarg + 1
             EBV = float(sys.argv[iarg])
+    elif sys.argv[iarg].lower() == '-a_v':
+        if iarg+1 < len(sys.argv):
+            iarg = iarg + 1
+            EBV = float(sys.argv[iarg])*0.25 # E(B-V) = 0.25 * A_V
     elif sys.argv[iarg].lower() == '-sfr':
         if iarg+1 < len(sys.argv):
             iarg = iarg + 1
@@ -448,12 +452,17 @@ if ~numpy.isnan(Mstar):
         #Lib_stellar = '/Users/dzliu/Softwares/BC03/Output_SED_LIB/BC03_Constant_SFH_various_ages/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED' # 'BC03_Constant_SFH_various_ages/lib.BC03.2016.Padova1994.BaSeL.Z0.0190.EBV.SED'
         w_stellar, f_stellar, p_stellar = find_SED_lib_by_given_parameters(Lib_stellar, {'EBV':EBV, 'Age':Age/1e9}, verbose = True)
     
-    a_stellar = Mstar * (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) / float(p_stellar['Mass']) * (1+z)
-    f_stellar = f_stellar * a_stellar
-    w_stellar = w_stellar * (1+z)
-    print('a_stellar = %s'%(a_stellar))
-    print('p_stellar[\'Mass\'] = %0.6e'%(p_stellar['Mass']))
-    print('Mstar = %0.6e'%(Mstar))
+    if 'Mass' in p_stellar:
+        a_stellar = Mstar * (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) / float(p_stellar['Mass']) * (1+z)
+        f_stellar = f_stellar * a_stellar
+        w_stellar = w_stellar * (1+z)
+        print('a_stellar = %s'%(a_stellar))
+        print('p_stellar[\'Mass\'] = %0.6e'%(p_stellar['Mass']))
+        print('Mstar = %0.6e'%(Mstar))
+    else:
+        a_stellar = 0.0
+        print('a_stellar = 0')
+        print('Mstar = 0')
     # 
     # Stellar_mass = a / (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * float(p_stellar['Mass']) / (1+Redshift)
     # 
@@ -630,6 +639,17 @@ if a_AGN > 0:
     os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_AGN'+'.txt'))
     os.system('rm "%s.bak"'%(Output_name+'_AGN'+'.txt'))
     print('Output to "%s"'%(Output_name+'_AGN'+'.txt'))
+
+
+if a_stellar > 0:
+    asciitable.write(numpy.column_stack((w_stellar,f_stellar)), 
+                        Output_name+'_stellar'+'.txt', 
+                        Writer=asciitable.FixedWidth, 
+                        names=['Wavelength_um', 'Flux_density_mJy'], 
+                        overwrite=True, delimiter='  ', bookend=True)
+    os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_stellar'+'.txt'))
+    os.system('rm "%s.bak"'%(Output_name+'_stellar'+'.txt'))
+    print('Output to "%s"'%(Output_name+'_stellar'+'.txt'))
 
 
 
