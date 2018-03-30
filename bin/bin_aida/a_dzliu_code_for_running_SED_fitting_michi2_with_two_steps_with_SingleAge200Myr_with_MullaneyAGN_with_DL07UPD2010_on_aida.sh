@@ -127,62 +127,110 @@ for (( i = 0; i < ${#list_of_source_names[@]}; i++ )); do
     cd "${list_of_source_names[i]}"
     
     
-    if [[ ! -f "fit_2.out" ]]; then
+    if [[ ! -f "fit_2.out" ]] && [[ ! -f "fit_with_no_stellar_data" ]]; then
         
-        #michi2-deploy-files
+        michi2_filter_flux_2sigma_no_dust_no_radio.py "extracted_flux.txt" "fit_2.in"
         
-        michi2-run-fitting-2-components-with-BC03-SingleAge200Myr-and-MullaneyAGN ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 2
-        
-        rm -rf obj_* best* Plot_*
-        
-        michi2-plot-fitting-results fit_2.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
-        
-        if [[ ! -d "obj_1" ]]; then
-            echo "Error! Failed to run \"michi2-plot-fitting-results fit_2.out\" and produce \"obj_1\"!"
-            exit 255
+        if [[ $(cat "fit_2.in" | grep -v "^#" | grep -v "^$" | wc -l) -gt 0 ]]; then
+            
+            michi2-run-fitting-2-components-with-BC03-SingleAge200Myr-and-MullaneyAGN ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 2
+            
+            rm -rf obj_* best* Plot_*
+            
+            michi2-plot-fitting-results fit_2.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
+            
+            if [[ ! -d "obj_1" ]]; then
+                echo "Error! Failed to run \"michi2-plot-fitting-results fit_2.out\" and produce \"obj_1\"!"
+                exit 255
+            else
+                mkdir "best-fit_stellar_SED_files"
+                mv obj_* best*.* Plot_* "best-fit_stellar_SED_files"
+                cp -r "best-fit_stellar_SED_files/obj_1" "best-fit_stellar_SED"
+            fi
+            
+            if [[ -f "fit_with_no_stellar_data" ]]; then
+                rm "fit_with_no_stellar_data"
+            fi
+            
         else
-            mkdir "best-fit_stellar_SED_files"
-            mv obj_* best*.* Plot_* "best-fit_stellar_SED_files"
-            cp -r "best-fit_stellar_SED_files/obj_1" "best-fit_stellar_SED"
+            
+            touch "fit_with_no_stellar_data"
+            
         fi
     
     else
         
-        echo "Found existing \"fit_2.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
+        if [[ -f "fit_2.out" ]]; then
+            echo "Found existing \"fit_2.out\" under directory \"${list_of_source_names[i]}\"! Will skip fitting stellar SED for this source!"
+        fi
+        
+        if [[ -f "fit_with_no_stellar_data" ]]; then
+            echo "Found existing \"fit_with_no_stellar_data\" under directory \"${list_of_source_names[i]}\"! Will skip fitting stellar SED for this source!"
+        fi
     
     fi
     
     
-    if [[ ! -f "fit_5.out" ]]; then
+    if [[ ! -f "fit_5.out" ]] && [[ ! -f "fit_4.out" ]]; then
         
-        #michi2-deploy-files
+        if [[ ! -f "fit_with_no_stellar_data" ]]; then
         
-        michi2-run-fitting-5-components-with-BC03-SingleAge200Myr-and-MullaneyAGN-and-DL07UPD2010 ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 8 -Umin 5
-        
-        rm -rf obj_* best*.* Plot_*
+            michi2-run-fitting-5-components-with-BC03-SingleAge200Myr-and-MullaneyAGN-and-DL07UPD2010 ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 8 -Umin 5
+            
+            rm -rf obj_* best*.* Plot_*
+            
+        else
+            
+            michi2-run-fitting-4-components-with-MullaneyAGN-and-DL07UPD2010 ${list_of_source_redshifts[i]} -flux extracted_flux.txt -parallel 8 -Umin 2
+            
+            rm -rf obj_* best*.* Plot_*
+            
+        fi
         
         sleep 2
     
     else
         
-        echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
+        if [[ -f "fit_5.out" ]]; then
+            echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip fitting IR SED for this source!"
+        fi
+        
+        if [[ -f "fit_4.out" ]]; then
+            echo "Found existing \"fit_4.out\" under directory \"${list_of_source_names[i]}\"! Will skip fitting IR SED for this source!"
+        fi
     
     fi
     
     
-    if [[ ! -f "fit_5.pdf" ]]; then
+    if [[ ! -f "fit_5.pdf" ]] && [[ ! -f "fit_4.pdf" ]]; then
         
         rm -rf obj_* best*.* Plot_*
         
-        michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
-        
-        michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}" -only-best -out fit_5.best.pdf
+        if [[ ! -f "fit_with_no_stellar_data" ]]; then
+            
+            michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
+            
+            michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source "${list_of_source_names[i]}" -only-best -out fit_5.best.pdf
+            
+        else
+            
+            michi2-plot-fitting-results fit_4.out -flux extracted_flux.txt -source "${list_of_source_names[i]}"
+            
+            michi2-plot-fitting-results fit_4.out -flux extracted_flux.txt -source "${list_of_source_names[i]}" -only-best -out fit_4.best.pdf
+            
+        fi
         
         sleep 1
     
     else
         
-        echo "Found existing \"fit_5.out\" under directory \"${list_of_source_names[i]}\"! Will skip this source!"
+        if [[ -f "fit_5.pdf" ]]; then
+            echo "Found existing \"fit_5.pdf\" under directory \"${list_of_source_names[i]}\"! Will skip plotting IR SED for this source!"
+        fi
+        
+        if [[ -f "fit_4.pdf" ]]; then
+            echo "Found existing \"fit_4.pdf\" under directory \"${list_of_source_names[i]}\"! Will skip plotting IR SED for this source!"
+        fi
     
     fi
     
