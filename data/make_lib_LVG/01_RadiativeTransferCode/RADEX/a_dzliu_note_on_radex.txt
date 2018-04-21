@@ -1,3 +1,11 @@
+Donwload:
+    http://home.strw.leidenuniv.nl/~moldata/radex.html
+    https://personal.sron.nl/~vdtak/radex/index.shtml
+    
+Mol/Atom data
+    http://home.strw.leidenuniv.nl/~moldata/C.html
+    http://home.strw.leidenuniv.nl/~moldata/C+.html
+
 Input:
     * frequency range
     * molecular hydrogen gas kinetic temperature

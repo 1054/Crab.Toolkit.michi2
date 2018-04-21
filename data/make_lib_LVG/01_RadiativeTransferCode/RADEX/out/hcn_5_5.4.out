@@ -1,0 +1,19 @@
+* Radex version        : 30nov2011
+* Geometry             : Uniform sphere
+* Molecular data file  : ./data/hcn.dat                                                                  
+* T(kin)            [K]:    5.000
+* Density of H2  [cm-3]:  2.512E+05
+* Density of pH2 [cm-3]:  6.280E+04
+* Density of oH2 [cm-3]:  1.884E+05
+* T(background)     [K]:    2.725
+* Column density [cm-2]:  3.876E+16
+* Line width     [km/s]:   50.000
+Calculation finished in   34 iterations
+      LINE         E_UP       FREQ        WAVEL     T_EX      TAU        T_R       POP        POP       FLUX        FLUX
+                   (K)        (GHz)       (um)      (K)                  (K)        UP        LOW      (K*km/s) (erg/cm2/s)
+1      -- 0          4.2     88.6316   3382.4556    4.968  1.752E+02  2.011E+00  4.793E-01  3.761E-01  1.070E+02  9.596E-07
+2      -- 1         12.8    177.2611   1691.2478    4.831  2.143E+02  1.373E+00  1.373E-01  4.793E-01  7.308E+01  5.242E-06
+3      -- 2         25.5    265.8864   1127.5207    3.902  6.417E+01  3.849E-01  7.305E-03  1.373E-01  2.048E+01  4.959E-06
+4      -- 3         42.5    354.5055    845.6638    2.967  3.369E+00  2.127E-02  3.036E-05  7.305E-03  1.132E+00  6.495E-07
+5      -- 4         63.8    443.1161    676.5550    3.155  1.364E-02  2.235E-04  4.389E-08  3.036E-05  1.189E-02  1.333E-08
+6      -- 5         89.3    531.7163    563.8203    3.652  1.937E-05  4.146E-07  4.792E-11  4.389E-08  2.207E-05  4.272E-11
