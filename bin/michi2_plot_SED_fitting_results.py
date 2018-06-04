@@ -482,47 +482,59 @@ else:
     UserInputFluxFile = ''
     UserOutputName = ''
     UserInputText = []
+    UserInputColorForAGN = ''
+    UserThickColorForAGN = 0.0
     iarg = 1
     while iarg < len(sys.argv):
         TempCmd = sys.argv[iarg].replace('--','-').lower()
-        if sys.argv[iarg]=='-only-plot-best-sed' or sys.argv[iarg]=='-only-best':
+        if TempCmd=='-only-plot-best-sed' or TempCmd=='-only-best':
             SetOnlyPlotBestSED = True
             print('Setting only plot best-fit!')
-        elif sys.argv[iarg]=='-constrain-by-upper-limits' or sys.argv[iarg]=='-constrain':
+        elif TempCmd=='-constrain-by-upper-limits' or TempCmd=='-constrain':
             ConstrainByUpperLimits = True
             print('Setting constrain by upper limits!')
-        elif sys.argv[iarg]=='-source-name' or sys.argv[iarg]=='-source' or sys.argv[iarg]=='-s':
+        elif TempCmd=='-source-name' or TempCmd=='-source' or TempCmd=='-s':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
                 SourceName = sys.argv[iarg]
                 print('Setting SourceName = %s'%(SourceName))
-        elif sys.argv[iarg]=='-yrange':
+        elif TempCmd=='-yrange':
             if iarg+2 < len(sys.argv):
                 iarg = iarg + 1
                 PlotYRange.append(float(sys.argv[iarg]))
                 iarg = iarg + 1
                 PlotYRange.append(float(sys.argv[iarg]))
                 print('Setting PlotYRange = %s'%(PlotYRange))
-        elif sys.argv[iarg]=='-max-sed-number' or sys.argv[iarg]=='-max':
+        elif TempCmd=='-max-sed-number' or TempCmd=='-max':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
                 PlotMaxSEDNumber = int(sys.argv[iarg])
                 print('Setting PlotMaxSEDNumber = %s'%(PlotMaxSEDNumber))
-        elif sys.argv[iarg]=='-flux-file' or sys.argv[iarg]=='-flux' or sys.argv[iarg]=='-f':
+        elif TempCmd=='-flux-file' or TempCmd=='-flux' or TempCmd=='-f':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
                 UserInputFluxFile = sys.argv[iarg]
                 print('Setting UserInputFluxFile = %s'%(UserInputFluxFile))
-        elif sys.argv[iarg]=='-output-file' or sys.argv[iarg]=='-output-name' or sys.argv[iarg]=='-output' or sys.argv[iarg]=='-out' or sys.argv[iarg]=='-o':
+        elif TempCmd=='-output-file' or TempCmd=='-output-name' or TempCmd=='-output' or TempCmd=='-out' or TempCmd=='-o':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
                 UserOutputName = sys.argv[iarg]
                 print('Setting UserOutputName = %s'%(UserOutputName))
-        elif sys.argv[iarg]=='-text':
+        elif TempCmd=='-text':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
                 UserInputText = UserInputText.append(sys.argv[iarg])
                 print('Setting UserInputText += %s'%(sys.argv[iarg]))
+        elif TempCmd=='-color-for-agn':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                UserInputColorForAGN = sys.argv[iarg]
+                print('Setting UserInputColorForAGN = %s'%(sys.argv[iarg]))
+        elif TempCmd=='-thick-for-agn':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                UserInputThickForAGN = float(sys.argv[iarg])
+                print('Setting UserInputThickForAGN = %s'%(sys.argv[iarg]))
         else:
             DataFile = sys.argv[iarg]
         iarg = iarg + 1
@@ -717,14 +729,20 @@ else:
                 xclip = [(-numpy.inf,2e3)]
             
             Plot_lib_color = Color_list[j]
+            Plot_lib_thick = Plot_chi2_linewidth
+            Plot_lib_alpha = Plot_chi2_alpha
             for Preset_lib_color in Color_preset:
                 if InfoDict['LIB%d'%(j+1)].find(Preset_lib_color)>=0: 
                     Plot_lib_color = Color_preset[Preset_lib_color]
+                if InfoDict['LIB%d'%(j+1)].find('AGN')>=0 and UserInputColorForAGN != '': 
+                    Plot_lib_color = UserInputColorForAGN # <20180515> allow user to set AGN component color
+                if InfoDict['LIB%d'%(j+1)].find('AGN')>=0 and UserInputThickForAGN > 0.0: 
+                    Plot_lib_thick = UserInputThickForAGN # <20180515> allow user to set AGN component thickness
             
             Plot_engine.plot_data_file('obj_%d/SED_LIB%d'%(i+1,j+1), xlog=1, ylog=1, xclip=xclip, current=1, \
                                 dataname='obj_%d_SED_LIB%d'%(i+1,j+1), 
                                 redshift = Redshift, 
-                                linestyle='dashed', linewidth=Plot_chi2_linewidth, color=Plot_lib_color, alpha=Plot_chi2_alpha)
+                                linestyle='dashed', linewidth=Plot_lib_thick, color=Plot_lib_color, alpha=Plot_lib_alpha)
         # 
         Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.05)
         Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.85)
