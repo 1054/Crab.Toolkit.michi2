@@ -1,0 +1,6 @@
+data m_FiltersCodes.txt read m_FiltersCodes 1.d
+data m_FiltersWaves.txt read m_FiltersWaves 1.f
+data m_FiltersNames.txt read m_FiltersNames 1.s
+sort {m_FiltersWaves m_FiltersCodes m_FiltersNames}
+define print_noheader 1
+print "m_Filters.txt" '%0.6e %5d   %s\n' {m_FiltersWaves m_FiltersCodes m_FiltersNames}
