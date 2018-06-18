@@ -10,8 +10,10 @@
 ; 
 ; largely modified by dzliu
 ; 2016
+; 20180618 added the output of converted wavelength (um) and flux (mJy).
 ; 
 ; Usage: idl84 -e "plot_sed" -args 10001 ; added by dzliu
+; Usage: idl84 -e "plot_sed" -args "best-fit_SED" ; added by dzliu
 ; 
 
 
@@ -91,6 +93,7 @@ pro plot_sed, galaxy
   name_ps=galaxy+'.ps'
   name_fit=galaxy+'.fit'
   name_sed=galaxy+'.sed'
+  name_sed_out=galaxy+'.sed.um.mJy.txt'
   name_xy=galaxy
   if not file_test(name_fit,/read) then message, 'Error! '+name_fit+' was not found!' ; added by dzliu
   if not file_test(name_sed,/read) then message, 'Error! '+name_sed+' was not found!' ; added by dzliu
@@ -237,6 +240,22 @@ pro plot_sed, galaxy
   t12=TeXtoIDL('log(SFR/M_{o} yr^{-1})')
   t13=TeXtoIDL('\xi_C^{tot}')
   t14=TeXtoIDL('\xi_W^{tot}')
+  
+  
+  
+  
+  ;================================================SAVING=============================================
+  save, FILENAME=name_sav, w_sed, f_sed_at, f_sed_un, f_obs, f_obs_lo, f_obs_hi, f_fit, f_res, f_res_lo, f_res_hi, Mstars, SFR, sSFR, Ldust, Mdust, Tdust, age_M, A_V, tau_V, tau_V_ISM, mu, Tc_ISM, Tw_BC
+  
+  openw, lun, name_sed_out, /get_lun
+  printf, lun, "wave_um", "f_attenu_mJy", "f_unattenu_mJy", "vLv_attenu_Lsun", "vLv_unattenu_Lsun", format='("# ",A-14," ",A16," ",A16," ",A16," ",A16)'
+  for i=0,n_elements(w_sed)-1 do begin
+    printf, lun, w_sed[i], f_sed_at[i], f_sed_un[i], vLv_sed_at[i], vLv_sed_un[i], format='("  ",E-14.6," ",E16.6," ",E16.6," ",E16.6," ",E16.6)'
+  endfor
+  close, lun
+  free_lun, lun
+  
+  
   
   
   ;================================================PLOTTING=============================================
