@@ -747,9 +747,10 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                         echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName $m_FilterWave (first hit)"
                     else
                         # if previously matched, then compare current and previous wavelength difference, then choose the nearer one. 
-                        if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= abs(($k_FilterWave)-($m_FilterWave)));}") -eq 1 ]]; then
+                        #if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= abs(($k_FilterWave)-($m_FilterWave)));}") -eq 1 ]] --#<BUG><20180618>#
+                        if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= abs(($t_FilterWave)-($k_FilterWave)));}") -eq 1 ]]; then
                             t_CheckOK=1
-                            echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName $m_FilterWave (updated) $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print ( abs(($t_FilterWave)-($m_FilterWave)) );}") $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print ( abs(($k_FilterWave)-($m_FilterWave)) );}") "
+                            echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName $m_FilterWave (updated) $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print ( abs(($t_FilterWave)-($m_FilterWave)) );}") $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print ( abs(($t_FilterWave)-($k_FilterWave)) );}") "
                         fi
                     fi
                     # if observing data filter name contains "ALMA", then also make sure library filter name contains "ALMA".
