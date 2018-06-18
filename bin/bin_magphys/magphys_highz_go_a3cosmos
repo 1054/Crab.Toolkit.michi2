@@ -250,6 +250,7 @@ function Run_Magphys() {
         best_fit_obj_name=$(cat "$magphys_outdir/fit_chisq_z_sorted.out" | grep -v "^#" | head -n 1 | sed -e 's/^ *//g' | tr -s ' ' | cut -d ' ' -f 5)
         cp "$magphys_outdir/${best_fit_obj_name}.sed" "$magphys_outdir/best-fit_SED.sed"
         cp "$magphys_outdir/${best_fit_obj_name}.pdf" "$magphys_outdir/best-fit_SED.pdf"
+        cp "$magphys_outdir/${best_fit_obj_name}.fit" "$magphys_outdir/best-fit_SED.fit"
         # 
         # copy log file
         cp "fit_sed_highz.log" "$magphys_outdir/" 2>/dev/null

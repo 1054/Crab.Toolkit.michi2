@@ -1,0 +1,4 @@
+#!/bin/bash
+
+idl -e convert_sed -args best-fit_SED
+

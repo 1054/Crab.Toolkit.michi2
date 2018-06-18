@@ -1,0 +1,12 @@
+#! usr/local/bin/tcsh
+
+set file=$USER_OBS
+
+foreach line (`awk ' {print $1";"$2}' $file`)
+
+   set sourcename=`echo $line | awk 'BEGIN {FS=";"} {print $1}'`
+
+   echo "idl84 -e plot_sed -args $sourcename"
+   
+end
+

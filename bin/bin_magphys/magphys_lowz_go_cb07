@@ -1,13 +1,10 @@
 #!/bin/bash
 # 
 # Aim: 
-#      Easily run Magphys_highz
+#      Easily run Magphys_lowz
 # 
 # Usage:
-#        /home/dzliu/Softwares/magphys/magphys_highz_go
-# 
-# Note:
-#       2018-03-19 MAGPHYS needs to recompute *.lbr files for each different filter list!
+#        /home/dzliu/Softwares/magphys/magphys_lowz_go
 # 
 
 
@@ -18,16 +15,16 @@
 # usage
 usage() {
     echo "Usage: "
-    echo "  $HOME/Softwares/magphys/magphys_highz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat # columns: 1 wave, 2 flux, 3 flux error"
-    echo "  $HOME/Softwares/magphys/magphys_highz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat -w 3 -f 5 -err 7 # columns: 3 wave, 5 flux, 7 flux error"
-    echo "  $HOME/Softwares/magphys/magphys_highz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat -redshift 1.455 # fixed redshift"
-    echo "  $HOME/Softwares/magphys/magphys_highz_go -USER_FILTERS aaa.filter -USER_OBS aaa.flux"
+    echo "  $HOME/Softwares/magphys/magphys_lowz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat # columns: 1 wave, 2 flux, 3 flux error"
+    echo "  $HOME/Softwares/magphys/magphys_lowz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat -w 3 -f 5 -err 7 # columns: 3 wave, 5 flux, 7 flux error"
+    echo "  $HOME/Softwares/magphys/magphys_lowz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat -redshift 1.455 # fixed redshift"
+    echo "  $HOME/Softwares/magphys/magphys_lowz_go -USER_FILTERS aaa.filter -USER_OBS aaa.flux"
     echo ""
 }
 # readlinkfull
 readlinkfull() {
     if [[ $# -gt 1 ]]; then if [[ "$1" == "-f" ]]; then shift; fi; fi
-    DIR=$(echo "${1%/*}"); (cd "$DIR" && echo "$(pwd)/$(basename ${1})")
+    DIR=$(echo "${1%/*}"); (cd "$DIR" && echo "$(pwd -P)/$(basename ${1})")
 }
 # checkDirExistence
 checkDirExistence() {
@@ -107,7 +104,7 @@ function Run_Magphys() {
     # 
     # Backup PWD
     # 
-    magphys_oldpwd="$(pwd)"
+    magphys_oldpwd="$(pwd -P)"
     # 
     # Change dir to magphys and run magphys
     # 
@@ -115,22 +112,22 @@ function Run_Magphys() {
         
         # Check status
         magphys_status=0
-        echo "Magphys-highz is running!"
+        echo "Magphys is running!"
         echo ""
         
         # Change dir to magphys
         cd "$magphys"
         
         # Backup files
-        mv "zlibs.dat"                      "zlibs.dat.backup"                       2>/dev/null
-        mv "fit_sed_highz"                  "fit_sed_highz.backup"                   2>/dev/null
-        mv "fit_sed_highz.log"              "fit_sed_highz.log.backup"               2>/dev/null
-        mv "make_zgrid"                     "make_zgrid.backup"                      2>/dev/null
-        mv "make_zgrid.log"                 "make_zgrid.log.backup"                  2>/dev/null
-        mv "get_optic_colors_highz"         "get_optic_colors_highz.backup"          2>/dev/null
-        mv "get_optic_colors_highz.log"     "get_optic_colors_highz.log.backup"      2>/dev/null
-        mv "get_infrared_colors_highz"      "get_infrared_colors_highz.backup"       2>/dev/null
-        mv "get_infrared_colors_highz.log"  "get_infrared_colors_highz.log.backup"   2>/dev/null
+        mv "zlibs.dat"                "zlibs.dat.backup"                 2>/dev/null
+        mv "fit_sed"                  "fit_sed.backup"                   2>/dev/null
+        mv "fit_sed.log"              "fit_sed.log.backup"               2>/dev/null
+        mv "make_zgrid"               "make_zgrid.backup"                2>/dev/null
+        mv "make_zgrid.log"           "make_zgrid.log.backup"            2>/dev/null
+        mv "get_optic_colors"         "get_optic_colors.backup"          2>/dev/null
+        mv "get_optic_colors.log"     "get_optic_colors.log.backup"      2>/dev/null
+        mv "get_infrared_colors"      "get_infrared_colors.backup"       2>/dev/null
+        mv "get_infrared_colors.log"  "get_infrared_colors.log.backup"   2>/dev/null
         
         # Make files
         make clean
@@ -152,21 +149,21 @@ function Run_Magphys() {
         for (( magphys_i=0; magphys_i<${#magphys_zgrid[@]}; magphys_i++ )); do
             #<TODO># re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
-            if [[ -f "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" && -f "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters" ]]; then
-                if [[ $(diff "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters" "$USER_FILTERS" | wc -l) -eq 0 ]]; then
-                    echo " re-using \"starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\""
+            if [[ -f "starformhist_cb07_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" && -f "starformhist_cb07_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters" ]]; then
+                if [[ $(diff "starformhist_cb07_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters" "$USER_FILTERS" | wc -l) -eq 0 ]]; then
+                    echo " re-using \"starformhist_cb07_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\""
                     magphys_reuse=1
                 fi
             fi
-            if [[ $magphys_reuse -eq 0 || ! -f "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
-                echo " " >> "get_optic_colors_highz.log"
-                echo " Input redshift = ${magphys_zgrid[magphys_i]}" >> "get_optic_colors_highz.log"
-                echo " get_optic_colors_highz ${magphys_zgrid[magphys_i]}"
-                echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_optic_colors_highz >> "get_optic_colors_highz.log"
-                if [[ -f "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
-                    cp "$USER_FILTERS" "starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters"
+            if [[ $magphys_reuse -eq 0 || ! -f "starformhist_cb07_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
+                echo " " >> "get_optic_colors.log"
+                echo " Input redshift = ${magphys_zgrid[magphys_i]}" >> "get_optic_colors.log"
+                echo " get_optic_colors ${magphys_zgrid[magphys_i]}"
+                echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_optic_colors >> "get_optic_colors.log"
+                if [[ -f "starformhist_cb07_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
+                    cp "$USER_FILTERS" "starformhist_cb07_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters"
                 else
-                    echo "Error! Failed to run \"get_optic_colors_highz\" and generate \"starformhist_bc03_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\"!"
+                    echo "Error! Failed to run \"get_optic_colors\" and generate \"starformhist_cb07_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\"!"
                     exit 1
                 fi
             fi
@@ -179,24 +176,19 @@ function Run_Magphys() {
                 fi
             fi
             if [[ $magphys_reuse -eq 0 || ! -f "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
-                echo " get_infrared_colors_highz ${magphys_zgrid[magphys_i]}"
-                echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_infrared_colors_highz >> "get_infrared_colors_highz.log"
+                echo " get_infrared_colors ${magphys_zgrid[magphys_i]}"
+                echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_infrared_colors >> "get_infrared_colors.log"
                 if [[ -f "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr" ]]; then
                     cp "$USER_FILTERS" "infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).filters"
                 else
-                    echo "Error! Failed to run \"get_infrared_colors_highz\" and generate \"infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\"!"
+                    echo "Error! Failed to run \"get_infrared_colors\" and generate \"infrared_dce08_z$(printf '%0.4f' ${magphys_zgrid[magphys_i]}).lbr\"!"
                     exit 1
                 fi
             fi
         done
-        cp "get_optic_colors_highz.log" "$magphys_outdir/" 2>/dev/null
-        cp "get_infrared_colors_highz.log" "$magphys_outdir/" 2>/dev/null
+        cp "get_optic_colors.log" "$magphys_outdir/" 2>/dev/null
+        cp "get_infrared_colors.log" "$magphys_outdir/" 2>/dev/null
         echo ""
-        
-        # Prepare output file
-        if [[ -f "$magphys_outdir/fit_chisq_z.out" ]]; then
-            mv "$magphys_outdir/fit_chisq_z.out" "$magphys_outdir/fit_chisq_z.out.backup"
-        fi
         
         # Run source fitting
         #tcsh -c "source fit_sample"
@@ -204,8 +196,8 @@ function Run_Magphys() {
         for (( magphys_i=0; magphys_i<${#magphys_slist[@]}; magphys_i++ )); do
             # 
             # Run source fitting
-            echo " fit_sed_highz $(($magphys_i+1))"
-            echo $(($magphys_i+1)) | xargs -n 1 | ./fit_sed_highz | tee "fit_sed_highz.log"
+            echo " fit_sed $(($magphys_i+1))"
+            echo $(($magphys_i+1)) | xargs -n 1 | ./fit_sed | tee "fit_sed.log"
             echo ""
             # 
             # Plot best fitting and chi2 distribution
@@ -223,13 +215,6 @@ function Run_Magphys() {
                 mv "${magphys_slist[magphys_i]}.ps"  "$magphys_outdir/"
                 mv "${magphys_slist[magphys_i]}.pdf" "$magphys_outdir/"
                 mv "${magphys_slist[magphys_i]}.jpg" "$magphys_outdir/"
-                # 
-                # make chi2 table
-                if [[ ! -f "$magphys_outdir/fit_chisq_z.out" ]]; then
-                    printf "# %8s %9s %9s %11s %25s\n" "i_sfh" "i_ir" "chi2" "redshift" "obj_name" > "$magphys_outdir/fit_chisq_z.out"
-                fi
-                obj_name_str=$(printf "%25s" "${magphys_slist[magphys_i]}")
-                grep -h -A1 "BEST FIT MODEL" "$magphys_outdir/${magphys_slist[magphys_i]}.fit" | grep -v "^#" | grep -v "^--$" | sed -e "s/$/ $obj_name_str/g" >> "$magphys_outdir/fit_chisq_z.out"
             else
                 echo ""
                 echo "Warning! Failed to run magphys! \"${magphys_slist[magphys_i]}.sed\" was not found under \"$magphys\"! Skip and continue!"
@@ -237,18 +222,7 @@ function Run_Magphys() {
                 magphys_status=-1
             fi
         done
-        # 
-        # sort chi2 table
-        cat "$magphys_outdir/fit_chisq_z.out" | sort -n -k 3 > "$magphys_outdir/fit_chisq_z_sorted.out"
-        # 
-        # get miminum chisq z
-        best_fit_obj_name=$(cat "$magphys_outdir/fit_chisq_z_sorted.out" | grep -v "^#" | head -n 1 | sed -e 's/^ *//g' | tr -s ' ' | cut -d ' ' -f 5)
-        cp "$magphys_outdir/${best_fit_obj_name}.sed" "$magphys_outdir/best-fit_SED.sed"
-        cp "$magphys_outdir/${best_fit_obj_name}.pdf" "$magphys_outdir/best-fit_SED.pdf"
-        cp "$magphys_outdir/${best_fit_obj_name}.fit" "$magphys_outdir/best-fit_SED.fit"
-        # 
-        # copy log file
-        cp "fit_sed_highz.log" "$magphys_outdir/" 2>/dev/null
+        cp "fit_sed.log" "$magphys_outdir/" 2>/dev/null
         echo ""
         
         # Change dir back
@@ -303,11 +277,11 @@ function Run_Magphys() {
 # Check directories and data files
 # 
 m_ScriptDir=$(dirname $(readlinkfull -f "${BASH_SOURCE[0]}"))
-m_MagphysDir="$m_ScriptDir/magphys_highz"
+m_MagphysDir="$m_ScriptDir/magphys_lowz"
 m_MagphysFilter="$m_MagphysDir/FILTERBIN.RES"
-m_MagphysLibOpt="$m_MagphysDir/OptiLIB_bc03_highz.bin"
-m_MagphysLibExt="$m_MagphysDir/OptiLIBis_bc03_highz.bin"
-m_MagphysLibFIR="$m_MagphysDir/InfraredLIB_highz.bin"
+m_MagphysLibOpt="$m_MagphysDir/OptiLIB_cb07.bin" #<TODO># bc03
+m_MagphysLibExt="$m_MagphysDir/OptiLIBis_cb07.bin" #<TODO># bc03
+m_MagphysLibFIR="$m_MagphysDir/InfraredLIB.bin"
 checkDirExistence "$m_MagphysDir"
 checkFileExistence "$m_MagphysFilter"
 checkFileExistence "$m_MagphysLibOpt"
@@ -573,7 +547,7 @@ fi
 # 
 # Prepare outdir
 # 
-m_OutputDir="$(pwd)/magphys_fitting"
+m_OutputDir="$(pwd -P)/magphys_fitting"
 
 # 
 # Backup outdir
@@ -630,14 +604,13 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         # Source Redshift (m_Redshifts)
         # 
         if [[ "${m_Redshifts[i]}" == "-"* || "${m_Redshifts[i]}" == "0" ]]; then m_Redshifts[i]="N/A"; fi # if input redshift is negative, then put to "N/A"
-        #<20180318>#if [[ "${m_Redshifts[i]}" != "N/A" ]]; then t_Redshifts=(${m_Redshifts[i]}); else t_Redshifts=($(seq 25 25 600)); for (( t_i = 0; t_i<${#t_Redshifts[@]}; t_i++ )); do t_Redshifts[t_i]=$(awk "BEGIN {print ${t_Redshifts[t_i]}/100.0}"); done ; fi # <TODO> Scan redshift 0.25 to 6.00
-        if [[ "${m_Redshifts[i]}" != "N/A" ]]; then t_Redshifts=(${m_Redshifts[i]}); else t_Redshifts=($(seq 0.2 0.1 6.0)); fi # <TODO> Scan redshift 0.2 to 6.0 in step of 0.1
+        if [[ "${m_Redshifts[i]}" != "N/A" ]]; then t_Redshifts=(${m_Redshifts[i]}); else t_Redshifts=($(seq 25 25 600)); for (( t_i = 0; t_i<${#t_Redshifts[@]}; t_i++ )); do t_Redshifts[t_i]=$(awk "BEGIN {print ${t_Redshifts[t_i]}/100.0}"); done ; fi # <TODO> Scan redshift 0.25 to 6.00
         
         # 
         # Convert wave flux ferr data files into "magphys_input_filters.dat" and "magphys_input_fluxes.dat"
         # 
         t_OutputDir="$m_OutputDir/fit_${t_SourName}_with_"$(basename ${m_DataFiles[i]} | sed -e 's/\.[^.]*$//g')
-        mkdir -p "$t_OutputDir"
+        mkdir "$t_OutputDir"
         
         if [[ ${m_WaveColNo[i]} -gt 0 ]]; then t_WaveColNo=${m_WaveColNo[i]}; else t_WaveColNo=1; fi
         if [[ ${m_FluxColNo[i]} -gt 0 ]]; then t_FluxColNo=${m_FluxColNo[i]}; else t_FluxColNo=2; fi
@@ -670,23 +643,23 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         
         m_FiltersNames+=(Subaru_IA427 Subaru_IA464 Subaru_IA484 Subaru_IA505 Subaru_IA527 Subaru_IA574 Subaru_IA624 Subaru_IA679 Subaru_IA709 Subaru_IA738 Subaru_IA767 Subaru_IA827 Subaru_NB711 Subaru_NB816)
         m_FiltersWaves+=(   4263.4e-4    4635.1e-4    4849.2e-4    5062.5e-4    5261.1e-4    5764.8e-4    6233.1e-4    6781.1e-4    7073.6e-4    7361.6e-4    7684.9e-4    8244.5e-4    7119.9e-4    8149.4e-4) # Laigle 2016 Table 1
-        m_FiltersCodes+=(         265          266          267          268          269          270          271          272          273          274          275          276          331          332) # magphys_highz/filters.log
+        m_FiltersCodes+=(         265          266          267          268          269          270          271          272          273          274          275          276          331          332) # magphys_lowz/filters.log
         
         m_FiltersNames+=(   VISTA_Y    VISTA_J    VISTA_H   VISTA_Ks)
         m_FiltersWaves+=(10214.2e-4 12534.6e-4 16453.4e-4 21539.9e-4) # Laigle 2016 Table 1
-        m_FiltersCodes+=(       319        320        321        322) # magphys_highz/filters.log
+        m_FiltersCodes+=(       319        320        321        322) # magphys_lowz/filters.log
         
         m_FiltersNames+=(CFHT_WIRCAM_H CFHT_WIRCAM_Ks)
         m_FiltersWaves+=(   16311.4e-4     21590.4e-4) # Laigle 2016 Table 1
-        m_FiltersCodes+=(          278            279) # magphys_highz/filters.log
+        m_FiltersCodes+=(          278            279) # magphys_lowz/filters.log
         
         m_FiltersNames+=(CFHT_MegaCam_u) # CFHT_MegaCam_g CFHT_MegaCam_r CFHT_MegaCam_i CFHT_MegaCam_z)
         m_FiltersWaves+=(     3823.3e-4) #                                                              # Laigle 2016 Table 1
-        m_FiltersCodes+=(           141) #            142            143            144            145) # magphys_highz/filters.log
+        m_FiltersCodes+=(           141) #            142            143            144            145) # magphys_lowz/filters.log
         
         m_FiltersNames+=(GALEX_FUV GALEX_NUV)
-        m_FiltersWaves+=(1520.0e-4 2313.9e-4) # magphys_highz/filters.log and Laigle 2016 Table 1
-        m_FiltersCodes+=(      123       124) # magphys_highz/filters.log
+        m_FiltersWaves+=(1520.0e-4 2313.9e-4) # magphys_lowz/filters.log and Laigle 2016 Table 1
+        m_FiltersCodes+=(      123       124) # magphys_lowz/filters.log
         
         printf "# %26s %18s %18s %18s\n" "filter_name" "lambda_eff" "filter_id" "fit?" > "$t_OutputDir/magphys_input_filters.dat"
         
@@ -694,7 +667,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         
         for (( t_i = 0; t_i<${#t_WaveData[@]}; t_i++ )); do
             t_FilterWave="${t_WaveData[t_i]}"
-            t_FilterCode="-99" # the found filter code in magphys_highz/filters.log
+            t_FilterCode="-99" # the found filter code in magphys_lowz/filters.log
             t_FilterName="" # the found filter name
             m_FilterWave="" # the found filter wavelength
             if [[ ${m_WaveInLog[i]} -gt 0 ]]; then t_FilterWave=$(awk "BEGIN {print (10)^($t_FilterWave)}"); fi # convert log to linear if needed
