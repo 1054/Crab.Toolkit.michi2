@@ -755,13 +755,13 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                             t_CheckOK=0
                         fi
                         # 
-                        #echo -n "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName (debug)"
-                        #if [[ "$m_FilterName" != *"ALMA"* ]]; then
-                        #    echo -n " (0)"
-                        #else
-                        #    echo -n " ($t_CheckOK)"
-                        #fi
-                        #echo ""
+                        echo -n "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName (debug)"
+                        if [[ "$m_FilterName" != *"ALMA"* ]]; then
+                            echo -n " (0)"
+                        else
+                            echo -n " ($t_CheckOK)"
+                        fi
+                        echo ""
                     fi
                     # apply the matched wave, flux, ferr 
                     if [[ $t_CheckOK -eq 1 ]]; then
