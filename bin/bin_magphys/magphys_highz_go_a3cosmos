@@ -751,7 +751,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                     fi
                     # if observing data filter name contains "ALMA", then also make sure library filter name contains "ALMA".
                     if [[ $t_CheckALMA -eq 1 ]]; then
-                        echo -n "Matching observed data ${t_FilterNameData[t_i]} to filter library $m_FilterName (debug)"
+                        echo -n "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName (debug)"
                         if [[ "$m_FilterName" != *"ALMA"* ]]; then
                             t_CheckOK=0
                             echo -n " (0)"
