@@ -219,8 +219,8 @@ pro convert_sed, galaxy
   printf, lun, "wave_um", "f_attenu_mJy", "f_unattenu_mJy", "vLv_attenu_Lsun", "vLv_unattenu_Lsun", format='("# ",A-14," ",A16," ",A16," ",A16," ",A16)'
   for i=0,n_elements(w_sed)-1 do begin
     if i gt 0 then begin
-      print, 'Checking non-monochromatic wavelengths:', string(format='E-14.6', w_sed[i]), string(format='E-14.6', w_sed[i-1])
-      if string(format='E-14.6', w_sed[i]) eq string(format='E-14.6', w_sed[i-1]) then begin
+      ;print, 'Checking non-monochromatic wavelengths:', string(format='(E-14.6)', w_sed[i]), string(format='(E-14.6)', w_sed[i-1])
+      if string(format='(E-14.6)', w_sed[i]) eq string(format='(E-14.6)', w_sed[i-1]) then begin
         continue
       endif
     endif
