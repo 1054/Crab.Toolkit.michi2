@@ -751,14 +751,17 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                     fi
                     # if observing data filter name contains "ALMA", then also make sure library filter name contains "ALMA".
                     if [[ $t_CheckALMA -eq 1 ]]; then
-                        echo -n "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName (debug)"
                         if [[ "$m_FilterName" != *"ALMA"* ]]; then
                             t_CheckOK=0
-                            echo -n " (0)"
-                        else
-                            echo -n " ($t_CheckOK)"
                         fi
-                        echo ""
+                        # 
+                        #echo -n "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName (debug)"
+                        #if [[ "$m_FilterName" != *"ALMA"* ]]; then
+                        #    echo -n " (0)"
+                        #else
+                        #    echo -n " ($t_CheckOK)"
+                        #fi
+                        #echo ""
                     fi
                     # apply the matched wave, flux, ferr 
                     if [[ $t_CheckOK -eq 1 ]]; then
@@ -771,6 +774,8 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
             if [[ "$k_FilterIndex" != "-99" ]]; then
                 m_FiltersFluxs[$k_FilterIndex]="$t_FilterFlux"
                 m_FiltersFErrs[$k_FilterIndex]="$t_FilterFErr"
+                # 
+                echo "Matched observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library ${m_FiltersNames[$k_FilterIndex]}  ${m_FiltersWaves[$k_FilterIndex]}"
             else
                 echo "Warning! The observed data at wavelength $t_FilterWave um has no matched filter in our filter list!!!"
             fi
