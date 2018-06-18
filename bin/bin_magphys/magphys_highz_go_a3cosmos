@@ -761,6 +761,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                     # apply the matched wave, flux, ferr 
                     if [[ $t_CheckOK -eq 1 ]]; then
                         k_FilterIndex="${m_i}"
+                        k_FilterWave="$m_FilterWave" #<BUG><20180618># forgot to set k_FilterWave!!!
                     fi
                 fi
             done
