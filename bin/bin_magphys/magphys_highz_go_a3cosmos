@@ -741,14 +741,15 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                 if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= (0.1*($m_FilterWave)));}") -eq 1 ]]; then
                     t_CheckOK=0
                     # if previously no match, but current wavelength difference is smaller than 10%, we consider it as a match
-                    if [[ "$k_FilterWave" == "-99" ]]; then
+                    #if [[ "$k_FilterWave" == "-99" ]] --#<BUG><20180618>#
+                    if [[ "$k_FilterIndex" == "-99" ]]; then
                         t_CheckOK=1
-                        echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName (first hit)"
+                        echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName $m_FilterWave (first hit)"
                     else
                         # if previously matched, then compare current and previous wavelength difference, then choose the nearer one. 
                         if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= abs(($k_FilterWave)-($m_FilterWave)));}") -eq 1 ]]; then
                             t_CheckOK=1
-                            echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName (updated)"
+                            echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName $m_FilterWave (updated)"
                         fi
                     fi
                     # if observing data filter name contains "ALMA", then also make sure library filter name contains "ALMA".
