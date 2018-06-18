@@ -755,6 +755,8 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
                         if [[ "$m_FilterName" != *"ALMA"* ]]; then
                             t_CheckOK=0
                             echo -n " (0)"
+                        else
+                            echo -n " ($t_CheckOK)"
                         fi
                         echo ""
                     fi
@@ -785,7 +787,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
             m_FilterFErr="${m_FiltersFErrs[m_i]}"
             # 
             # write to the MAGPHYS input filter file
-            m_FilterGood=$(awk "BEGIN {if (($m_FilterFlux)>=3.0*($m_FilterFErr) && ($m_FilterFlux)>0.0) print 1; else print 0;}")
+            m_FilterGood=$(awk "BEGIN {if (($m_FilterFlux)>=3.0*($m_FilterFErr) && ($m_FilterFlux)>0.0) print 1; else print 0;}") # here we fit only S/N>=3 data points
             printf "%28s %18g %18d %18d\n" "$m_FilterName" "$m_FilterWave" "$m_FilterCode" "$m_FilterGood" >> "$t_OutputDir/magphys_input_filters.dat"
             # 
             # prepare string that will be written to the MAGPHYS input flux file
