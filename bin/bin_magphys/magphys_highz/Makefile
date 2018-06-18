@@ -2,7 +2,8 @@ RM = /bin/rm -f
 #UTILIB = ./public_utilities.a
 #FC =  g77 -ggdb -O0 -ffixed-line-length-132 -fbounds-check
 #<DZLIU>#FC = gfortran -std=legacy -ffixed-line-length-none -fbounds-check # need to add "-mcmodel=medium" if we want nfilt>=200
-FC = gfortran -std=legacy -ffixed-line-length-none -fbounds-check -mcmodel=medium
+#<DZLIU>#FC = gfortran -std=legacy -ffixed-line-length-none -fbounds-check -mcmodel=medium
+FC = gfortran -std=legacy -ffixed-line-length-none -fbounds-check -fno-align-commons -mcmodel=medium
 
 OBJFILES = make_zgrid get_optic_colors_highz get_infrared_colors_highz fit_sed_highz
 
