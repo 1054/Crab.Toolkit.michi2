@@ -403,6 +403,7 @@ pro plot_sed, galaxy
   plot,Tw_BC[0,*],Tw_BC[1,*],psym=10,xrange=xrange08,xtitle=xtitle08,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position10,YTICKFORMAT="(A1)"
   
   plot,Mdust[0,*],Mdust[1,*],psym=10,xrange=xrange10,xtitle=xtitle10,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position08,YTICKFORMAT="(A1)"
+  xyouts, (position08[0]+position08[3])/2.0, (position08[1]-0.25), xtitle10, /NORMAL
   plot,Mstars[0,*],Mstars[1,*],psym=10,xrange=xrange05,xtitle=xtitle05,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position04,YTICKFORMAT="(A1)"
   plot,sSFR[0,*],sSFR[1,*],psym=10,xrange=xrange11,xtitle=xtitle11,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position05,YTICKFORMAT="(A1)"
   plot,SFR[0,*],SFR[1,*],psym=10,xrange=xrange12,xtitle=xtitle12,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position06,YTICKFORMAT="(A1)"
