@@ -136,10 +136,11 @@ pro plot_sed, galaxy
   ;vLv_sed_un = (1.+z)*(Lv_sed_un)*2.99792458e8/(10^lambda/1e10) ; {\nu}L_{\nu} in units of L_{\odot}, unattenuated SED
   
   ; Convert the observed fluxes and best fit fluxes to vLv ({\nu}L_{\nu})
-  vLv_obs    = (1.+z)*(Lv_obs       )*2.99792458e8/(w_obs/1e6)  ; notes by dzliu: vLv_obs are in units of L_{\odot}; (1.+z) is needed according to the original code of plot_sed.pro and the fit_sed_highz.f line 275.
-  vLv_fit    = (1.+z)*(Lv_fit       )*2.99792458e8/(w_obs/1e6)
-  vLv_obs_lo = (1.+z)*(Lv_obs-Lv_err)*2.99792458e8/(w_obs/1e6)
-  vLv_obs_hi = (1.+z)*(Lv_obs+Lv_err)*2.99792458e8/(w_obs/1e6)
+  vLv_obs     = (1.+z)*(Lv_obs       )*2.99792458e8/(w_obs/1e6)  ; notes by dzliu: vLv_obs are in units of L_{\odot}; (1.+z) is needed according to the original code of plot_sed.pro and the fit_sed_highz.f line 275.
+  vLv_fit     = (1.+z)*(Lv_fit       )*2.99792458e8/(w_obs/1e6)
+  vLv_obs_err = (1.+z)*(Lv_err       )*2.99792458e8/(w_obs/1e6)
+  vLv_obs_lo  = (1.+z)*(Lv_obs-Lv_err)*2.99792458e8/(w_obs/1e6)
+  vLv_obs_hi  = (1.+z)*(Lv_obs+Lv_err)*2.99792458e8/(w_obs/1e6)
   
   ; For error bars which go down to infinity (i.e. error is bigger than flux)
   IF N_ELEMENTS(where(vLv_obs_lo LE 1D-30, /NULL)) GT 0 THEN BEGIN
@@ -150,12 +151,13 @@ pro plot_sed, galaxy
   vLv_res = alog10(vLv_obs) - alog10(vLv_fit)
   
   ; Compute flux density from vLv
-  f_sed_at = dzliu_lumtoflux(z,w_sed,vLv_sed_at) ; -- the best fit dust attenuated SED flux
-  f_sed_un = dzliu_lumtoflux(z,w_sed,vLv_sed_un) ; -- the best fit dust unattenuated SED flux
-  f_fit    = dzliu_lumtoflux(z,w_obs,vLv_fit)    ; -- the best fit flux
-  f_obs    = dzliu_lumtoflux(z,w_obs,vLv_obs)    ; -- the observed flux
-  f_obs_lo = dzliu_lumtoflux(z,w_obs,vLv_obs_lo) ; -- the observed flux lowest value for 1-sigma confidence
-  f_obs_hi = dzliu_lumtoflux(z,w_obs,vLv_obs_hi) ; -- the observed flux highest value for 1-sigma confidence
+  f_sed_at  = dzliu_lumtoflux(z,w_sed,vLv_sed_at)  ; -- the best fit dust attenuated SED flux
+  f_sed_un  = dzliu_lumtoflux(z,w_sed,vLv_sed_un)  ; -- the best fit dust unattenuated SED flux
+  f_fit     = dzliu_lumtoflux(z,w_obs,vLv_fit)     ; -- the best fit flux
+  f_obs     = dzliu_lumtoflux(z,w_obs,vLv_obs)     ; -- the observed flux
+  f_obs_err = dzliu_lumtoflux(z,w_obs,vLv_obs_err) ; -- the observed flux error
+  f_obs_lo  = dzliu_lumtoflux(z,w_obs,vLv_obs_lo)  ; -- the observed flux lowest value for 1-sigma confidence
+  f_obs_hi  = dzliu_lumtoflux(z,w_obs,vLv_obs_hi)  ; -- the observed flux highest value for 1-sigma confidence
   
   ; For values below 0, we set them to 1D-30
   IF N_ELEMENTS(where(f_fit LE 1D-30, /NULL)) GT 0 THEN BEGIN
@@ -245,7 +247,7 @@ pro plot_sed, galaxy
   
   
   ;================================================SAVING=============================================
-  save, FILENAME=name_sav, w_sed, f_sed_at, f_sed_un, f_obs, f_obs_lo, f_obs_hi, f_fit, f_res, f_res_lo, f_res_hi, Mstars, SFR, sSFR, Ldust, Mdust, Tdust, age_M, A_V, tau_V, tau_V_ISM, mu, Tc_ISM, Tw_BC
+  save, FILENAME=name_sav, w_sed, f_sed_at, f_sed_un, f_obs, f_obs_err, f_obs_lo, f_obs_hi, f_fit, f_res, f_res_lo, f_res_hi, Mstars, SFR, sSFR, Ldust, Mdust, Tdust, age_M, A_V, tau_V, tau_V_ISM, mu, Tc_ISM, Tw_BC
   
   openw, lun, name_sed_out, /get_lun
   printf, lun, "wave_um", "f_attenu_mJy", "f_unattenu_mJy", "vLv_attenu_Lsun", "vLv_unattenu_Lsun", format='("# ",A-14," ",A16," ",A16," ",A16," ",A16)'
@@ -309,9 +311,23 @@ pro plot_sed, galaxy
   ENDIF
   
   ; Plot observed fluxes
-  plotsym,8,0.9,/fill
-  oploterror,w_obs,f_obs,lambda_err,(f_obs-f_obs_lo),psym=8,symsize=0.5,color=1,errcolor=1,/LOBAR
-  oploterror,w_obs,f_obs,lambda_err,(f_obs_hi-f_obs),psym=8,symsize=0.5,color=1,errcolor=1,/HIBAR
+  cid_detected = []
+  cid_undetect = []
+  FOR k=0,N_ELEMENTS(f_obs)-1 DO BEGIN
+    IF f_obs[k]/f_obs_err[k] GE 3.0 THEN BEGIN
+      cid_detected = [cid_detected, k]
+    ENDIF ELSE BEGIN
+      cid_undetect = [cid_undetect, k]
+    ENDELSE
+  ENDFOR
+  IF N_ELEMENTS(cid_detected) GT 0 THEN BEGIN
+    plotsym,8,0.9,/fill
+    oploterror,w_obs,f_obs,lambda_err,(f_obs-f_obs_lo),psym=8,symsize=0.5,color=1,errcolor=1,/LOBAR
+    oploterror,w_obs,f_obs,lambda_err,(f_obs_hi-f_obs),psym=8,symsize=0.5,color=1,errcolor=1,/HIBAR
+  ENDIF ELSE BEGIN
+    plotsym,1
+    oplot,w_obs,f_obs,,psym=8,symsize=0.5,color=1,errcolor=1,/LOBAR
+  ENDELSE
   xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0),name_xy,charthick=3,charsize=0.8, align=1
   xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0+0.9),TeXtoIDL("z=")+STRTRIM(STRING(z,FORMAT='(F0.4)'),2),charthick=3,charsize=0.8, align=1
   xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0+0.9+0.9),TeXtoIDL("\chi^{2}=")+STRTRIM(STRING(chi2,FORMAT='(G10)'),2),charthick=3,charsize=0.8, align=1
