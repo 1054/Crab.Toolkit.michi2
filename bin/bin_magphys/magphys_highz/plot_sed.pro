@@ -72,7 +72,19 @@ function dzliu_xrange_for_histogram, xmatrix, xlower_default = xlower_default, x
     IF xupper LE 0.0 THEN xupper = xupper_default
     RETURN, [xbest-xlower, xbest+xupper]
   ENDIF
-  RETURN, []
+  RETURN, [MIN(xmatrix[0,*]), MAX(xmatrix[0,*])]
+end
+
+function dzliu_xinterval_for_histogram, xarray
+  xtickinterval_1 = ROUND((MAX(xarray)-MIN(xarray))/3.0)
+  xtickinterval_2 = ALOG10(xtickinterval_1)
+  IF xtickinterval_2 GT 0 THEN xtickinterval_2 = FIX(xtickinterval_2) ELSE xtickinterval_2 = FIX(xtickinterval_2)-1
+  IF 5 * 10^xtickinterval_2 LE xtickinterval_1 THEN BEGIN
+    RETURN, 5 * 10^xtickinterval_2
+  ENDIF ELSE IF 2 * 10^xtickinterval_2 LE xtickinterval_1 THEN BEGIN
+    RETURN, 2 * 10^xtickinterval_2
+  ENDIF ELSE BEGIN
+    RETURN, 1 * 10^xtickinterval_2
 end
 
 
@@ -264,7 +276,11 @@ pro plot_sed, galaxy
  ;xtitle11=TeXtoIDL('log(sSFR) yr^{-1}') & xrange11=[-12.9,-7.1]
  ;xtitle13=TeXtoIDL('\xi_C^{tot}') & xrange13=[0.01,0.99]
  ;xtitle14=TeXtoIDL('\xi_W^{tot}') & xrange14=[0.01,0.99]
-  
+  xtickinterval01=dzliu_xinterval_for_histogram(xrange01)
+  xtickinterval02=dzliu_xinterval_for_histogram(xrange02)
+  xtickinterval03=dzliu_xinterval_for_histogram(xrange03)
+  xtickinterval04=dzliu_xinterval_for_histogram(xrange04)
+  xtickinterval05=dzliu_xinterval_for_histogram(xrange05)
   
   
   
@@ -417,11 +433,11 @@ pro plot_sed, galaxy
   xyouts,0.05,(positionU2[1]+positionU2[3])/2.0,/NORMAL,TeXtoIDL("log(S_{OBS}/S_{SED})"),charthick=3,charsize=1.25,align=0.5,orient=90 ; ytitle
   
   ; Histograms 
-  plot,Mstars[0,*],Mstars[1,*],           psym=10,xrange=xrange01,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position01
-  plot,SFR[0,*],SFR[1,*],                 psym=10,xrange=xrange02,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position02,YTICKFORMAT="(A1)"
-  plot,Ldust[0,*],Ldust[1,*],             psym=10,xrange=xrange03,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position03,YTICKFORMAT="(A1)"
-  plot,Mdust[0,*],Mdust[1,*],             psym=10,xrange=xrange04,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position04,YTICKFORMAT="(A1)"
-  plot,Tdust[0,*],Tdust[1,*],             psym=10,xrange=xrange05,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position05,YTICKFORMAT="(A1)"
+  plot,Mstars[0,*],Mstars[1,*],           psym=10,xrange=xrange01,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xinterval=xinterval01,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position01
+  plot,SFR[0,*],SFR[1,*],                 psym=10,xrange=xrange02,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xinterval=xinterval02,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position02,YTICKFORMAT="(A1)"
+  plot,Ldust[0,*],Ldust[1,*],             psym=10,xrange=xrange03,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xinterval=xinterval03,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position03,YTICKFORMAT="(A1)"
+  plot,Mdust[0,*],Mdust[1,*],             psym=10,xrange=xrange04,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xinterval=xinterval04,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position04,YTICKFORMAT="(A1)"
+  plot,Tdust[0,*],Tdust[1,*],             psym=10,xrange=xrange05,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xinterval=xinterval05,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position05,YTICKFORMAT="(A1)"
  ;plot,f_mu[0,*],f_mu[1,*],               psym=10,xrange=xrange01,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,ytitle='Likehood Distr.',POSITION=position01
  ;plot,tau_V_ISM[0,*],tau_V_ISM[1,*],     psym=10,xrange=xrange09,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position03,YTICKFORMAT="(A1)"
  ;plot,tau_V[0,*],tau_V[1,*],             psym=10,xrange=xrange04,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position02,YTICKFORMAT="(A1)"
