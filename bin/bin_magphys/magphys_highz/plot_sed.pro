@@ -85,6 +85,7 @@ function dzliu_xinterval_for_histogram, xarray
     RETURN, 2 * 10^xtickinterval_2
   ENDIF ELSE BEGIN
     RETURN, 1 * 10^xtickinterval_2
+  ENDELSE
 end
 
 
