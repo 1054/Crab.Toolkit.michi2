@@ -61,6 +61,9 @@ function dzliu_xrange_for_histogram, xmatrix
       xlower = ABS(xbest - MIN(xmatrix[0, xindex])) * 3.0
       xupper = ABS(MAX(xmatrix[0, xindex]) - xbest) * 3.0
     ENDIF
+    print, 'xbest =', xbest
+    print, 'xlower =', xlower
+    print, 'xupper =', xupper
     IF xlower LT 0.0 THEN xlower = 1.5
     IF xupper LT 0.0 THEN xupper = 1.5
     RETURN, [xbest-xlower, xbest+xupper]
