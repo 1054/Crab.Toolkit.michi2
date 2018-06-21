@@ -63,9 +63,9 @@ function dzliu_xrange_for_histogram, xmatrix, xlower_default = xlower_default, x
       IF xupper LE 0.0 AND xlower GT 0.0 THEN xupper = xlower
       IF xlower LE 0.0 AND xupper GT 0.0 THEN xlower = xupper
     ENDIF
-    print, 'xbest =', xbest
-    print, 'xlower =', xlower
-    print, 'xupper =', xupper
+    ;print, 'xbest =', xbest
+    ;print, 'xlower =', xlower
+    ;print, 'xupper =', xupper
     IF N_ELEMENTS(xlower_default) EQ 0 THEN xlower_default = 1.25
     IF N_ELEMENTS(xupper_default) EQ 0 THEN xupper_default = 1.25
     IF xlower LE 0.0 THEN xlower = xlower_default
