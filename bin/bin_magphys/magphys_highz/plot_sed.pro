@@ -78,6 +78,8 @@ end
 function dzliu_xinterval_for_histogram, xarray
   xtickinterval_1 = ROUND((MAX(xarray)-MIN(xarray))/3.0)
   xtickinterval_2 = ALOG10(xtickinterval_1)
+  print, 'xtickinterval_1 =', xtickinterval_1
+  print, 'xtickinterval_2 =', xtickinterval_2
   IF xtickinterval_2 GT 0 THEN xtickinterval_2 = FIX(xtickinterval_2) ELSE xtickinterval_2 = FIX(xtickinterval_2)-1
   IF 5 * 10^xtickinterval_2 LE xtickinterval_1 THEN BEGIN
     RETURN, 5 * 10^xtickinterval_2
