@@ -315,14 +315,14 @@ pro plot_sed, galaxy
   ; Define Axis Parameters
   ;ytitle = TeXtoIDL("log(\lambdaL_{\lambda}/L"+sunsymbol()+")")
   ;ytitle = "flux [mJy]" ; TeXtoIDL("flux [mJy]")
-  xtitle = TextoIDL("\lambda/\mum [observed-frame]")
-  xrange = [0.07,3e5]
+  ;xtitle = TextoIDL("\lambda/\mum [observed-frame]")
+  xrange = [0.07,5e5]
   ;yrange = [7.1,14.]
-  yrange = [1e-6,1e4]
+  yrange = [1e-5,1e5]
   
   ; Plot frame
   plot,POSITION=positionU1,[1D-30],[1D-30],/NoData,/xlog,/ylog,xrange=xrange,yrange=yrange,xstyle=1,ystyle=1,ytickformat='dzliu_logtickformat',xminor=9,thick=3,xthick=3,ythick=3,charthick=3,charsize=1.75,XTICKFORMAT="(A1)"
-  xyouts,0.05,(0.65+0.99)/2.0,/NORMAL,TeXtoIDL("flux [mJy]"),charthick=3,charsize=1.0,align=0.5,orient=90 ; ytitle
+  xyouts,0.05,(0.65+0.99)/2.0,/NORMAL,TeXtoIDL("flux [mJy]"),charthick=3,charsize=1.25,align=0.5,orient=90 ; ytitle
   
   ; Plot best fit SED
   w_flag = WHERE(f_sed_at GT 0 AND f_sed_un GT 0, /NULL)
@@ -369,13 +369,13 @@ pro plot_sed, galaxy
     plotsym,1
     oplot,w_obs[cid_undetect_ALMA],3.0*f_obs_err[cid_undetect_ALMA],psym=8,symsize=0.8,color=1
   ENDIF
-  xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0),name_xy,charthick=3,charsize=0.8, align=1
-  xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0+0.9),TeXtoIDL("z=")+STRTRIM(STRING(z,FORMAT='(F0.4)'),2),charthick=3,charsize=0.8, align=1
-  xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0+0.9+0.9),TeXtoIDL("\chi^{2}=")+STRTRIM(STRING(chi2,FORMAT='(G10)'),2),charthick=3,charsize=0.8, align=1
+  xyouts,xrange[0]+0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0),name_xy,charthick=3,charsize=1.25, align=0
+  xyouts,xrange[0]+0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0+0.9),TeXtoIDL("z=")+STRTRIM(STRING(z,FORMAT='(F0.4)'),2),charthick=3,charsize=1.25, align=0
+  xyouts,xrange[0]+0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0+0.9+0.9),TeXtoIDL("\chi^{2}=")+STRTRIM(STRING(chi2,FORMAT='(G10)'),2),charthick=3,charsize=1.25, align=0
   
   ; Plot the flux residual panel
   yrange = [-1.0,1.0]
-  plot,POSITION=positionU2,[0.07,2500],[0,0],lines=1,/xlog,xrange=xrange,yrange=yrange,xtitle=xtitle,xstyle=1,ystyle=1,xtickformat='dzliu_logtickformat',xminor=9,thick=3,xthick=3,ythick=3,xticklen=0.1,yticks=2,yminor=5,charthick=3,charsize=1.75
+  plot,POSITION=positionU2,xrange,[0,0],lines=1,/xlog,xrange=xrange,yrange=yrange,xstyle=1,ystyle=1,xtickformat='dzliu_logtickformat',xminor=9,thick=3,xthick=3,ythick=3,xticklen=0.1,yticks=2,yminor=5,charthick=3,charsize=1.75
   w_flag = WHERE(f_res GE yrange[0] AND f_res LE yrange[1], /NULL)
   IF N_ELEMENTS(w_flag) GT 0 THEN BEGIN
     plotsym,8,0.9,/fill
@@ -392,7 +392,8 @@ pro plot_sed, galaxy
     plotsym,1,0.9,/fill ; downward arrow
     oplot,w_obs[w_flag],f_res[w_flag]*0+yrange[1],psym=8,symsize=1.5,thick=3,color=0
   ENDIF
-  xyouts,0.05,(0.55+0.65)/2.0,/NORMAL,TeXtoIDL("log(f_{OBS}/f_{SED})"),charthick=3,charsize=0.8,align=0.5,orient=90 ; ytitle
+  xyouts,(positionU2[0]+positionU2[2])/2.0,(positionU2[1]-0.08),/NORMAL,TeXtoIDL("\lambda/\mum [observed-frame]"),charthick=3,charsize=1.25,align=0.5; xtitle
+  xyouts,0.05,(positionU2[1]+positionU2[3])/2.0,/NORMAL,TeXtoIDL("log(S_{OBS}/S_{SED})"),charthick=3,charsize=1.25,align=0.5,orient=90 ; ytitle
   
   ; Histograms 
   plot,Mstars[0,*],Mstars[1,*],           psym=10,xrange=xrange01,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position01,YTICKFORMAT="(A1)",ytitle='Likehood Distr.'
