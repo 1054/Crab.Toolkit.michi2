@@ -372,9 +372,9 @@ pro plot_sed, galaxy
     plotsym,1
     oplot,w_obs[cid_undetect_ALMA],3.0*f_obs_err[cid_undetect_ALMA],psym=8,symsize=0.8,color=1
   ENDIF
-  xyouts,positionU1[0]+0.04*(positionU1[1]-positionU1[0]),positionU1[3]-1*0.08*(positionU1[3]-positionU1[1]),/NORMAL,name_xy,charthick=3,charsize=1.25, align=0 ; legend
-  xyouts,positionU1[0]+0.04*(positionU1[1]-positionU1[0]),positionU1[3]-2*0.08*(positionU1[3]-positionU1[1]),/NORMAL,TeXtoIDL("z=")+STRTRIM(STRING(z,FORMAT='(F0.4)'),2),charthick=3,charsize=1.25, align=0
-  xyouts,positionU1[0]+0.04*(positionU1[1]-positionU1[0]),positionU1[3]-3*0.08*(positionU1[3]-positionU1[1]),/NORMAL,TeXtoIDL("\chi^{2}=")+STRTRIM(STRING(chi2,FORMAT='(G10)'),2),charthick=3,charsize=1.25, align=0
+  xyouts,positionU1[0]+0.06*(positionU1[1]-positionU1[0]),positionU1[3]-1*0.08*(positionU1[3]-positionU1[1]),/NORMAL,name_xy,charthick=3,charsize=1.25, align=0 ; legend
+  xyouts,positionU1[0]+0.06*(positionU1[1]-positionU1[0]),positionU1[3]-2*0.08*(positionU1[3]-positionU1[1]),/NORMAL,TeXtoIDL("z=")+STRTRIM(STRING(z,FORMAT='(F0.4)'),2),charthick=3,charsize=1.25, align=0
+  xyouts,positionU1[0]+0.06*(positionU1[1]-positionU1[0]),positionU1[3]-3*0.08*(positionU1[3]-positionU1[1]),/NORMAL,TeXtoIDL("\chi^{2}=")+STRTRIM(STRING(chi2,FORMAT='(G10)'),2),charthick=3,charsize=1.25, align=0
   
   ; Plot the flux residual panel
   yrange = [-1.0,1.0]
