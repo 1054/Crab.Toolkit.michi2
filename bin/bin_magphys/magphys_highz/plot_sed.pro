@@ -58,8 +58,8 @@ function dzliu_xrange_for_histogram, xmatrix, xlower_default = xlower_default, x
     xlower = 0.0
     xupper = 0.0
     IF N_ELEMENTS(xindex) GT 1 THEN BEGIN
-      xlower = ABS(xbest - MIN(xmatrix[0, xindex])) * 3.0
-      xupper = ABS(MAX(xmatrix[0, xindex]) - xbest) * 3.0
+      xlower = ABS(xbest - MIN(xmatrix[0, xindex])) * 2.75
+      xupper = ABS(MAX(xmatrix[0, xindex]) - xbest) * 2.75
       IF xupper LE 0.0 AND xlower GT 0.0 THEN xupper = xlower
       IF xlower LE 0.0 AND xupper GT 0.0 THEN xlower = xupper
     ENDIF
