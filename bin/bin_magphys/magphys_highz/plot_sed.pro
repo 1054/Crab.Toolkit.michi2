@@ -76,7 +76,7 @@ function dzliu_xrange_for_histogram, xmatrix, xlower_default = xlower_default, x
 end
 
 function dzliu_xinterval_for_histogram, xarray
-  xtickinterval_1 = ROUND((MAX(xarray)-MIN(xarray))/3.0)
+  xtickinterval_1 = (MAX(xarray)-MIN(xarray))/3.0
   xtickinterval_2 = ALOG10(xtickinterval_1)
   print, 'xtickinterval_1 =', xtickinterval_1
   print, 'xtickinterval_2 =', xtickinterval_2
