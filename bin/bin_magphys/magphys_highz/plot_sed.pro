@@ -289,7 +289,7 @@ pro plot_sed, galaxy
   position12=[0.775,0.07,0.90,0.22]
   
   ; Open PS file to plot
-  device,filename=name_ps,/color
+  device,filename=name_ps,/color,/ENCAPSULATED ; size unit inches, US letter 8.5 x 11.0
   
   ; Define Axis Parameters
   ;ytitle = TeXtoIDL("log(\lambdaL_{\lambda}/L"+sunsymbol()+")")
