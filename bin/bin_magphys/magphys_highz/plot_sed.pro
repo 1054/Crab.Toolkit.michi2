@@ -83,10 +83,10 @@ pro plot_sed, galaxy
   
   ; Read USER_FILTERS
   fmt='A,F,I,I'
-  filt=''
+  filter_name=''
   if ~strlen(GETENV('USER_FILTERS')) then message, 'Error! GETENV(USER_FILTERS) was not defined!'               ; added by dzliu
   if ~file_test(GETENV('USER_FILTERS'),/read) then message, 'Error! '+GETENV('USER_FILTERS')+' was not found!'  ; added by dzliu
-  readcol,GETENV('USER_FILTERS'),f=fmt,filt,lambda_eff,filter_id,fit                                            ; Reads the filter file, lambda_eff are in units of um
+  readcol,GETENV('USER_FILTERS'),f=fmt,filter_name,lambda_eff,filter_id,fit                                            ; Reads the filter file, lambda_eff are in units of um
   m = n_elements(lambda_eff)
   
   ; Read MAGPHYS *.fit data file
@@ -247,7 +247,7 @@ pro plot_sed, galaxy
   
   
   ;================================================SAVING=============================================
-  save, FILENAME=name_sav, w_sed, f_sed_at, f_sed_un, f_obs, f_obs_err, f_obs_lo, f_obs_hi, f_fit, f_res, f_res_lo, f_res_hi, Mstars, SFR, sSFR, Ldust, Mdust, Tdust, age_M, A_V, tau_V, tau_V_ISM, mu, Tc_ISM, Tw_BC
+  save, FILENAME=name_sav, w_sed, f_sed_at, f_sed_un, filter_name, w_obs, f_obs, f_obs_err, f_obs_lo, f_obs_hi, f_fit, f_res, f_res_lo, f_res_hi, Mstars, SFR, sSFR, Ldust, Mdust, Tdust, age_M, A_V, tau_V, tau_V_ISM, mu, Tc_ISM, Tw_BC
   
   openw, lun, name_sed_out, /get_lun
   printf, lun, "wave_um", "f_attenu_mJy", "f_unattenu_mJy", "vLv_attenu_Lsun", "vLv_unattenu_Lsun", format='("# ",A-14," ",A16," ",A16," ",A16," ",A16)'
@@ -313,21 +313,41 @@ pro plot_sed, galaxy
   ; Plot observed fluxes
   cid_detected = []
   cid_undetect = []
+  cid_detected_ALMA = []
+  cid_undetect_ALMA = []
   FOR k=0,N_ELEMENTS(f_obs)-1 DO BEGIN
     IF f_obs[k]/f_obs_err[k] GE 3.0 THEN BEGIN
-      cid_detected = [cid_detected, k]
+      IF STRMATCH(filter_name[k],'ALMA*') THEN BEGIN
+        cid_detected_ALMA = [cid_detected_ALMA, k]
+      ENDIF ELSE BEGIN
+        cid_detected = [cid_detected, k]
+      ENDELSE
     ENDIF ELSE BEGIN
-      cid_undetect = [cid_undetect, k]
+      IF STRMATCH(filter_name[k],'ALMA*') THEN BEGIN
+        cid_undetect_ALMA = [cid_undetect_ALMA, k]
+      ENDIF ELSE BEGIN
+        cid_undetect = [cid_undetect, k]
+      ENDELSE
     ENDELSE
   ENDFOR
   IF N_ELEMENTS(cid_detected) GT 0 THEN BEGIN
     plotsym,8,0.9,/fill
-    oploterror,w_obs,f_obs,lambda_err,(f_obs-f_obs_lo),psym=8,symsize=0.5,color=1,errcolor=1,/LOBAR
-    oploterror,w_obs,f_obs,lambda_err,(f_obs_hi-f_obs),psym=8,symsize=0.5,color=1,errcolor=1,/HIBAR
-  ENDIF ELSE BEGIN
+    oploterror,w_obs[cid_detected],f_obs[cid_detected],lambda_err[cid_detected],(f_obs[cid_detected]-f_obs_lo[cid_detected]),psym=8,symsize=0.5,/LOBAR
+    oploterror,w_obs[cid_detected],f_obs[cid_detected],lambda_err[cid_detected],(f_obs_hi[cid_detected]-f_obs[cid_detected]),psym=8,symsize=0.5,/HIBAR
+  ENDIF
+  IF N_ELEMENTS(cid_undetect) GT 0 THEN BEGIN
     plotsym,1
-    oplot,w_obs,f_obs,,psym=8,symsize=0.5,color=1,errcolor=1,/LOBAR
-  ENDELSE
+    oplot,w_obs[cid_undetect],3.0*f_obs_err[cid_undetect],psym=8,symsize=0.8
+  ENDIF
+  IF N_ELEMENTS(cid_detected_ALMA) GT 0 THEN BEGIN
+    plotsym,8,0.9,/fill
+    oploterror,w_obs[cid_detected_ALMA],f_obs[cid_detected_ALMA],lambda_err[cid_detected_ALMA],(f_obs[cid_detected_ALMA]-f_obs_lo[cid_detected_ALMA]),psym=8,symsize=0.5,color=1,errcolor=1,/LOBAR
+    oploterror,w_obs[cid_detected_ALMA],f_obs[cid_detected_ALMA],lambda_err[cid_detected_ALMA],(f_obs_hi[cid_detected_ALMA]-f_obs[cid_detected_ALMA]),psym=8,symsize=0.5,color=1,errcolor=1,/HIBAR
+  ENDIF
+  IF N_ELEMENTS(cid_undetect_ALMA) GT 0 THEN BEGIN
+    plotsym,1
+    oplot,w_obs[cid_undetect_ALMA],3.0*f_obs_err[cid_undetect_ALMA],psym=8,symsize=0.8,color=1
+  ENDIF
   xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0),name_xy,charthick=3,charsize=0.8, align=1
   xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0+0.9),TeXtoIDL("z=")+STRTRIM(STRING(z,FORMAT='(F0.4)'),2),charthick=3,charsize=0.8, align=1
   xyouts,xrange[1]-0.17*(xrange[1]-xrange[0]),yrange[1]/10^(1.0+0.9+0.9),TeXtoIDL("\chi^{2}=")+STRTRIM(STRING(chi2,FORMAT='(G10)'),2),charthick=3,charsize=0.8, align=1
