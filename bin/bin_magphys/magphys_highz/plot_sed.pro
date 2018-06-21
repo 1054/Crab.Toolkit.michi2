@@ -226,22 +226,36 @@ pro plot_sed, galaxy
   for j=1,3 do readf,20,skips & readf,20,Tdust
   for j=1,2 do readf,20,skips
   
-  t1=TeXtoIDL('f_\mu')
-  t3=TeXtoIDL('\mu')
-  t4=TeXtoIDL('\tau_V')
-  t5=TeXtoIDL('log(M_{stars}/M_{o})')
-  t6=TeXtoIDL('log(L_{dust}/L_{o})')
+  xtitle01=TeXtoIDL('f_\mu') & xrange01=[0.01,0.98]
+  ;xtitle03=TeXtoIDL('\mu')
+  xtitle04=TeXtoIDL('\tau_V') & xrange04=[0.01,5.8]
+  xtitle05=TeXtoIDL('log(M_{stars}/M_{o})') & xrange05=[8.1,12.9]
+  xtitle06=TeXtoIDL('log(L_{dust}/L_{o})') & xrange06=[8.01,13.99]
+  xtitle07=TeXtoIDL('T_{C}^{ISM}/K') & xrange07=[15.1,55.99]
+  xtitle08=TeXtoIDL('T_{W}^{BC}/K') & xrange08=[30.5,99.5]
+  ;<dzliu>;xtitle08=TeXtoIDL('T_{dust}/K')
+  xtitle09=TeXtoIDL('\mu\tau_V') & xrange09=[0.01,2.95]
+  xtitle10=TeXtoIDL('log(M_{dust}/M_{o})') & xrange10=[4.1,10.5]
+  xtitle11=TeXtoIDL('log(sSFR) yr^{-1}') & xrange11=[-12.9,-7.1]
+  xtitle12=TeXtoIDL('log(SFR/M_{o} yr^{-1})') & xrange12=[-3.9,5.0]
+  xtitle13=TeXtoIDL('\xi_C^{tot}') & xrange13=[0.01,0.99]
+  xtitle14=TeXtoIDL('\xi_W^{tot}') & xrange14=[0.01,0.99]
   
-  t7=TeXtoIDL('T_{C}^{ISM}/K')
-  t8=TeXtoIDL('T_{W}^{BC}/K')
-  ;<dzliu>;t8=TeXtoIDL('T_{dust}/K')
+  xrange01=[]
+  xrange04=[]
+  xrange05=[]
+  xrange06=[]
+  xrange07=[]
+  xrange08=[]
+  xrange10=[]
+  xrange11=[]
+  xrange12=[]
+  xrange13=[]
+  xrange14=[]
   
-  t9=TeXtoIDL('\mu\tau_V')
-  t10=TeXtoIDL('log(M_{dust}/M_{o})')
-  t11=TeXtoIDL('log(sSFR) yr^{-1}')
-  t12=TeXtoIDL('log(SFR/M_{o} yr^{-1})')
-  t13=TeXtoIDL('\xi_C^{tot}')
-  t14=TeXtoIDL('\xi_W^{tot}')
+  
+  
+  
   
   
   
@@ -273,20 +287,23 @@ pro plot_sed, galaxy
   TVLCT, 100, 100, 100 , 4
   
   ; Define Positions
+  ; upper panel
+  positionU1=[0.12,0.65,0.92,0.99]
+  positionU2=[0.12,0.55,0.92,0.65]
   ; 1st row
-  position1=[0.15,0.3,0.275,0.45]
-  position2=[0.275,0.3,0.40,0.45]
-  position3=[0.40,0.3,0.525,0.45]
-  position4=[0.525,0.3,0.65,0.45]
-  position5=[0.65,0.3,0.775,0.45]
-  position6=[0.775,0.3,0.9,0.45]
+  position01=[0.150,0.30,0.275,0.45]
+  position02=[0.275,0.30,0.400,0.45]
+  position03=[0.400,0.30,0.525,0.45]
+  position04=[0.525,0.30,0.650,0.45]
+  position05=[0.650,0.30,0.775,0.45]
+  position06=[0.775,0.30,0.900,0.45]
   ; 2nd row
-  position7=[0.15,0.07,0.275,0.22]
-  position8=[0.275,0.07,0.40,0.22]
-  position9=[0.40,0.07,0.525,0.22]
-  position10=[0.525,0.07,0.65,0.22]
-  position11=[0.65,0.07,0.775,0.22]
-  position12=[0.775,0.07,0.90,0.22]
+  position07=[0.150,0.07,0.275,0.22]
+  position08=[0.275,0.07,0.400,0.22]
+  position09=[0.400,0.07,0.525,0.22]
+  position10=[0.525,0.07,0.650,0.22]
+  position11=[0.650,0.07,0.775,0.22]
+  position12=[0.775,0.07,0.900,0.22]
   
   ; Open PS file to plot
   device,filename=name_ps,/color,XSIZE=21,YSIZE=21,/ENCAPSULATED ; size unit in centimeters, US letter 8.5 x 11.0 inches
@@ -300,7 +317,7 @@ pro plot_sed, galaxy
   yrange = [1e-6,1e4]
   
   ; Plot frame
-  plot,POSITION=[0.12,0.65,0.92,0.99],[1D-30],[1D-30],/NoData,/xlog,/ylog,xrange=xrange,yrange=yrange,xstyle=1,ystyle=1,ytickformat='dzliu_logtickformat',xminor=9,thick=3,xthick=3,ythick=3,charthick=3,charsize=1.75,XTICKFORMAT="(A1)"
+  plot,POSITION=positionU1,[1D-30],[1D-30],/NoData,/xlog,/ylog,xrange=xrange,yrange=yrange,xstyle=1,ystyle=1,ytickformat='dzliu_logtickformat',xminor=9,thick=3,xthick=3,ythick=3,charthick=3,charsize=1.75,XTICKFORMAT="(A1)"
   xyouts,0.05,(0.65+0.99)/2.0,/NORMAL,TeXtoIDL("flux [mJy]"),charthick=3,charsize=1.0,align=0.5,orient=90 ; ytitle
   
   ; Plot best fit SED
@@ -354,7 +371,7 @@ pro plot_sed, galaxy
   
   ; Plot the flux residual panel
   yrange = [-1.0,1.0]
-  plot,POSITION=[0.12,0.55,0.92,0.65],[0.07,2500],[0,0],lines=1,/xlog,xrange=xrange,yrange=yrange,xtitle=xtitle,xstyle=1,ystyle=1,xtickformat='dzliu_logtickformat',xminor=9,thick=3,xthick=3,ythick=3,xticklen=0.1,yticks=2,yminor=5,charthick=3,charsize=1.75
+  plot,POSITION=positionU2,[0.07,2500],[0,0],lines=1,/xlog,xrange=xrange,yrange=yrange,xtitle=xtitle,xstyle=1,ystyle=1,xtickformat='dzliu_logtickformat',xminor=9,thick=3,xthick=3,ythick=3,xticklen=0.1,yticks=2,yminor=5,charthick=3,charsize=1.75
   w_flag = WHERE(f_res GE yrange[0] AND f_res LE yrange[1], /NULL)
   IF N_ELEMENTS(w_flag) GT 0 THEN BEGIN
     plotsym,8,0.9,/fill
@@ -374,23 +391,23 @@ pro plot_sed, galaxy
   xyouts,0.05,(0.55+0.65)/2.0,/NORMAL,TeXtoIDL("log(f_{OBS}/f_{SED})"),charthick=3,charsize=0.8,align=0.5,orient=90 ; ytitle
   
   ; Histograms 
-  plot,f_mu[0,*],f_mu[1,*],psym=10,xrange=[0.01,0.98],xtitle=t1,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,ytitle='Likehood Distr.',POSITION=position1
-  plot,tau_V_ISM[0,*],tau_V_ISM[1,*],psym=10,xrange=[0.01,2.95],xtitle=t9,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position3,YTICKFORMAT="(A1)"
-  plot,tau_V[0,*],tau_V[1,*],psym=10,xrange=[0.01,5.8],xstyle=1,xtitle=t4,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position2,YTICKFORMAT="(A1)"
-  plot,Ldust[0,*],Ldust[1,*],psym=10,xrange=[8.01,13.99],xtitle=t6,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position7,ytitle='Likehood Distr.'
+  plot,f_mu[0,*],f_mu[1,*],psym=10,xrange=xrange01,xtitle=xtitle01,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,ytitle='Likehood Distr.',POSITION=position01
+  plot,tau_V_ISM[0,*],tau_V_ISM[1,*],psym=10,xrange=xrange09,xtitle=xtitle09,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position03,YTICKFORMAT="(A1)"
+  plot,tau_V[0,*],tau_V[1,*],psym=10,xrange=xrange04,xtitle=xtitle04,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position02,YTICKFORMAT="(A1)"
+  plot,Ldust[0,*],Ldust[1,*],psym=10,xrange=xrange06,xtitle=xtitle06,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position07,ytitle='Likehood Distr.'
   
-  ;<dzliu>;plot,Tc_ISM[0,*],Tc_ISM[1,*],psym=10,xrange=[15.1,28.99],xtitle=t7,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,xcharsize=0.9,POSITION=position9,YTICKFORMAT="(A1)"
-  ;<dzliu>;plot,Tw_BC[0,*],Tw_BC[1,*],psym=10,xrange=[30.5,64.5],xtitle=t8,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,xcharsize=0.9,POSITION=position10,YTICKFORMAT="(A1)"
-  ;<dzliu>;plot,Tdust[0,*],Tdust[1,*],psym=10,xrange=[15.1,79.9],xtitle=t8,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,xcharsize=0.9,POSITION=position10,YTICKFORMAT="(A1)"
-  plot,Tc_ISM[0,*],Tc_ISM[1,*],psym=10,xrange=[15.1,55.99],xtitle=t7,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,xcharsize=0.9,POSITION=position9,YTICKFORMAT="(A1)"
-  plot,Tw_BC[0,*],Tw_BC[1,*],psym=10,xrange=[30.5,99.5],xtitle=t8,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,xcharsize=0.9,POSITION=position10,YTICKFORMAT="(A1)"
+  ;<dzliu>;plot,Tc_ISM[0,*],Tc_ISM[1,*],psym=10,xrange=[15.1,28.99],xtitle=xtitle07,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position09,YTICKFORMAT="(A1)"
+  ;<dzliu>;plot,Tw_BC[0,*],Tw_BC[1,*],psym=10,xrange=[30.5,64.5],xtitle=xtitle08,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position10,YTICKFORMAT="(A1)"
+  ;<dzliu>;plot,Tdust[0,*],Tdust[1,*],psym=10,xrange=[15.1,79.9],xtitle=xtitle08,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position10,YTICKFORMAT="(A1)"
+  plot,Tc_ISM[0,*],Tc_ISM[1,*],psym=10,xrange=xrange07,xtitle=xtitle07,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position09,YTICKFORMAT="(A1)"
+  plot,Tw_BC[0,*],Tw_BC[1,*],psym=10,xrange=xrange08,xtitle=xtitle08,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position10,YTICKFORMAT="(A1)"
   
-  plot,Mdust[0,*],Mdust[1,*],psym=10,xtitle=t10,xrange=[4.1,10.5],xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position8,YTICKFORMAT="(A1)"
-  plot,Mstars[0,*],Mstars[1,*],psym=10,xtitle=t5,xrange=[8.1,12.9],xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position4,YTICKFORMAT="(A1)"
-  plot,sSFR[0,*],sSFR[1,*],psym=10,xtitle=t11,xrange=[-12.9,-7.1],xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position5,YTICKFORMAT="(A1)"
-  plot,SFR[0,*],SFR[1,*],psym=10,xtitle=t12,xrange=[-3.9,5.0],xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position6,YTICKFORMAT="(A1)"
-  plot,xi_C_tot[0,*],xi_C_tot[1,*],xrange=[0.01,0.99],psym=10,xtitle=t13,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position11,YTICKFORMAT="(A1)"
-  plot,xi_W_tot[0,*],xi_W_tot[1,*],xrange=[0.01,0.99],psym=10,xtitle=t14,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.3,POSITION=position12,YTICKFORMAT="(A1)"
+  plot,Mdust[0,*],Mdust[1,*],psym=10,xrange=xrange10,xtitle=xtitle10,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position08,YTICKFORMAT="(A1)"
+  plot,Mstars[0,*],Mstars[1,*],psym=10,xrange=xrange05,xtitle=xtitle05,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position04,YTICKFORMAT="(A1)"
+  plot,sSFR[0,*],sSFR[1,*],psym=10,xrange=xrange11,xtitle=xtitle11,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position05,YTICKFORMAT="(A1)"
+  plot,SFR[0,*],SFR[1,*],psym=10,xrange=xrange12,xtitle=xtitle12,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position06,YTICKFORMAT="(A1)"
+  plot,xi_C_tot[0,*],xi_C_tot[1,*],psym=10,xrange=xrange13,xtitle=xtitle13,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position11,YTICKFORMAT="(A1)"
+  plot,xi_W_tot[0,*],xi_W_tot[1,*],psym=10,xrange=xrange14,xtitle=xtitle14,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=1.3,POSITION=position12,YTICKFORMAT="(A1)"
   
   device,/close
   set_plot,'x'
