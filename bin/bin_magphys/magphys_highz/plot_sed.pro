@@ -82,11 +82,14 @@ function dzliu_xinterval_for_histogram, xarray
   print, 'xtickinterval_1 =', xtickinterval_1
   print, 'xtickinterval_2 =', xtickinterval_2
   IF 5 * 10^xtickinterval_2 LE xtickinterval_1 THEN BEGIN
+    print, 'xtickinterval =', 5 * 10^xtickinterval_2
     RETURN, 5 * 10^xtickinterval_2
   ENDIF ELSE IF 2 * 10^xtickinterval_2 LE xtickinterval_1 THEN BEGIN
+    print, 'xtickinterval =', 2 * 10^xtickinterval_2
     RETURN, 2 * 10^xtickinterval_2
   ENDIF ELSE BEGIN
     RETURN, 1 * 10^xtickinterval_2
+    print, 'xtickinterval =', 1 * 10^xtickinterval_2
   ENDELSE
 end
 
