@@ -63,9 +63,9 @@ function dzliu_xrange_for_histogram, xmatrix, xlower_default = xlower_default, x
       IF xupper LE 0.0 AND xlower GT 0.0 THEN xupper = xlower
       IF xlower LE 0.0 AND xupper GT 0.0 THEN xlower = xupper
     ENDIF
-    ;print, 'xbest =', xbest
-    ;print, 'xlower =', xlower
-    ;print, 'xupper =', xupper
+    print, 'xbest =', xbest
+    print, 'xlower =', xlower
+    print, 'xupper =', xupper
     IF N_ELEMENTS(xlower_default) EQ 0 THEN xlower_default = 1.25
     IF N_ELEMENTS(xupper_default) EQ 0 THEN xupper_default = 1.25
     IF xlower LE 0.0 THEN xlower = xlower_default
@@ -79,16 +79,16 @@ function dzliu_xinterval_for_histogram, xarray
   xtickinterval_1 = (MAX(xarray)-MIN(xarray))/2.0
   xtickinterval_2 = ALOG10(xtickinterval_1)
   IF xtickinterval_2 GT 0 THEN xtickinterval_2 = FIX(xtickinterval_2) ELSE xtickinterval_2 = FIX(xtickinterval_2)-1
-  print, 'xtickinterval_1 =', xtickinterval_1
-  print, 'xtickinterval_2 =', xtickinterval_2
+  ;print, 'xtickinterval_1 =', xtickinterval_1
+  ;print, 'xtickinterval_2 =', xtickinterval_2
   IF 5 * 10^xtickinterval_2 LE xtickinterval_1 THEN BEGIN
-    print, 'xtickinterval =', 5 * 10^xtickinterval_2
+    ;print, 'xtickinterval =', 5 * 10^xtickinterval_2
     RETURN, 5 * 10^xtickinterval_2
   ENDIF ELSE IF 2 * 10^xtickinterval_2 LE xtickinterval_1 THEN BEGIN
-    print, 'xtickinterval =', 2 * 10^xtickinterval_2
+    ;print, 'xtickinterval =', 2 * 10^xtickinterval_2
     RETURN, 2 * 10^xtickinterval_2
   ENDIF ELSE BEGIN
-    print, 'xtickinterval =', 1 * 10^xtickinterval_2
+    ;print, 'xtickinterval =', 1 * 10^xtickinterval_2
     RETURN, 1 * 10^xtickinterval_2
   ENDELSE
 end
