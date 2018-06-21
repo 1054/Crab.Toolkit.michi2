@@ -288,22 +288,22 @@ pro plot_sed, galaxy
   
   ; Define Positions
   ; upper panel
-  positionU1=[0.12,0.65,0.92,0.99]
-  positionU2=[0.12,0.55,0.92,0.65]
+  positionU1=[0.120,0.55,0.920,0.99]
+  positionU2=[0.120,0.45,0.920,0.55]
   ; 1st row
-  position01=[0.150,0.30,0.275,0.45]
-  position02=[0.275,0.30,0.400,0.45]
-  position03=[0.400,0.30,0.525,0.45]
-  position04=[0.525,0.30,0.650,0.45]
-  position05=[0.650,0.30,0.775,0.45]
-  position06=[0.775,0.30,0.900,0.45]
+  position01=[0.150,0.25,0.275,0.35]
+  position02=[0.275,0.25,0.400,0.35]
+  position03=[0.400,0.25,0.525,0.35]
+  position04=[0.525,0.25,0.650,0.35]
+  position05=[0.650,0.25,0.775,0.35]
+  position06=[0.775,0.25,0.900,0.35]
   ; 2nd row
-  position07=[0.150,0.07,0.275,0.22]
-  position08=[0.275,0.07,0.400,0.22]
-  position09=[0.400,0.07,0.525,0.22]
-  position10=[0.525,0.07,0.650,0.22]
-  position11=[0.650,0.07,0.775,0.22]
-  position12=[0.775,0.07,0.900,0.22]
+  position07=[0.150,0.07,0.275,0.17]
+  position08=[0.275,0.07,0.400,0.17]
+  position09=[0.400,0.07,0.525,0.17]
+  position10=[0.525,0.07,0.650,0.17]
+  position11=[0.650,0.07,0.775,0.17]
+  position12=[0.775,0.07,0.900,0.17]
   
   ; Open PS file to plot
   device,filename=name_ps,/color,XSIZE=21,YSIZE=21,/ENCAPSULATED ; size unit in centimeters, US letter 8.5 x 11.0 inches
