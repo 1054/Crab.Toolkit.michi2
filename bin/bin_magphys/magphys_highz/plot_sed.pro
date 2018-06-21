@@ -50,6 +50,24 @@ function dzliu_logtickformat, axis, index, number
     RETURN, first + '10!U' + sign + exp + '!N'
 end
 
+function dzliu_xrange_for_histogram, xmatrix
+  xindex = WHERE(xmatrix[1,*] EQ MAX(xmatrix[1,*],/NAN), /NULL)
+  IF N_ELEMENTS(xindex) GT 0 THEN BEGIN
+    xbest = xmatrix[0, xindex[0]]
+    xindex = WHERE(xmatrix[1,*] GE MAX(xmatrix[1,*],/NAN)/2.0, /NULL)
+    xlower = 0.0
+    xupper = 0.0
+    IF N_ELEMENTS(xindex) GT 1 THEN BEGIN
+      xlower = ABS(xbest - MIN(xmatrix[0, xindex])) * 3.0
+      xupper = ABS(MAX(xmatrix[0, xindex]) - xbest) * 3.0
+    ENDIF
+    IF xlower LT 0.0 THEN xlower = 1.5
+    IF xupper LT 0.0 THEN xupper = 1.5
+    RETURN, [xbest-xlower, xbest+xupper]
+  ENDIF
+  RETURN, []
+end
+
 
 
 
@@ -226,11 +244,11 @@ pro plot_sed, galaxy
   for j=1,3 do readf,20,skips & readf,20,Tdust
   for j=1,2 do readf,20,skips
   
-  xtitle01=TeXtoIDL('log(M_{stars}/M_{o})')   & xrange01=[7.01,12.99]
-  xtitle02=TeXtoIDL('log(SFR/M_{o} yr^{-1})') & xrange02=[-3.99,5.01]
-  xtitle03=TeXtoIDL('log(L_{dust}/L_{o})')    & xrange03=[8.01,13.99]
-  xtitle04=TeXtoIDL('log(M_{dust}/M_{o})')    & xrange04=[4.01,10.99]
-  xtitle05=TeXtoIDL('T_{dust}/K')             & xrange05=[15.01,79.99]
+  xtitle01=TeXtoIDL('log(M_{stars}/M_{o})')   & xrange01=dzliu_xrange_for_histogram(Mstars)   ; & xrange01=[6.99,12.99]
+  xtitle02=TeXtoIDL('log(SFR/M_{o} yr^{-1})') & xrange02=dzliu_xrange_for_histogram(SFR)      ; & xrange02=[-3.99,5.01]
+  xtitle03=TeXtoIDL('log(L_{dust}/L_{o})')    & xrange03=dzliu_xrange_for_histogram(Ldust)    ; & xrange03=[8.01,13.99]
+  xtitle04=TeXtoIDL('log(M_{dust}/M_{o})')    & xrange04=dzliu_xrange_for_histogram(Mdust)    ; & xrange04=[4.01,10.99]
+  xtitle05=TeXtoIDL('T_{dust}/K')             & xrange05=dzliu_xrange_for_histogram(Tdust)    ; & xrange05=[15.01,79.99]
  ;xtitle01=TeXtoIDL('f_\mu') & xrange01=[0.01,0.98]
  ;xtitle04=TeXtoIDL('\tau_V') & xrange04=[0.01,5.8]
  ;xtitle07=TeXtoIDL('T_{C}^{ISM}/K') & xrange07=[15.1,55.99]
@@ -240,20 +258,7 @@ pro plot_sed, galaxy
  ;xtitle13=TeXtoIDL('\xi_C^{tot}') & xrange13=[0.01,0.99]
  ;xtitle14=TeXtoIDL('\xi_W^{tot}') & xrange14=[0.01,0.99]
   
-  xrange01=[]
-  xrange02=[]
-  xrange03=[]
-  xrange04=[]
-  xrange05=[]
-  ;xrange06=[]
-  ;xrange07=[]
-  ;xrange08=[]
-  ;xrange09=[]
-  ;xrange10=[]
-  ;xrange11=[]
-  ;xrange12=[]
-  ;xrange13=[]
-  ;xrange14=[]
+  
   
   
   
