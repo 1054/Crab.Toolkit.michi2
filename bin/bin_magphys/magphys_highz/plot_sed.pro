@@ -395,7 +395,7 @@ pro plot_sed, galaxy
     plotsym,1,0.9,/fill ; downward arrow
     oplot,w_obs[w_flag],f_res[w_flag]*0+yrange[1],psym=8,symsize=1.5,thick=3,color=0
   ENDIF
-  xyouts,(positionU2[0]+positionU2[2])/2.0,(positionU2[1]-0.05),/NORMAL,TeXtoIDL("\lambda/\mum [observed-frame]"),charthick=3,charsize=1.25,align=0.5; xtitle
+  xyouts,(positionU2[0]+positionU2[2])/2.0,(positionU2[1]-0.06),/NORMAL,TeXtoIDL("\lambda/\mum [observed-frame]"),charthick=3,charsize=1.25,align=0.5; xtitle
   xyouts,0.05,(positionU2[1]+positionU2[3])/2.0,/NORMAL,TeXtoIDL("log(S_{OBS}/S_{SED})"),charthick=3,charsize=1.25,align=0.5,orient=90 ; ytitle
   
   ; Histograms 
@@ -414,12 +414,12 @@ pro plot_sed, galaxy
  ;plot,sSFR[0,*],sSFR[1,*],               psym=10,xrange=xrange11,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,xminor=5,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position05,YTICKFORMAT="(A1)"
  ;plot,xi_C_tot[0,*],xi_C_tot[1,*],       psym=10,xrange=xrange13,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position11,YTICKFORMAT="(A1)"
  ;plot,xi_W_tot[0,*],xi_W_tot[1,*],       psym=10,xrange=xrange14,xstyle=1,thick=5,xthick=3,ythick=3,xticklen=0.1,ystyle=1,yrange=[0,1.18],charthick=3,charsize=1.5,xcharsize=0.9,POSITION=position12,YTICKFORMAT="(A1)"
-  xyouts, 0.05, (position01[1]+position01[3])/2.0, 'Likehood Distr.',        /NORMAL, ALIGNMENT=0.5, CHARSIZE=0.9, CHARTHICK=3, ORIENT=90 ; ytitle
-  xyouts, (position01[0]+position01[2])/2.0, (position01[1]-0.04), xtitle01, /NORMAL, ALIGNMENT=0.5, CHARSIZE=0.9, CHARTHICK=3
-  xyouts, (position02[0]+position02[2])/2.0, (position02[1]-0.04), xtitle02, /NORMAL, ALIGNMENT=0.5, CHARSIZE=0.9, CHARTHICK=3
-  xyouts, (position03[0]+position03[2])/2.0, (position03[1]-0.04), xtitle03, /NORMAL, ALIGNMENT=0.5, CHARSIZE=0.9, CHARTHICK=3
-  xyouts, (position04[0]+position04[2])/2.0, (position04[1]-0.04), xtitle04, /NORMAL, ALIGNMENT=0.5, CHARSIZE=0.9, CHARTHICK=3
-  xyouts, (position05[0]+position05[2])/2.0, (position05[1]-0.04), xtitle05, /NORMAL, ALIGNMENT=0.5, CHARSIZE=0.9, CHARTHICK=3
+  xyouts, 0.05, (position01[1]+position01[3])/2.0, 'Likehood Distr.',        /NORMAL, ALIGNMENT=0.5, CHARSIZE=1.1, CHARTHICK=3, ORIENT=90 ; ytitle
+  xyouts, (position01[0]+position01[2])/2.0, (position01[1]-0.05), xtitle01, /NORMAL, ALIGNMENT=0.5, CHARSIZE=1.1, CHARTHICK=3
+  xyouts, (position02[0]+position02[2])/2.0, (position02[1]-0.05), xtitle02, /NORMAL, ALIGNMENT=0.5, CHARSIZE=1.1, CHARTHICK=3
+  xyouts, (position03[0]+position03[2])/2.0, (position03[1]-0.05), xtitle03, /NORMAL, ALIGNMENT=0.5, CHARSIZE=1.1, CHARTHICK=3
+  xyouts, (position04[0]+position04[2])/2.0, (position04[1]-0.05), xtitle04, /NORMAL, ALIGNMENT=0.5, CHARSIZE=1.1, CHARTHICK=3
+  xyouts, (position05[0]+position05[2])/2.0, (position05[1]-0.05), xtitle05, /NORMAL, ALIGNMENT=0.5, CHARSIZE=1.1, CHARTHICK=3
   
   
   device,/close
