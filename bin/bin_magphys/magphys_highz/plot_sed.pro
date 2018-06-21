@@ -50,7 +50,7 @@ function dzliu_logtickformat, axis, index, number
     RETURN, first + '10!U' + sign + exp + '!N'
 end
 
-function dzliu_xrange_for_histogram, xmatrix
+function dzliu_xrange_for_histogram, xmatrix, xlower_default = xlower_default, xupper_default = xupper_default
   xindex = WHERE(xmatrix[1,*] EQ MAX(xmatrix[1,*],/NAN), /NULL)
   IF N_ELEMENTS(xindex) GT 0 THEN BEGIN
     xbest = xmatrix[0, xindex[0]]
@@ -60,12 +60,16 @@ function dzliu_xrange_for_histogram, xmatrix
     IF N_ELEMENTS(xindex) GT 1 THEN BEGIN
       xlower = ABS(xbest - MIN(xmatrix[0, xindex])) * 3.0
       xupper = ABS(MAX(xmatrix[0, xindex]) - xbest) * 3.0
+      IF xupper LE 0.0 AND xlower GT 0.0 THEN xupper = xlower
+      IF xlower LE 0.0 AND xupper GT 0.0 THEN xlower = xupper
     ENDIF
     print, 'xbest =', xbest
     print, 'xlower =', xlower
     print, 'xupper =', xupper
-    IF xlower LT 0.0 THEN xlower = 1.5
-    IF xupper LT 0.0 THEN xupper = 1.5
+    IF N_ELEMENTS(xlower_default) EQ 0 THEN xlower_default = 1.5
+    IF N_ELEMENTS(xupper_default) EQ 0 THEN xupper_default = 1.5
+    IF xlower LE 0.0 THEN xlower = xlower_default
+    IF xupper LE 0.0 THEN xupper = xupper_default
     RETURN, [xbest-xlower, xbest+xupper]
   ENDIF
   RETURN, []
