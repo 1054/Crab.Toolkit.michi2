@@ -7,3 +7,5 @@ export USER_FILTERS="magphys_input_filters.dat"
 export magphys="$HOME/Softwares/magphys/magphys_highz"
 
 idl -e plot_sed -args "best-fit_SED"
+
+ps2pdf -dEPSCrop "best-fit_SED.ps" "best-fit_SED.pdf"
