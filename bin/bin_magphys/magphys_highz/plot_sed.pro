@@ -226,7 +226,7 @@ pro plot_sed, galaxy
   for j=1,3 do readf,20,skips & readf,20,Tdust
   for j=1,2 do readf,20,skips
   
-  xtitle01=TeXtoIDL('log(M_{stars}/M_{o})')   & xrange01=[8.01,12.99]
+  xtitle01=TeXtoIDL('log(M_{stars}/M_{o})')   & xrange01=[0.01,12.99]
   xtitle02=TeXtoIDL('log(SFR/M_{o} yr^{-1})') & xrange02=[-3.9,5.0]
   xtitle03=TeXtoIDL('log(L_{dust}/L_{o})')    & xrange03=[8.01,13.99]
   xtitle04=TeXtoIDL('log(M_{dust}/M_{o})')    & xrange04=[4.01,10.99]
@@ -240,17 +240,17 @@ pro plot_sed, galaxy
  ;xtitle13=TeXtoIDL('\xi_C^{tot}') & xrange13=[0.01,0.99]
  ;xtitle14=TeXtoIDL('\xi_W^{tot}') & xrange14=[0.01,0.99]
   
-  xrange01=[]
-  xrange04=[]
-  xrange05=[]
-  xrange06=[]
-  xrange07=[]
-  xrange08=[]
-  xrange10=[]
-  xrange11=[]
-  xrange12=[]
-  xrange13=[]
-  xrange14=[]
+  ;xrange01=[]
+  ;xrange04=[]
+  ;xrange05=[]
+  ;xrange06=[]
+  ;xrange07=[]
+  ;xrange08=[]
+  ;xrange10=[]
+  ;xrange11=[]
+  ;xrange12=[]
+  ;xrange13=[]
+  ;xrange14=[]
   
   
   
