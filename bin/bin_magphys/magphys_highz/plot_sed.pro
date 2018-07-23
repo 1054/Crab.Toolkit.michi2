@@ -223,10 +223,10 @@ pro plot_sed, galaxy
   mu=dblarr(2,20)
   tau_V=dblarr(2,160) ; highz is 246-86=160 instead of 48
   sSFR=dblarr(2,70)
-  Mstars=dblarr(2,60)
-  Ldust=dblarr(2,60)
-  Tc_ISM=dblarr(2,40) ;<dzliu modified> Tc_ISM=dblarr(2,10) -> Tc_ISM=dblarr(2,40), see also "dzliu modified" in "fit_sed_highz.f"
-  Tw_BC=dblarr(2,60) ;<dzliu modified> Tw_BC=dblarr(2,30) -> Tw_BC=dblarr(2,60), see also "dzliu modified" in "fit_sed_highz.f"
+  Mstars=dblarr(2,80) ; dzliu modified 20180723: 60 -> 80, see "dzliu modified" in "fit_sed_highz.f"
+  Ldust=dblarr(2,80) ; dzliu modified 20180723: 60 -> 80, see "dzliu modified" in "fit_sed_highz.f"
+  Tc_ISM=dblarr(2,10) ; dzliu restored 20180723 -> 10 ;<dzliu modified> Tc_ISM=dblarr(2,10) -> Tc_ISM=dblarr(2,40), see also "dzliu modified" in "fit_sed_highz.f"
+  Tw_BC=dblarr(2,30) ; dzliu restored 20180723 -> 30 ;<dzliu modified> Tw_BC=dblarr(2,30) -> Tw_BC=dblarr(2,60), see also "dzliu modified" in "fit_sed_highz.f"
   xi_C_tot=dblarr(2,20) ; highz added this
   xi_PAH_tot=dblarr(2,20) ; highz added this
   xi_MIR_tot=dblarr(2,20) ; highz added this
