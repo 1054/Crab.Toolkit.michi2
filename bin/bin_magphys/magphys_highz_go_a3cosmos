@@ -227,7 +227,8 @@ function Run_Magphys() {
                 mv "${magphys_slist[magphys_i]}.fit" "$magphys_outdir/"
                 mv "${magphys_slist[magphys_i]}.ps"  "$magphys_outdir/"
                 mv "${magphys_slist[magphys_i]}.pdf" "$magphys_outdir/"
-                mv "${magphys_slist[magphys_i]}.jpg" "$magphys_outdir/"
+                if [[ -f "${magphys_slist[magphys_i]}.jpg" ]]; then mv "${magphys_slist[magphys_i]}.jpg" "$magphys_outdir/"; fi
+                if [[ -f "${magphys_slist[magphys_i]}.sed.um.mJy.txt" ]]; then mv "${magphys_slist[magphys_i]}.sed.um.mJy.txt" "$magphys_outdir/"; fi
                 # 
                 # make chi2 table
                 if [[ ! -f "$magphys_outdir/fit_chisq_z.out" ]]; then
@@ -249,8 +250,9 @@ function Run_Magphys() {
         # get miminum chisq z
         best_fit_obj_name=$(cat "$magphys_outdir/fit_chisq_z_sorted.out" | grep -v "^#" | head -n 1 | sed -e 's/^ *//g' | tr -s ' ' | cut -d ' ' -f 5)
         cp "$magphys_outdir/${best_fit_obj_name}.sed" "$magphys_outdir/best-fit_SED.sed"
-        cp "$magphys_outdir/${best_fit_obj_name}.pdf" "$magphys_outdir/best-fit_SED.pdf"
         cp "$magphys_outdir/${best_fit_obj_name}.fit" "$magphys_outdir/best-fit_SED.fit"
+        cp "$magphys_outdir/${best_fit_obj_name}.pdf" "$magphys_outdir/best-fit_SED.pdf"
+        cp "$magphys_outdir/${best_fit_obj_name}.sed.um.mJy.txt" "$magphys_outdir/best-fit_SED.sed.um.mJy.txt"
         # 
         # copy log file
         cp "fit_sed_highz.log" "$magphys_outdir/" 2>/dev/null

@@ -67,7 +67,7 @@ c     observations, filters, etc.
       real*8 flux_obs(galmax,nmax),sigma(galmax,nmax),aux,nsig
       real*8 flux_obs_cat(galmax,nmax),sigma_cat(galmax,nmax)
       real*8 flux_sfh(nmod,nmax),ssfr(nmod),z(nmod),flux_best(galmax,nmax)
-      real*8 lambda_eff(nmax),lambda_rest(nmax),fwrite(nmax)
+      real*8 lambda_eff(nmax),lambda_rest(nmax)
       real*8 flux_orig(galmax,nmax),sigma_orig(galmax,nmax)
 c     model libraries, parameters, etc.
       integer n_flux,indx_sfh(nmod),indx_ir(nmod),indx(nmod)
@@ -162,13 +162,6 @@ c     cosmological parameters
 c     histogram parameters: min,max,bin width
 c     dzliu modified: data tbg1_min/30./,tbg1_max/60.0125/,dtbg/0.025/ -> tbg1_max/90.0125/,dtbg/0.05/
 c     dzliu modified: data tbg2_min/15./,tbg2_max/25.0125/,dtbg/0.025/ -> tbg2_max/55.0125/,dtbg/0.05/
-c     dzliu note 20180723: [download_20180723] data a_min/6./,a_max/13.0025/,da/0.005/ <-> [this_file] data a_min/8./,a_max/14.0025/,da/0.005/
-c     dzliu note 20180723: [download_20180723] data md_min/4./,md_max/10./,dmd/0.005/ <-> [this_file] data md_min/6./,md_max/12./,dmd/0.005/
-c     dzliu note 20180723: [highz_photoz] data a_min/8./,a_max/14.0025/,da/0.005/ <-> [same as this file]
-c     dzliu note 20180723: [highz_photoz] data md_min/6./,md_max/12./,dmd/0.005/ <-> [same as this file]
-c     dzliu restored 20180723: data tbg1_min/30./,tbg1_max/60.0125/,dtbg/0.025/ <- tbg1_max/90.0125/,dtbg/0.05/
-c     dzliu restored 20180723: data tbg2_min/15./,tbg2_max/25.0125/,dtbg/0.025/ <- tbg2_max/55.0125/,dtbg/0.05/
-c     dzliu modified 20180723: data a_min/8./,a_max/14.0025/,da/0.005/ -> data a_min/6./,a_max/14.0025/,da/0.005/
       data fmu_min/0./,fmu_max/1.0005/,dfmu/0.001/
       data fmuism_min/0./,fmuism_max/1.0005/,dfmu_ism/0.001/       
       data mu_min/0./,mu_max/1.0005/,dmu/0.001/
@@ -176,10 +169,10 @@ c     dzliu modified 20180723: data a_min/8./,a_max/14.0025/,da/0.005/ -> data a
       data av_min/0./,av_max/20./,dav/0.025/
       data ssfr_min/-13./,ssfr_max/-5.9975/,dssfr/0.05/
       data sfr_min/-2./,sfr_max/4.5005/,dsfr/0.005/
-      data a_min/6./,a_max/14.0025/,da/0.005/
+      data a_min/8./,a_max/14.0025/,da/0.005/
       data ld_min/8./,ld_max/14.0025/,dldust/0.005/
-      data tbg1_min/30./,tbg1_max/60.0125/,dtbg/0.025/
-      data tbg2_min/15./,tbg2_max/25.0125/
+      data tbg1_min/30./,tbg1_max/90.0125/,dtbg/0.05/
+      data tbg2_min/15./,tbg2_max/55.0125/,dtbg/0.05/
       data xi_min/0./,xi_max/1.0001/,dxi/0.001/
       data md_min/6./,md_max/12./,dmd/0.005/
       data z_min/0./,z_max/10./,dz/0.05/
@@ -409,13 +402,11 @@ c     .lbr contains absolute AB magnitudes -> convert to fluxes Fnu in Lo/Hz
 c     Convert all magnitudes to Lo/Hz (except H lines luminosity: in Lo)
 c     Normalise SEDs to stellar mass
                   do k=1,nfilt_sfh
-                      if (flux_sfh(i_sfh,k).gt.-98.) then
-                          flux_sfh(i_sfh,k)=3.117336e+6
+                     flux_sfh(i_sfh,k)=3.117336e+6
      +                    *10**(-0.4*(flux_sfh(i_sfh,k)+48.6))
-                          flux_sfh(i_sfh,k)=flux_sfh(i_sfh,k)/mstr1(i_sfh)
+                     flux_sfh(i_sfh,k)=flux_sfh(i_sfh,k)/mstr1(i_sfh)
 c     1+z factor which is required in model fluxes
-                          flux_sfh(i_sfh,k)=flux_sfh(i_sfh,k)/(1+redshift(i_gal))  ! dzliu note: redshift to obsframe by 1/(1+z) <TODO> why? equivalent to multiplying (1+z) to the derived quantities e.g. Mdust Ldust etc.
-                      endif
+                     flux_sfh(i_sfh,k)=flux_sfh(i_sfh,k)/(1+redshift(i_gal))   ! dzliu note: redshift to obsframe by 1/(1+z) <TODO> why? equivalent to multiplying (1+z) to the derived quantities e.g. Mdust Ldust etc.
                   enddo
                endif
             enddo
@@ -674,8 +665,8 @@ c     Check progress of the fit...
             else if (i_sfh/n_sfh.eq.1) then
                write (*,*) '100% done...', n_sfh, " opt. models - fit finished"
             endif
-            
-            df=0.20             !fmu_opt=fmu_ir +/- dfmu    ! dzliu test: df=0.20, try df=1.00 (i.e. do not constrain ISM/BirthCloud ratio between stellar attenuation and dust emission)
+
+            df=0.20             !fmu_opt=fmu_ir +/- dfmu   ! dzliu test: df=0.20, try df=1.00 (i.e. do not constrain ISM/BirthCloud ratio between stellar attenuation and dust emission)
 
 c     Search for the IR models with f_mu within the range set by df
             DO i_ir=1,n_ir
@@ -685,7 +676,6 @@ c     Search for the IR models with f_mu within the range set by df
                chi2=0.
                chi2_opt=0.
                chi2_ir=0.
-               
 
                if (abs(fmu_sfh(i_sfh)-fmu_ir(i_ir)).le.df.and.xi1(i_ir).lt.0.15.and.fmu_sfh(i_sfh).lt.0.9) then
 
@@ -711,7 +701,6 @@ c     Compute scaling factor "a" - this is the number that minimizes chi^2
                   enddo
                   a=num/den
 c     Compute chi^2 goodness-of-fit
-                  
                   do k=1,nfilt_sfh
                      if (flux_obs(i_gal,k).gt.0.and.flux_mod(k).gt.0) then   
                         chi2=chi2+(((flux_obs(i_gal,k)-(a*flux_mod(k)))
@@ -746,11 +735,6 @@ c     Best fit model
                      a_sav=a
                      chi2_sav_opt=chi2_new_opt
                      chi2_sav_ir=chi2_new_ir
-                     do k=1,nfilt
-                         if (flux_mod(k).gt.0) then
-                             fwrite(k)=a_sav*flux_mod(k)
-                         endif
-                     enddo
                   endif
 
 c     MARGINAL PROBABILITY DENSITY FUNCTIONS
@@ -965,13 +949,13 @@ c     New histogram parameters
          sfr_min=-2.
          sfr_max=4.
          da=0.10
-         a_min=6.0 ! dzliu modified 20180723: 8.0 -> 6.0
+         a_min=8.0
          a_max=14.0
-         dtbg=1.
+         dtbg=1. ! dzliu modified: dtbg=1. -> dtbg=2.
          tbg2_min=15.
-         tbg2_max=25. ! dzliu restored 20180723 ! dzliu modified: tbg2_max=25. -> tbg2_max=55.
+         tbg2_max=55. ! dzliu modified: tbg2_max=25. -> tbg2_max=55.
          tbg1_min=30.
-         tbg1_max=60. ! dzliu restored 20180723 ! dzliu modified: tbg1_max=60. -> tbg1_max=90.
+         tbg1_max=90. ! dzliu modified: tbg1_max=60. -> tbg1_max=90.
          td_min=10.
          td_max=80.
          dtd=5.
@@ -1084,18 +1068,14 @@ c     --------------------------------------------------------------------------
      +        m_lh(sfh_sav),m_lk(sfh_sav)
 
          write(31,'(a)') '#'//filter_header(1:largo(filter_header))   ! dzliu modified, add space between headers ! note that it should be '#'//filter_header instead of '# '//filter_header
-         write(31,701) (fwrite(k),k=1,nfilt)
-c        THE CODE BELOW ARE REPLACED BY THE 'fwrite()' CODE ABOVE SINCE THE OFFICIAL VERSION "magphys/download_20180723/fit_sed_highz.f"
-c        write(31,701) (a_sav*flux_sfh(sfh_sav,k),k=1,nfilt_sfh-nfilt_mix),
-c    +        (a_sav*(flux_sfh(sfh_sav,k)
-c    +        +flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav)),
-c    +        k=nfilt_sfh-nfilt_mix+1,nfilt_sfh),
-c    +        (a_sav*flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav),
-c    +        k=nfilt_sfh+1,nfilt)
-         
-c701     format(1p200e12.3)
+         write(31,701) (a_sav*flux_sfh(sfh_sav,k),k=1,nfilt_sfh-nfilt_mix),
+     +        (a_sav*(flux_sfh(sfh_sav,k)
+     +        +flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav)),
+     +        k=nfilt_sfh-nfilt_mix+1,nfilt_sfh),
+     +        (a_sav*flux_ir(ir_sav,k-nfilt_sfh+nfilt_mix)*ldust(sfh_sav),
+     +        k=nfilt_sfh+1,nfilt)
  701     format('  ',1p,200(e12.6,'                  ')) ! dzliu modified, add space between values, and 50(e12.3) --> 200(e12.6,''*18)
-         
+
          write(31,703)
          write(31,805)
  805     format('# MARGINAL PDF HISTOGRAMS FOR EACH PARAMETER......')
