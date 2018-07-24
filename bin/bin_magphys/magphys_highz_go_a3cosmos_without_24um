@@ -795,7 +795,7 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
             m_FilterGood=$(awk "BEGIN {if (($m_FilterFlux)>=3.0*($m_FilterFErr) && ($m_FilterFlux)>0.0) print 1; else print 0;}") # here we fit only S/N>=3 data points
             # 
             # allow user to not fit some filters
-            for (( m_fk = 0; m_fk < ${#m_ExcludedFilters[@]}]]; m_fk++ )); do
+            for (( m_fk = 0; m_fk < ${#m_ExcludedFilters[@]}; m_fk++ )); do
                 if [[ "${m_ExcludedFilters[m_fk]}" == "$m_FilterName" ]]; then
                     m_FilterGood=0
                     break
