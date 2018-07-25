@@ -147,12 +147,11 @@ function Run_Magphys() {
         
         # Make model from zlibs.dat
         #tcsh -c "source get_libs"
-        magphys_zgrid_0=($(cat "$USER_OBS" | sed -e 's/^ *//g' | grep -v "#" | tr -s ' ' | cut -d ' ' -f 2)) # ($(cat "zlibs.dat" | sed -e 's/^ *//g' | grep -v "^#" | perl -p -e 's/^\s*(\S*)\s*(\S*)\s*$/\2\n/g'))
-        magphys_zgrid=($(printf "%q\n" "${magphys_zgrid_0[@]}" | sort -u)) # remove duplicates, see http://stackoverflow.com/questions/13648410/how-can-i-get-unique-values-from-an-array-in-bash
-        for (( magphys_i=0; magphys_i<${#magphys_zgrid[@]}; magphys_i++ )); do
+        #magphys_zgrid_0=($(cat "$USER_OBS" | sed -e 's/^ *//g' | grep -v "#" | tr -s ' ' | cut -d ' ' -f 2)) # ($(cat "zlibs.dat" | sed -e 's/^ *//g' | grep -v "^#" | perl -p -e 's/^\s*(\S*)\s*(\S*)\s*$/\2\n/g'))
+        #magphys_zgrid=($(printf "%q\n" "${magphys_zgrid_0[@]}" | sort -u)) # remove duplicates, see http://stackoverflow.com/questions/13648410/how-can-i-get-unique-values-from-an-array-in-bash
+        #for (( magphys_i=0; magphys_i<${#magphys_zgrid[@]}; magphys_i++ )); do
             #<TODO># re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
-            magphys_zstr=$(printf '%0.4f' ${magphys_zgrid[magphys_i]})
             if [[ -f "starformhist_bc03_photoz.lbr" && -f "starformhist_bc03_photoz.filters" ]]; then
                 #if [[ $(diff "starformhist_bc03_photoz.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]
                 if [[ $(diff <(awk '{print $1,$2,$3}' "starformhist_bc03_photoz.filters") <(awk '{print $1,$2,$3}' "$USER_FILTERS") | wc -l) -eq 0 ]]; then
@@ -164,9 +163,8 @@ function Run_Magphys() {
             if [[ $magphys_reuse -eq 0 || ! -f "starformhist_bc03_photoz.lbr" ]]; then
                 date +"%Y-%m-%d %H:%M:%S %Z" > "get_optic_colors_photoz.log"
                 echo " " >> "get_optic_colors_photoz.log"
-                echo " Input redshift = ${magphys_zgrid[magphys_i]}" >> "get_optic_colors_photoz.log"
-                echo " get_optic_colors_photoz ${magphys_zgrid[magphys_i]}"
-                echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_optic_colors_photoz >> "get_optic_colors_photoz.log"
+                echo " get_optic_colors_photoz"
+                ./get_optic_colors_photoz >> "get_optic_colors_photoz.log"
                 if [[ -f "starformhist_bc03_photoz.lbr" ]] && [[ $? -eq 0 ]]; then
                     cp "$USER_FILTERS" "starformhist_bc03_photoz.filters"
                 else
@@ -186,8 +184,8 @@ function Run_Magphys() {
             fi
             if [[ $magphys_reuse -eq 0 || ! -f "infrared_dce08_photoz.lbr" ]]; then
                 date +"%Y-%m-%d %H:%M:%S %Z" > "get_infrared_colors_photoz.log"
-                echo " get_infrared_colors_photoz ${magphys_zgrid[magphys_i]}"
-                echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_infrared_colors_photoz >> "get_infrared_colors_photoz.log"
+                echo " get_infrared_colors_photoz"
+                ./get_infrared_colors_photoz >> "get_infrared_colors_photoz.log"
                 if [[ -f "infrared_dce08_photoz.lbr" ]] && [[ $? -eq 0 ]]; then
                     cp "$USER_FILTERS" "infrared_dce08_photoz.filters"
                 else
@@ -195,7 +193,7 @@ function Run_Magphys() {
                     exit 1
                 fi
             fi
-        done
+        #done
         #cp "get_optic_colors_photoz.log" "$magphys_outdir/" 2>/dev/null
         #cp "get_infrared_colors_photoz.log" "$magphys_outdir/" 2>/dev/null
         echo ""
