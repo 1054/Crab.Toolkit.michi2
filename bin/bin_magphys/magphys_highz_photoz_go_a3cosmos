@@ -199,9 +199,9 @@ function Run_Magphys() {
         echo ""
         
         # Prepare output file
-        #if [[ -f "$magphys_outdir/fit_chisq_z.out" ]]; then
-        #    mv "$magphys_outdir/fit_chisq_z.out" "$magphys_outdir/fit_chisq_z.out.backup"
-        #fi
+        if [[ -f "$magphys_outdir/fit_chisq_z.out" ]]; then
+            mv "$magphys_outdir/fit_chisq_z.out" "$magphys_outdir/fit_chisq_z.out.backup"
+        fi
         
         # Run source fitting
         #tcsh -c "source fit_sample"
@@ -233,9 +233,9 @@ function Run_Magphys() {
                 if [[ -f "${magphys_slist[magphys_i]}.sed.um.mJy.txt" ]]; then mv "${magphys_slist[magphys_i]}.sed.um.mJy.txt" "$magphys_outdir/"; fi
                 # 
                 # make chi2 table
-                #if [[ ! -f "$magphys_outdir/fit_chisq_z.out" ]]; then
-                #    printf "# %8s %9s %9s %11s %25s\n" "i_sfh" "i_ir" "chi2" "redshift" "obj_name" > "$magphys_outdir/fit_chisq_z.out"
-                #fi
+                if [[ ! -f "$magphys_outdir/fit_chisq_z.out" ]]; then
+                    printf "# %8s %9s %9s %11s %25s\n" "i_sfh" "i_ir" "chi2" "redshift" "obj_name" > "$magphys_outdir/fit_chisq_z.out"
+                fi
                 obj_name_str=$(printf "%25s" "${magphys_slist[magphys_i]}")
                 grep -h -A1 "BEST FIT MODEL" "$magphys_outdir/${magphys_slist[magphys_i]}.fit" | grep -v "^#" | grep -v "^--$" | sed -e "s/$/ $obj_name_str/g" >> "$magphys_outdir/fit_chisq_z.out"
             else
@@ -247,7 +247,7 @@ function Run_Magphys() {
         done
         # 
         # sort chi2 table
-        #cat "$magphys_outdir/fit_chisq_z.out" | sort -n -k 3 > "$magphys_outdir/fit_chisq_z_sorted.out"
+        cat "$magphys_outdir/fit_chisq_z.out" | sort -n -k 3 > "$magphys_outdir/fit_chisq_z_sorted.out"
         # 
         # get miminum chisq z
         #best_fit_obj_name=$(cat "$magphys_outdir/fit_chisq_z_sorted.out" | grep -v "^#" | head -n 1 | sed -e 's/^ *//g' | tr -s ' ' | cut -d ' ' -f 5)
