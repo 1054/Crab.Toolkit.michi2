@@ -658,9 +658,10 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         # 
         # Source Redshift (m_Redshifts)
         # 
-        if [[ "${m_Redshifts[i]}" == "-"* || "${m_Redshifts[i]}" == "0" ]]; then m_Redshifts[i]="N/A"; fi # if input redshift is negative, then put to "N/A"
+        #if [[ "${m_Redshifts[i]}" == "-"* || "${m_Redshifts[i]}" == "0" ]]; then m_Redshifts[i]="N/A"; fi # if input redshift is negative, then put to "N/A"
         #<20180318>#if [[ "${m_Redshifts[i]}" != "N/A" ]]; then t_Redshifts=(${m_Redshifts[i]}); else t_Redshifts=($(seq 25 25 600)); for (( t_i = 0; t_i<${#t_Redshifts[@]}; t_i++ )); do t_Redshifts[t_i]=$(awk "BEGIN {print ${t_Redshifts[t_i]}/100.0}"); done ; fi # <TODO> Scan redshift 0.25 to 6.00
-        if [[ "${m_Redshifts[i]}" != "N/A" ]]; then t_Redshifts=(${m_Redshifts[i]}); else t_Redshifts=($(seq 0.2 0.1 6.0)); fi # <TODO> Scan redshift 0.2 to 6.0 in step of 0.1
+        #if [[ "${m_Redshifts[i]}" != "N/A" ]]; then t_Redshifts=(${m_Redshifts[i]}); else t_Redshifts=($(seq 0.2 0.1 6.0)); fi # <TODO> Scan redshift 0.2 to 6.0 in step of 0.1
+        #t_Redshifts=(-99)
         
         # 
         # Convert wave flux ferr data files into "magphys_input_filters.dat" and "magphys_input_fluxes.dat"
@@ -808,17 +809,10 @@ if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
         printf "${t_ObsHeadString}\n" > "$t_OutputDir/magphys_input_fluxes.dat"
         # 
         # check if there are multiple redshifts or not
-        if [[ ${#t_Redshifts[@]} -eq 1 ]]; then
-            printf "%25s %10.4f " "${t_SourName}" "${t_Redshifts[0]}" >> "$t_OutputDir/magphys_input_fluxes.dat"
-            printf "${t_ObsDataString}" >> "$t_OutputDir/magphys_input_fluxes.dat"
-            printf "\n" >> "$t_OutputDir/magphys_input_fluxes.dat"
-        else
-            for (( t_i = 0; t_i<${#t_Redshifts[@]}; t_i++ )); do 
-                printf "%25s %10.4f " "${t_SourName}_z"$(printf '%0.4f' ${t_Redshifts[t_i]}) "${t_Redshifts[t_i]}" >> "$t_OutputDir/magphys_input_fluxes.dat"
-                printf "$t_ObsDataString" >> "$t_OutputDir/magphys_input_fluxes.dat"
-                printf "\n" >> "$t_OutputDir/magphys_input_fluxes.dat"
-            done
-        fi
+        
+        printf "%25s %10.0f " "${t_SourName}" "-99" >> "$t_OutputDir/magphys_input_fluxes.dat"
+        printf "${t_ObsDataString}" >> "$t_OutputDir/magphys_input_fluxes.dat"
+        printf "\n" >> "$t_OutputDir/magphys_input_fluxes.dat"
         
         cat "$t_OutputDir/magphys_input_filters.dat"
         cat "$t_OutputDir/magphys_input_fluxes.dat" | sed -e 's/^ *//g' | tr -s ' ' | grep    "^#"
