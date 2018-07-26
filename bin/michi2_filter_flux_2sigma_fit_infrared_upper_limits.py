@@ -16,7 +16,7 @@ from copy import copy
 ####################################
 
 if not len(sys.argv) > 2:
-    print('Usage: michi2_filter_flux_3sigma.py input_flux.txt output_flux.txt')
+    print('Usage: michi2_filter_flux_2sigma_fit_infrared_upper_limits.py input_flux.txt output_flux.txt')
     sys.exit()
 
 data_table = asciitable.read(sys.argv[1])
