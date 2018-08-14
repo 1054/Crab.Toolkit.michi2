@@ -661,11 +661,11 @@ def recognize_Filter(input_str, special_file_name=''):
             #      "<wavelength>_FLUX_<instrument>"
             #      "<wavelength>_FLUXERR_<instrument>"
             # 
-            Pattern_FLUX_1 = re.compile("(FLUX_)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., FLUX_20cm, FLUX_3.6um
+            Pattern_FLUX_1 = re.compile("(FLUX_)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., FLUX_20cm, FLUX_3.6um, FLUX_814W(TODO)
             Pattern_FLUXERR_1 = re.compile("(FLUX[_]?ERR_)([0-9Ee.+-]+)([^0-9.+-]*.*)")
             Pattern_FLUX_2 = re.compile("[^a-zA-Z]*(f[_]?)([0-9Ee.+-]+)([^0-9.+-]*.*)") # e.g., _f1.4ghz or _f_1.4ghz
             Pattern_FLUXERR_2 = re.compile("[^a-zA-Z]*(df[_]?)([0-9Ee.+-]+)([^0-9.+-]*.*)")
-            Pattern_FLUX_3 = re.compile("(.*)(_FLUX)(_.*)") # e.g. SPLASH_1_FLUX_Laigle
+            Pattern_FLUX_3 = re.compile("(.*)(_FLUX)(_.*)") # e.g. SPLASH_1_FLUX_Laigle, J_FLUX_APER3_Laigle2016
             Pattern_FLUXERR_3 = re.compile("(.*)(_FLUX[_]?ERR)(_.*)")
             Pattern_FLUX_4 = re.compile("[_]?(f_)([^_]+)(.*)") # e.g., f_K_Jin
             Pattern_FLUXERR_4 = re.compile("[_]?(df_)([^_]+)(.*)") # 

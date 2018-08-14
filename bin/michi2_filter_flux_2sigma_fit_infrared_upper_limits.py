@@ -26,11 +26,11 @@ if not len(data_table.colnames) >= 3:
     sys.exit()
 
 # 
-# exclude invalid wavelength data
+# exclude invalid wavelength and invalid flux error data
 w = data_table.field(data_table.colnames[0])
 f = data_table.field(data_table.colnames[1])
 ferr = data_table.field(data_table.colnames[2])
-mask = (w<=0)
+mask = (w<=0) | (ferr>=1e10) #<20180814> fixed bug, added "| (ferr>=1e10)"
 isel = numpy.argwhere(mask).flatten()
 if len(isel) > 0:
     data_table.remove_rows(isel)
@@ -40,20 +40,20 @@ if len(isel) > 0:
 w = data_table.field(data_table.colnames[0])
 f = data_table.field(data_table.colnames[1])
 ferr = data_table.field(data_table.colnames[2])
-mask = (w<8.0) & (f<2.0*ferr)
+mask = (w<8.0) & (f<3.0*ferr) #<20180814> replaced "(f<2.0*ferr)" by "(f<3.0*ferr)"
 isel = numpy.argwhere(mask).flatten()
 if len(isel) > 0:
     data_table.remove_rows(isel)
 
 # 
 # exclude S/N<=1e-10 data at infrared
-w = data_table.field(data_table.colnames[0])
-f = data_table.field(data_table.colnames[1])
-ferr = data_table.field(data_table.colnames[2])
-mask = (w>=8.0) & (f<=1e-10*ferr)
-isel = numpy.argwhere(mask).flatten()
-if len(isel) > 0:
-    data_table.remove_rows(isel)
+#w = data_table.field(data_table.colnames[0])
+#f = data_table.field(data_table.colnames[1])
+#ferr = data_table.field(data_table.colnames[2])
+#mask = (w>=8.0) & (f<=1e-10*ferr)
+#isel = numpy.argwhere(mask).flatten()
+#if len(isel) > 0:
+#    data_table.remove_rows(isel)
 
 # 
 # fit S/N>=2 data points, 

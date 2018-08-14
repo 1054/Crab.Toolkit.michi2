@@ -26,11 +26,11 @@ if not len(data_table.colnames) >= 3:
     sys.exit()
 
 # 
-# exclude radio
+# exclude radio, invalid wavelength, and invalid flux error data
 w = data_table.field(data_table.colnames[0])
 f = data_table.field(data_table.colnames[1])
 ferr = data_table.field(data_table.colnames[2])
-mask = (w>10000) | (w<=0)
+mask = (w>10000) | (w<=0) | (ferr>=1e10) #<20180814> fixed bug, added "| (ferr>=1e10)"
 isel = numpy.argwhere(mask).flatten()
 if len(isel) > 0:
     #print(isel)
