@@ -177,6 +177,8 @@ def read_magphys_fit_file(file_path):
 def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = [], frequency_GHz = [], redshift = np.nan):
     SED_flux_mJy = []
     # parse user input
+    print(wavelength_um)
+    print(frequency_GHz)
     if len(wavelength_um) == 0 and len(frequency_GHz) > 0:
         wavelength_um = 2.99792458e5 / np.array(frequency_GHz)
     elif len(wavelength_um) > 0:
