@@ -175,10 +175,8 @@ def read_magphys_fit_file(file_path):
 # Function for converting energy units and scales
 # 
 def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = [], redshift = np.nan):
-    # 
     SED_flux_mJy = []
-    # 
-    if re.search(r'\bLoA^-1\n', energy_unit):
+    if re.search(r'\bLoA^-1\b', energy_unit):
         # if the energies are L_{\lambda} in units of L_{\odot} {\AA}^{-1}
         if len(wavelengths_um) == 0:
             print('******')
@@ -192,9 +190,12 @@ def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = []
         lumdist_Mpc = cosmo.luminosity_distance(redshift).value # Mpc
         SED_flux_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
         #SED_Lv = vLv / (2.99792458e8/(wavelength_um/1e6)) # L_{\odot} Hz^{-1}
-    elif re.search(r'\bJy\n', energy_unit):
+    elif re.search(r'\bJy\b', energy_unit):
         # if the energies are flux densities in units of Jy
         SED_flux_mJy = energies * 1e3
+    # 
+    if len(SED_flux_mJy) == 0:
+        raise('Error!! convert_energies_to_flux_densities() failed!')
     # 
     return SED_flux_mJy
 
