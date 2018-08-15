@@ -174,19 +174,40 @@ def read_magphys_fit_file(file_path):
 # 
 # Function for converting energy units and scales
 # 
-def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = [], redshift = np.nan):
+def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = [], frequency_GHz = [], redshift = np.nan):
     SED_flux_mJy = []
+    # parse user input
+    if len(wavelength_um) == 0 and len(frequency_GHz) > 0:
+        wavelength_um = 2.99792458e5 / frequency_GHz
+    elif len(wavelength_um) > 0:
+        frequency_GHz = 2.99792458e5 / wavelength_um
+    # convert energies
     if re.search(r'\bLoA^-1\b', energy_unit):
         # if the energies are L_{\lambda} in units of L_{\odot} {\AA}^{-1}
-        if len(wavelengths_um) == 0:
+        if len(wavelength_um) == 0 and len(frequency_GHz) == 0:
             print('******')
-            print('Warning! convert_energies_to_flux_densities() requires \'wavelength_um\'! Conversion failed!')
+            print('Warning! convert_energies_to_flux_densities() requires \'wavelength_um\' or \'frequency_GHz\'! Conversion failed!')
+            print('******')
+        else:
+        if np.isnan(redshift):
+            print('******')
+            print('Warning! convert_energies_to_flux_densities() requires \'redshift\'! Conversion failed!')
+            print('******')
+        vLv = energies * (wavelength_um/1e4) # panchromatic energy in units of L_{\odot}
+        lumdist_Mpc = cosmo.luminosity_distance(redshift).value # Mpc
+        SED_flux_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
+        #SED_Lv = vLv / (2.99792458e8/(wavelength_um/1e6)) # L_{\odot} Hz^{-1}
+    elif re.search(r'\bLoHz^-1\b', energy_unit) or re.search(r'L_{\\odot} *Hz\^{-1}', energy_unit):
+        # if the energies are L_{\nu} in units of L_{\odot} {Hz}^{-1}
+        if len(wavelength_um) == 0 and len(frequency_GHz) == 0:
+            print('******')
+            print('Warning! convert_energies_to_flux_densities() requires \'wavelength_um\' or \'frequency_GHz\'! Conversion failed!')
             print('******')
         if np.isnan(redshift):
             print('******')
             print('Warning! convert_energies_to_flux_densities() requires \'redshift\'! Conversion failed!')
             print('******')
-        vLv = energies * (wavelengths_um/1e4)
+        vLv = energies * (frequency_GHz*1e9) # panchromatic energy in units of L_{\odot}
         lumdist_Mpc = cosmo.luminosity_distance(redshift).value # Mpc
         SED_flux_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
         #SED_Lv = vLv / (2.99792458e8/(wavelength_um/1e6)) # L_{\odot} Hz^{-1}
@@ -345,9 +366,10 @@ if __name__ == '__main__':
                         if len(fit_fit_data[filter_name]) >= 3:
                             # convert L_{\odot} Hz^{-1} to mJy # <TODO> *.fit photometry data unit
                             luminosities = np.array(fit_fit_data[filter_name]) # L_{\odot} Hz^{-1}, should contain 3 values: observed luminosity, observed luminosity error, and SED best-fit luminosity. 
-                            frequencies = 2.99792458e8/(wavelength_um/1e6) # Hz
-                            vLv = luminosities * frequencies # L_{\odot}
-                            fluxes_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
+                            fluxes_mJy = convert_energies_to_flux_densities(luminosities, 'LoHz^-1', wavelength_um=wavelength_um, redshift=redshift)
+                            #frequencies = 2.99792458e8/(wavelength_um/1e6) # Hz
+                            #vLv = luminosities * frequencies # L_{\odot}
+                            #fluxes_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
                             ofp_fmt = '  %%-%ds %%15.4f %%%ds %%10d %%15.6f %%15.6e %%15.6e %%15.6e %%15.6e\n' % (ofp_fmt_width_of_obj_name, ofp_fmt_width_of_filter_name )
                             ofp.write(ofp_fmt % (obj_name, redshift, filter_name, is_fit, wavelength_um, fluxes_mJy[0], fluxes_mJy[1], fluxes_mJy[2], fluxes_mJy[0]-fluxes_mJy[2]) ) # [0] is observed flux, [1] is observed flux error, [2] is SED best-fit flux.
                         else:
@@ -386,7 +408,7 @@ if __name__ == '__main__':
                         print('******')
                 # compute SED_flux_mJy and spline the flux densities of rest-frame wavelengths
                 if len(energies) > 0:
-                    SED_flux_mJy = convert_energies_to_flux_densities(energies, energy_unit, wavelength_um, redshift)
+                    SED_flux_mJy = convert_energies_to_flux_densities(energies, energy_unit, wavelength_um=wavelength_um, redshift=redshift)
                     RF_wavelength_um = np.array([850.0, 500.0, 350.0, 250.0])
                     RF_flux_mJy = spline_flux_densities(SED_flux_mJy, wavelength_um, RF_wavelength_um*(1.0+redshift))
                     #_, index_unique = np.unique(wavelength_um, return_index=True)
