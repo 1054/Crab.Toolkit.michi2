@@ -318,6 +318,16 @@ if __name__ == '__main__':
             fit_fit_data_filters = [t for t in fit_fit_data if len(fit_fit_data[t])==3]
             #print(fit_fit_data_filters)
             #print(len(fit_fit_data_filters))
+            # determine energy unit <TODO> may change with future magphys versions
+            if re.search(r'\bLoA\^-1\b', fit_sed_data['__energy_unit__']):
+                fit_fit_data['__energy_unit__'] = 'L_nu/LoHz^-1'
+            elif re.search(r'\bJy\b', fit_sed_data['__energy_unit__']):
+                fit_fit_data['__energy_unit__'] = 'Jy'
+            else:
+                print('******')
+                print('Error! Could not obtain energy unit info from *.sed file!')
+                print('******')
+                sys.exit()
             #-- Note that the best-fit SED flux at each band in "*.fit" files have units of L_{\odot} Hz^{-1}, not mJy! See magphys documentation.
             
             user_obs_data = read_magphys_user_obs_file(magphys_user_obs_file)
@@ -373,7 +383,7 @@ if __name__ == '__main__':
                         if len(fit_fit_data[filter_name]) >= 3:
                             # convert L_{\odot} Hz^{-1} to mJy # <TODO> *.fit photometry data unit
                             luminosities = np.array(fit_fit_data[filter_name]) # L_{\odot} Hz^{-1}, should contain 3 values: observed luminosity, observed luminosity error, and SED best-fit luminosity. 
-                            fluxes_mJy = convert_energies_to_flux_densities(luminosities, 'LoHz^-1', wavelength_um=wavelength_um, redshift=redshift)
+                            fluxes_mJy = convert_energies_to_flux_densities(luminosities, fit_fit_data['__energy_unit__'], wavelength_um=wavelength_um, redshift=redshift)
                             #frequencies = 2.99792458e8/(wavelength_um/1e6) # Hz
                             #vLv = luminosities * frequencies # L_{\odot}
                             #fluxes_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
@@ -397,25 +407,18 @@ if __name__ == '__main__':
                 # determine wavelengths and energies data
                 if 'lg(lambda/A)' in fit_sed_data and 'Attenuated' in fit_sed_data:
                     wavelengths = np.power(10, np.array(fit_sed_data['lg(lambda/A)']) ) # original unit \AA, obs-frame, converted to um unit.
+                    wavelength_um = wavelengths / 1e4 # um
                     energies = np.power(10, np.array(fit_sed_data['Attenuated']) )
                     wavelength_unit = 'A' # determine wavelength unit
-                    energy_unit = fit_sed_data['__energy_unit__'] # determine energy unit
                 else:
                     # <TODO> if MAGPHYS *.sed file format changes, here we also need to apply some changes
                     print('******')
                     print('Error! "%s" does not contain "lg(lambda/A)" and "Attenuated" columns?'%(fit_fit_file, filter_name) )
                     print('******')
-                # compute wavelength_um
-                if len(wavelengths) > 0:
-                    if wavelength_unit == 'A':
-                        wavelength_um = wavelengths / 1e4 # um
-                    else:
-                        print('******')
-                        print('Error! Could not determine wavelength unit!')
-                        print('******')
+                    sys.exit()
                 # compute SED_flux_mJy and spline the flux densities of rest-frame wavelengths
                 if len(energies) > 0:
-                    SED_flux_mJy = convert_energies_to_flux_densities(energies, energy_unit, wavelength_um=wavelength_um, redshift=redshift)
+                    SED_flux_mJy = convert_energies_to_flux_densities(energies, fit_sed_data['__energy_unit__'], wavelength_um=wavelength_um, redshift=redshift)
                     RF_wavelength_um = np.array([850.0, 500.0, 350.0, 250.0])
                     RF_flux_mJy = spline_flux_densities(SED_flux_mJy, wavelength_um, RF_wavelength_um*(1.0+redshift))
                     #_, index_unique = np.unique(wavelength_um, return_index=True)
