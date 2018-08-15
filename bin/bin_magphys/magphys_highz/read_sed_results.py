@@ -188,7 +188,6 @@ def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = []
             print('******')
             print('Warning! convert_energies_to_flux_densities() requires \'wavelength_um\' or \'frequency_GHz\'! Conversion failed!')
             print('******')
-        else:
         if np.isnan(redshift):
             print('******')
             print('Warning! convert_energies_to_flux_densities() requires \'redshift\'! Conversion failed!')
