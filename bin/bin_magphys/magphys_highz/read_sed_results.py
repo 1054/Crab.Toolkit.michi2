@@ -181,12 +181,16 @@ def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = []
         wavelength_um = [wavelength_um]
     if type(frequency_GHz) is not list and type(frequency_GHz) is not np.ndarray:
         frequency_GHz = [frequency_GHz]
+    if type(wavelength_um) is not np.ndarray:
+        wavelength_um = np.array(wavelength_um)
+    if type(frequency_GHz) is not np.ndarray:
+        frequency_GHz = np.array(frequency_GHz)
     if len(wavelength_um) == 0 and len(frequency_GHz) > 0:
         wavelength_um = 2.99792458e5 / np.array(frequency_GHz)
     elif len(wavelength_um) > 0:
         frequency_GHz = 2.99792458e5 / np.array(wavelength_um)
     # convert energies
-    if re.search(r'\bLoA^-1\b', energy_unit):
+    if re.search(r'\bLoA\^-1\b', energy_unit):
         # if the energies are L_{\lambda} in units of L_{\odot} {\AA}^{-1}
         if len(wavelength_um) == 0 and len(frequency_GHz) == 0:
             print('******')
@@ -200,7 +204,7 @@ def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = []
         lumdist_Mpc = cosmo.luminosity_distance(redshift).value # Mpc
         SED_flux_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
         #SED_Lv = vLv / (2.99792458e8/(wavelength_um/1e6)) # L_{\odot} Hz^{-1}
-    elif re.search(r'\bLoHz^-1\b', energy_unit) or re.search(r'L_{\\odot} *Hz\^{-1}', energy_unit):
+    elif re.search(r'\bLoHz\^-1\b', energy_unit) or re.search(r'L_{\\odot} *Hz\^{-1}', energy_unit):
         # if the energies are L_{\nu} in units of L_{\odot} {Hz}^{-1}
         if len(wavelength_um) == 0 and len(frequency_GHz) == 0:
             print('******')
