@@ -75,6 +75,11 @@ def read_magphys_sed_file(file_path):
             line = fp.readline()
             line = line.strip()
             if line.startswith('#'):
+                # check magphys sed flux unit
+                if line.find('Spectral Energy Distribution [lg(L_lambda/LoA^-1)]') >= 0:
+                    fit_sed_data['__energy_unit__'] = 'lg(L_lambda/LoA^-1)'
+                elif line.find('Spectral Energy Distribution [lg(Fnu/Jy)]') >= 0:
+                    fit_sed_data['__energy_unit__'] = 'lg(Fnu/Jy)'
                 # this line is a commented header line
                 line = regex_replace.sub(' ', line[1:]).strip() # line = line[1:].replace('.',' ').strip()
                 line_split = line.split()
@@ -95,6 +100,9 @@ def read_magphys_sed_file(file_path):
                         #print('fit_sed_data[\'%s\'] = %s' % (read_col, read_val)) # debug
                 else:
                     continue
+    if not ('__energy_unit__' in fit_sed_data):
+        print('Error! Could not find "Spectral Energy Distribution [.*]" in the input MAGPHYS SED file "%d"!' % (file_path))
+        sys.exit()
     # 
     return fit_sed_data
 
@@ -160,6 +168,46 @@ def read_magphys_fit_file(file_path):
                     continue
     # 
     return fit_fit_data
+
+
+
+# 
+# Function for converting energy units and scales
+# 
+def convert_energies_to_flux_densities(energies, energy_unit, wavelength_um = [], redshift = np.nan):
+    # 
+    SED_flux_mJy = []
+    # 
+    if re.search(r'\bLoA^-1\n', energy_unit):
+        # if the energies are L_{\lambda} in units of L_{\odot} {\AA}^{-1}
+        if len(wavelengths_um) == 0:
+            print('******')
+            print('Warning! convert_energies_to_flux_densities() requires \'wavelength_um\'! Conversion failed!')
+            print('******')
+        if np.isnan(redshift):
+            print('******')
+            print('Warning! convert_energies_to_flux_densities() requires \'redshift\'! Conversion failed!')
+            print('******')
+        vLv = energies * (wavelengths_um/1e4)
+        lumdist_Mpc = cosmo.luminosity_distance(redshift).value # Mpc
+        SED_flux_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
+        #SED_Lv = vLv / (2.99792458e8/(wavelength_um/1e6)) # L_{\odot} Hz^{-1}
+    elif re.search(r'\bJy\n', energy_unit):
+        # if the energies are flux densities in units of Jy
+        SED_flux_mJy = energies * 1e3
+    # 
+    return SED_flux_mJy
+
+
+
+# 
+# Function for splining flux densities with wavelenegths
+# 
+def spline_flux_densities(SED_flux_mJy, SED_wavelength_um, output_wavelength_um):
+    _, index_unique = np.unique(SED_wavelength_um, return_index=True) # remove non-monochromatically-increasing data
+    spliner = interpolate.UnivariateSpline(np.log10(SED_wavelength_um[index_unique]), np.log10(SED_flux_mJy[index_unique])) # spline in logarithm space
+    output_flux_mJy = np.power(10, spliner(np.log10(output_wavelength_um ) ) )
+    return output_flux_mJy
 
 
 
@@ -280,7 +328,7 @@ if __name__ == '__main__':
             
             
             
-            # compure residual fluxes
+            # compute residual fluxes
             with open(fit_res_file, 'w') as ofp:
                 ofp_fmt_width_of_obj_name = max( [ len(obj_name), len('obj_name') ] ) + 3
                 ofp_fmt_width_of_filter_name = max( [ len(max(filter_names, key=len)), len('filter_name') ] ) + 2
@@ -294,7 +342,7 @@ if __name__ == '__main__':
                     lumdist_Mpc = cosmo.luminosity_distance(redshift).value # Mpc
                     if filter_name in fit_fit_data:
                         if len(fit_fit_data[filter_name]) >= 3:
-                            # convert L_{\odot} Hz^{-1} to mJy
+                            # convert L_{\odot} Hz^{-1} to mJy # <TODO> *.fit photometry data unit
                             luminosities = np.array(fit_fit_data[filter_name]) # L_{\odot} Hz^{-1}, should contain 3 values: observed luminosity, observed luminosity error, and SED best-fit luminosity. 
                             frequencies = 2.99792458e8/(wavelength_um/1e6) # Hz
                             vLv = luminosities * frequencies # L_{\odot}
@@ -312,38 +360,47 @@ if __name__ == '__main__':
                 print('Written to "%s"' % (fit_res_file))
             
             
-            # compure rest-frame fluxes with the best-fit SED from the SED fitting result "*.sed" file
+            # compute rest-frame fluxes with the best-fit SED from the SED fitting result "*.sed" file
             with open(fit_rf_file, 'w') as ofp:
+                wavelengths = []
+                energies = []
+                # determine wavelengths and energies data
                 if 'lg(lambda/A)' in fit_sed_data and 'Attenuated' in fit_sed_data:
-                    luminosities = np.power(10, np.array(fit_sed_data['Attenuated']) ) # L_{\lambda} in units of L_{\odot} {\AA}^{-1}, total attenuated SED
-                    wavelengths = np.power(10, np.array(fit_sed_data['lg(lambda/A)']) ) # \AA, obs-frame
-                    vLv = luminosities * wavelengths # L_{\odot}
-                    wavelength_um = wavelengths / 1e4 # um
-                    lumdist_Mpc = cosmo.luminosity_distance(redshift).value # Mpc
-                    SED_flux_mJy = vLv / (4 * np.pi * lumdist_Mpc**2) * (1.+redshift) * 40.31970 / (2.99792458e5/(wavelength_um)) # 1 L_{\odot} Mpc^{-2} = 40.31970 mJy GHz
-                    SED_Lv = vLv / (2.99792458e8/(wavelength_um/1e6)) # L_{\odot} Hz^{-1}
-                    _, index_unique = np.unique(wavelength_um, return_index=True)
-                    spliner = interpolate.UnivariateSpline(np.log10(wavelength_um[index_unique]), np.log10(SED_flux_mJy[index_unique]))
+                    wavelengths = np.power(10, np.array(fit_sed_data['lg(lambda/A)']) ) # original unit \AA, obs-frame, converted to um unit.
+                    energies = np.power(10, np.array(fit_sed_data['Attenuated']) )
+                    wavelength_unit = 'A' # determine wavelength unit
+                    energy_unit = fit_sed_data['__energy_unit__'] # determine energy unit
+                else:
+                    # <TODO> if MAGPHYS *.sed file format changes, here we also need to apply some changes
+                    print('******')
+                    print('Error! "%s" does not contain "lg(lambda/A)" and "Attenuated" columns?'%(fit_fit_file, filter_name) )
+                    print('******')
+                # compute wavelength_um
+                if len(wavelengths) > 0:
+                    if wavelength_unit == 'A':
+                        wavelength_um = wavelengths / 1e4 # um
+                    else:
+                        print('******')
+                        print('Error! Could not determine wavelength unit!')
+                        print('******')
+                # compute SED_flux_mJy and spline the flux densities of rest-frame wavelengths
+                if len(energies) > 0:
+                    SED_flux_mJy = convert_energies_to_flux_densities(energies, energy_unit, wavelength_um, redshift)
+                    RF_wavelength_um = np.array([850.0, 500.0, 350.0, 250.0])
+                    RF_flux_mJy = spline_flux_densities(SED_flux_mJy, wavelength_um, RF_wavelength_um*(1.0+redshift))
+                    #_, index_unique = np.unique(wavelength_um, return_index=True)
+                    #spliner = interpolate.UnivariateSpline(np.log10(wavelength_um[index_unique]), np.log10(SED_flux_mJy[index_unique]))
                     #print('%0.6e' % np.power(10, spliner(np.log10(1297.32) ) ) ) # mJy, should be consistent with the values in the "$USER_OBS" file, but note that the latter file contains flux in units of Jy.
                     ##SED_Lv_spliner = interpolate.UnivariateSpline(np.log10(wavelength_um[index_unique]), np.log10(SED_Lv[index_unique]))
                     ###print('%0.6e' % np.power(10, SED_Lv_spliner(np.log10(1297.32) ) ) ) # Lsun Hz-1, should be consistent with the values in the "*.fit" file. 
-                    
-                    RF_wavelength_um = np.array([850.0, 500.0, 350.0, 250.0])
-                    RF_flux_mJy = np.power(10, spliner(np.log10(RF_wavelength_um*(1.0+redshift) ) ) )
-                    
                     for iRF in range(len(RF_wavelength_um)):
                         if iRF == 0:
                             ofp_fmt = '# %%-%ds %%15s %%18s %%18s %%16s\n' % (ofp_fmt_width_of_obj_name )
                             ofp.write(ofp_fmt % ('obj_name', 'redshift', 'RF_wavelength_um', 'OBS_wavelength_um', 'RF_flux_mJy' ) )
                         ofp_fmt = '  %%-%ds %%15.4f %%18.6f %%18.6f %%16.6e\n' % (ofp_fmt_width_of_obj_name )
                         ofp.write(ofp_fmt % (obj_name, redshift, RF_wavelength_um[iRF], RF_wavelength_um[iRF]*(1.0+redshift), RF_flux_mJy[iRF] ) )
-                    
-                else:
-                    print('******')
-                    print('Error! "%s" does not contain "lg(lambda/A)" and "Attenuated" columns?'%(fit_fit_file, filter_name) )
-                    print('******')
-                # 
-                print('Written to "%s"' % (fit_rf_file))
+                    # 
+                    print('Written to "%s"' % (fit_rf_file))
             
             
             # write parameter result table
