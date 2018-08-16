@@ -162,7 +162,7 @@ function Run_Magphys() {
             done
             # double-check
             if [[ -f "starformhist_bc03_photoz.lock" ]]; then
-                echo "Found \"starformhist_bc03_photoz.lock\" under magphys directory! Some process is still generating the magphys library file! We could not proceed! Abort!"
+                echo "Error! Found \"starformhist_bc03_photoz.lock\" under magphys directory! Some process is still generating the magphys library file! We could not proceed! Abort!"
                 exit 255
             fi
             # re-use internal data files (only if filters are unchanged)
@@ -177,7 +177,7 @@ function Run_Magphys() {
             fi
             # throw error if we could not reuse existing data files <20180816>
             if [[ $magphys_reuse -eq 0 ]] && [[ -f "starformhist_bc03_photoz.lbr" ]]; then
-                echo "Warning! Found existing \"starformhist_bc03_photoz.lbr\" under magphys directory but the filters are inconsistent with the \"starformhist_bc03_photoz.filters\" therein! We could not proceed! Please delete the following files if you are sure the filters are changed!"
+                echo "Error! Found existing \"starformhist_bc03_photoz.lbr\" under magphys directory but the filters are inconsistent with the \"starformhist_bc03_photoz.filters\" therein! We could not proceed! Please delete the following files if you are sure the filters are changed!"
                 echo "\"$magphys/starformhist_bc03_photoz.lbr\""
                 echo "\"$magphys/starformhist_bc03_photoz.filters\""
                 exit 255
@@ -212,7 +212,7 @@ function Run_Magphys() {
             done
             # double-check
             if [[ -f "infrared_dce08_photoz.lock" ]]; then
-                echo "Found \"infrared_dce08_photoz.lock\" under magphys directory! Some process is still generating the magphys library file! We could not proceed! Abort!"
+                echo "Error! Found \"infrared_dce08_photoz.lock\" under magphys directory! Some process is still generating the magphys library file! We could not proceed! Abort!"
                 exit 255
             fi
             # re-use internal data files (only if filters are unchanged)
@@ -227,7 +227,7 @@ function Run_Magphys() {
             fi
             # throw error if we could not reuse existing data files <20180816>
             if [[ $magphys_reuse -eq 0 ]] && [[ -f "infrared_dce08_photoz.lbr" ]]; then
-                echo "Warning! Found existing \"infrared_dce08_photoz.lbr\" under magphys directory but the filters are inconsistent with the \"infrared_dce08_photoz.filters\" therein! We could not proceed! Please delete the following files if you are sure the filters are changed!"
+                echo "Error! Found existing \"infrared_dce08_photoz.lbr\" under magphys directory but the filters are inconsistent with the \"infrared_dce08_photoz.filters\" therein! We could not proceed! Please delete the following files if you are sure the filters are changed!"
                 echo "\"$magphys/infrared_dce08_photoz.lbr\""
                 echo "\"$magphys/infrared_dce08_photoz.filters\""
                 exit 255
