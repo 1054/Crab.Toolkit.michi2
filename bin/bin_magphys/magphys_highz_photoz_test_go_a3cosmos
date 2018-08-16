@@ -150,10 +150,9 @@ function Run_Magphys() {
         #magphys_zgrid_0=($(cat "$USER_OBS" | sed -e 's/^ *//g' | grep -v "#" | tr -s ' ' | cut -d ' ' -f 2)) # ($(cat "zlibs.dat" | sed -e 's/^ *//g' | grep -v "^#" | perl -p -e 's/^\s*(\S*)\s*(\S*)\s*$/\2\n/g'))
         #magphys_zgrid=($(printf "%q\n" "${magphys_zgrid_0[@]}" | sort -u)) # remove duplicates, see http://stackoverflow.com/questions/13648410/how-can-i-get-unique-values-from-an-array-in-bash
         #for (( magphys_i=0; magphys_i<${#magphys_zgrid[@]}; magphys_i++ )); do
-            
-            # re-use internal data files (only if filters are unchanged)
+            #<TODO># re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
-            if ( [[ -f "starformhist_bc03_photoz.lbr" ]] || [[ -L "starformhist_bc03_photoz.lbr" ]] ) && ( [[ -f "starformhist_bc03_photoz.filters" ]] || [[ -L "starformhist_bc03_photoz.filters" ]] ); then
+            if [[ -f "starformhist_bc03_photoz.lbr" && -f "starformhist_bc03_photoz.filters" ]]; then
                 #if [[ $(diff "starformhist_bc03_photoz.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]
                 if [[ $(diff <(awk '{print $1,$2,$3}' "starformhist_bc03_photoz.filters") <(awk '{print $1,$2,$3}' "$USER_FILTERS") | wc -l) -eq 0 ]]; then
                     # -- diff on columns of two files in shell -- https://stackoverflow.com/questions/38372561/diff-on-columns-of-two-files-in-shell
@@ -161,15 +160,7 @@ function Run_Magphys() {
                     magphys_reuse=1
                 fi
             fi
-            # throw error if we could not reuse existing data files <20180816>
-            if [[ $magphys_reuse -eq 0 ]] && [[ -f "starformhist_bc03_photoz.lbr" ]]; then
-                echo "Warning! Found existing \"starformhist_bc03_photoz.lbr\" under magphys directory but the filters are inconsistent with the \"starformhist_bc03_photoz.filters\" therein! We could not proceed! Please delete the following files if you are sure the filters are changed!"
-                echo "\"$magphys/starformhist_bc03_photoz.lbr\""
-                echo "\"$magphys/starformhist_bc03_photoz.filters\""
-                exit 255
-            fi
-            # if no existing data file then we generate them by running ./get_optic_colors_photoz
-            if [[ $magphys_reuse -eq 0 ]] || [[ ! -f "starformhist_bc03_photoz.lbr" ]]; then
+            if [[ $magphys_reuse -eq 0 || ! -f "starformhist_bc03_photoz.lbr" ]]; then
                 date +"%Y-%m-%d %H:%M:%S %Z" > "get_optic_colors_photoz.log"
                 echo " " >> "get_optic_colors_photoz.log"
                 echo " get_optic_colors_photoz"
@@ -181,9 +172,9 @@ function Run_Magphys() {
                     exit 1
                 fi
             fi
-            # re-use internal data files (only if filters are unchanged)
+            #<TODO># re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
-            if ( [[ -f "infrared_dce08_photoz.lbr" ]] || [[ -L "infrared_dce08_photoz.lbr" ]] ) && ( [[ -f "infrared_dce08_photoz.filters" ]] || [[ -L "infrared_dce08_photoz.filters" ]] ); then
+            if [[ -f "infrared_dce08_photoz.lbr" && -f "infrared_dce08_photoz.filters" ]]; then
                 #if [[ $(diff "infrared_dce08_photoz.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]
                 if [[ $(diff <(awk '{print $1,$2,$3}' "infrared_dce08_photoz.filters") <(awk '{print $1,$2,$3}' "$USER_FILTERS") | wc -l) -eq 0 ]]; then
                     # -- diff on columns of two files in shell -- https://stackoverflow.com/questions/38372561/diff-on-columns-of-two-files-in-shell
@@ -191,14 +182,6 @@ function Run_Magphys() {
                     magphys_reuse=1
                 fi
             fi
-            # throw error if we could not reuse existing data files <20180816>
-            if [[ $magphys_reuse -eq 0 ]] && [[ -f "infrared_dce08_photoz.lbr" ]]; then
-                echo "Warning! Found existing \"infrared_dce08_photoz.lbr\" under magphys directory but the filters are inconsistent with the \"infrared_dce08_photoz.filters\" therein! We could not proceed! Please delete the following files if you are sure the filters are changed!"
-                echo "\"$magphys/infrared_dce08_photoz.lbr\""
-                echo "\"$magphys/infrared_dce08_photoz.filters\""
-                exit 255
-            fi
-            # if no existing data file then we generate them by running ./get_infrared_colors_photoz
             if [[ $magphys_reuse -eq 0 || ! -f "infrared_dce08_photoz.lbr" ]]; then
                 date +"%Y-%m-%d %H:%M:%S %Z" > "get_infrared_colors_photoz.log"
                 echo " get_infrared_colors_photoz"
@@ -210,7 +193,6 @@ function Run_Magphys() {
                     exit 1
                 fi
             fi
-            
         #done
         #cp "get_optic_colors_photoz.log" "$magphys_outdir/" 2>/dev/null
         #cp "get_infrared_colors_photoz.log" "$magphys_outdir/" 2>/dev/null
@@ -330,7 +312,7 @@ function Run_Magphys() {
 # Check directories and data files
 # 
 m_ScriptDir=$(dirname $(readlinkfull -f "${BASH_SOURCE[0]}"))
-m_MagphysDir="$m_ScriptDir/magphys_photoz"
+m_MagphysDir="$m_ScriptDir/magphys_photoz_test"
 m_MagphysFilter="$m_MagphysDir/FILTERBIN.RES"
 m_MagphysLibOpt="$m_MagphysDir/OptiLIB_bc03_highz.bin"
 m_MagphysLibExt="$m_MagphysDir/OptiLIBis_bc03_highz.bin"
