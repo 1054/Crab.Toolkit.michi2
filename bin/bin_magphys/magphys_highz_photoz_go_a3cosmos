@@ -151,6 +151,20 @@ function Run_Magphys() {
         #magphys_zgrid=($(printf "%q\n" "${magphys_zgrid_0[@]}" | sort -u)) # remove duplicates, see http://stackoverflow.com/questions/13648410/how-can-i-get-unique-values-from-an-array-in-bash
         #for (( magphys_i=0; magphys_i<${#magphys_zgrid[@]}; magphys_i++ )); do
             
+            # check internal data file locks (some process may be just generating them!)
+            wait_timer_1=$(date +"%s") # $(date +"%Y-%m-%d %H:%M:%S %Z")
+            while [[ -f "starformhist_bc03_photoz.lock" ]]; do
+                sleep 2
+                wait_timer_2=$(date +"%s") # $(date +"%Y-%m-%d %H:%M:%S %Z")
+                wait_timer_3=$(awk "BEGIN {printf \"%.1f\",($wait_timer_2-$wait_timer_1)/1000.0;}")
+                echo "Found \"starformhist_bc03_photoz.lock\" under magphys directory! Some process is generating the magphys library file! Waiting for 1 minute (we have waited for $wait_timer_3 minutes now)!"
+                sleep 60
+            done
+            # double-check
+            if [[ -f "starformhist_bc03_photoz.lock" ]]; then
+                echo "Found \"starformhist_bc03_photoz.lock\" under magphys directory! Some process is still generating the magphys library file! We could not proceed! Abort!"
+                exit 255
+            fi
             # re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
             if ( [[ -f "starformhist_bc03_photoz.lbr" ]] || [[ -L "starformhist_bc03_photoz.lbr" ]] ) && ( [[ -f "starformhist_bc03_photoz.filters" ]] || [[ -L "starformhist_bc03_photoz.filters" ]] ); then
@@ -170,6 +184,7 @@ function Run_Magphys() {
             fi
             # if no existing data file then we generate them by running ./get_optic_colors_photoz
             if [[ $magphys_reuse -eq 0 ]] || [[ ! -f "starformhist_bc03_photoz.lbr" ]]; then
+                touch "starformhist_bc03_photoz.lock"
                 date +"%Y-%m-%d %H:%M:%S %Z" > "get_optic_colors_photoz.log"
                 echo " " >> "get_optic_colors_photoz.log"
                 echo " get_optic_colors_photoz"
@@ -178,8 +193,27 @@ function Run_Magphys() {
                     cp "$USER_FILTERS" "starformhist_bc03_photoz.filters"
                 else
                     echo "Error! Failed to run \"get_optic_colors_photoz\" and generate \"starformhist_bc03_photoz.lbr\"!"
+                    rm "starformhist_bc03_photoz.lock" "starformhist_bc03_photoz.lbr"
                     exit 1
                 fi
+                rm "starformhist_bc03_photoz.lock"
+            fi
+            
+            
+            
+            # check internal data file locks (some process may be just generating them!)
+            wait_timer_1=$(date +"%s") # $(date +"%Y-%m-%d %H:%M:%S %Z")
+            while [[ -f "infrared_dce08_photoz.lock" ]]; do
+                sleep 2
+                wait_timer_2=$(date +"%s") # $(date +"%Y-%m-%d %H:%M:%S %Z")
+                wait_timer_3=$(awk "BEGIN {printf \"%.1f\",($wait_timer_2-$wait_timer_1)/1000.0;}")
+                echo "Found \"infrared_dce08_photoz.lock\" under magphys directory! Some process is generating the magphys library file! Waiting for 1 minute (we have waited for $wait_timer_3 minutes now)!"
+                sleep 60
+            done
+            # double-check
+            if [[ -f "infrared_dce08_photoz.lock" ]]; then
+                echo "Found \"infrared_dce08_photoz.lock\" under magphys directory! Some process is still generating the magphys library file! We could not proceed! Abort!"
+                exit 255
             fi
             # re-use internal data files (only if filters are unchanged)
             magphys_reuse=0
@@ -200,6 +234,7 @@ function Run_Magphys() {
             fi
             # if no existing data file then we generate them by running ./get_infrared_colors_photoz
             if [[ $magphys_reuse -eq 0 || ! -f "infrared_dce08_photoz.lbr" ]]; then
+                touch "infrared_dce08_photoz.lock"
                 date +"%Y-%m-%d %H:%M:%S %Z" > "get_infrared_colors_photoz.log"
                 echo " get_infrared_colors_photoz"
                 ./get_infrared_colors_photoz >> "get_infrared_colors_photoz.log"
@@ -207,8 +242,10 @@ function Run_Magphys() {
                     cp "$USER_FILTERS" "infrared_dce08_photoz.filters"
                 else
                     echo "Error! Failed to run \"get_infrared_colors_photoz\" and generate \"infrared_dce08_photoz.lbr\"!"
+                    rm "infrared_dce08_photoz.lock" "infrared_dce08_photoz.lbr"
                     exit 1
                 fi
+                rm "infrared_dce08_photoz.lock"
             fi
             
         #done
