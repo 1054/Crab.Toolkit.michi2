@@ -157,7 +157,7 @@ function Run_Magphys() {
                 sleep 2
                 wait_timer_2=$(date +"%s") # $(date +"%Y-%m-%d %H:%M:%S %Z")
                 wait_timer_3=$(awk "BEGIN {printf \"%.1f\",($wait_timer_2-$wait_timer_1)/1000.0;}")
-                echo "Found \"starformhist_bc03_photoz.lock\" under magphys directory! Some process is generating the magphys library file! Waiting for 1 minute (we have waited for $wait_timer_3 minutes now)!"
+                echo "Found \"starformhist_bc03_photoz.lock\" under magphys directory! Some process is generating the magphys library file! Waiting for 1 minute (we have waited for $wait_timer_3 minutes so far)!"
                 sleep 60
             done
             # double-check
@@ -206,8 +206,8 @@ function Run_Magphys() {
             while [[ -f "infrared_dce08_photoz.lock" ]]; do
                 sleep 2
                 wait_timer_2=$(date +"%s") # $(date +"%Y-%m-%d %H:%M:%S %Z")
-                wait_timer_3=$(awk "BEGIN {printf \"%.1f\",($wait_timer_2-$wait_timer_1)/1000.0;}")
-                echo "Found \"infrared_dce08_photoz.lock\" under magphys directory! Some process is generating the magphys library file! Waiting for 1 minute (we have waited for $wait_timer_3 minutes now)!"
+                wait_timer_3=$(awk "BEGIN {printf \"%.1f\",($wait_timer_2-$wait_timer_1)/60.0;}")
+                echo "Found \"infrared_dce08_photoz.lock\" under magphys directory! Some process is generating the magphys library file! Waiting for 1 minute (we have waited for $wait_timer_3 minutes so far)!"
                 sleep 60
             done
             # double-check
