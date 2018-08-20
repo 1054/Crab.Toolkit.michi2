@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # 
+# Aim:
+#    fit all S/N>=2 data points in infrared (S/N>=3 data points in optical)
+#    and in addition fit S/N~1-2 data points as f+1*e
+#    and fit S/N~0-1 data points as f+2*e
+# 
+# 
 
 import os
 import sys

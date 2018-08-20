@@ -22,7 +22,7 @@ from astropy.cosmology import FlatLambdaCDM
 cosmo = FlatLambdaCDM(H0=70, Om0=0.27, Tcmb0=2.725)
 from scipy import optimize, interpolate
 from collections import Counter # Counter counts the number of occurrences of each item in a list. See -- https://stackoverflow.com/questions/30650474/python-rename-duplicates-in-list-with-progressive-numbers-without-sorting-list
-
+from collections import OrderedDict
 
 
 # 
@@ -442,11 +442,11 @@ if __name__ == '__main__':
                 #   nfit* is the number of fitted data points
                 #   snr* is the S/N of fitted data points added in quadratic
                 #   rchi2* is the reduced chi-square of fitted data points, rchi2 = \sum { (f_OBS - f_SED )^2 / e_OBS^2 } / ( Nfit - 1 )
-                SED_fitting_parameters_name_dict = {}
+                SED_fitting_parameters_name_dict = OrderedDict()
                 SED_fitting_parameters_name_dict['nfit'] = 'nfit'
                 SED_fitting_parameters_name_dict['snr'] = 'snr'
                 SED_fitting_parameters_name_dict['rchi2'] = 'rchi2'
-                SED_fitting_parameters_value_dict = {}
+                SED_fitting_parameters_value_dict = OrderedDict()
                 SED_fitting_parameters_value_dict['nfit'] = 0
                 SED_fitting_parameters_value_dict['nfit_star'] = 0
                 SED_fitting_parameters_value_dict['nfit_dust'] = 0
@@ -497,7 +497,7 @@ if __name__ == '__main__':
                     SED_fitting_parameters_value_dict['rchi2_dust'] = np.nan
                 
                 # then we prepare to read SED fitting derived physical parameters from 'fit_fit_data'
-                SED_physical_parameters_name_dict = {}
+                SED_physical_parameters_name_dict = OrderedDict()
                 SED_physical_parameters_name_dict['logMstar'] = 'M(stars)'
                 SED_physical_parameters_name_dict['logMdust'] = 'M(dust)'
                 SED_physical_parameters_name_dict['logLdust'] = 'Ldust'
@@ -527,8 +527,8 @@ if __name__ == '__main__':
                     ofp_fmt = ' %%%ds' % (max( [ len(par_name)+4, 7 ] ) ) # optimize the width of column
                     ofp.write(ofp_fmt % (par_name ) )
                     ofp.write(ofp_fmt % (par_name+'_MED' ) )
-                    ofp.write(ofp_fmt % (par_name+'_H68' ) )
                     ofp.write(ofp_fmt % (par_name+'_L68' ) )
+                    ofp.write(ofp_fmt % (par_name+'_H68' ) )
                 # -- finished writing the header line
                 ofp.write('\n')
                 # -/ write obj_name and reshift into the data line(s)
@@ -545,8 +545,8 @@ if __name__ == '__main__':
                     ofp_fmt = ' %%%d.3f' % (max( [ len(par_name)+4, 7 ] ) ) # optimize the width of column
                     ofp.write(ofp_fmt % (fit_fit_data[SED_physical_parameters_name_dict[par_name]][0] ) ) # best-fit value from the "*.fit" file
                     ofp.write(ofp_fmt % (fit_fit_data['PARAMETER ' + SED_physical_parameters_name_dict[par_name] + ' P50'][0] ) )
-                    ofp.write(ofp_fmt % (fit_fit_data['PARAMETER ' + SED_physical_parameters_name_dict[par_name] + ' P84'][0] ) )
                     ofp.write(ofp_fmt % (fit_fit_data['PARAMETER ' + SED_physical_parameters_name_dict[par_name] + ' P16'][0] ) )
+                    ofp.write(ofp_fmt % (fit_fit_data['PARAMETER ' + SED_physical_parameters_name_dict[par_name] + ' P84'][0] ) )
                 ofp.write('\n')
                 # -- finished writing the data line(s)
                 # 

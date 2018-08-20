@@ -1,0 +1,866 @@
+#!/bin/bash
+# 
+# Aim: 
+#      Easily run Magphys_highz
+# 
+# Usage:
+#        /home/dzliu/Softwares/magphys/magphys_highz_go
+# 
+# Note:
+#       2018-03-19 Here we let MAGPHYS use a common long filter list for all sources, so that it does not need to recompute *.lbr files for each different filter list!
+# 
+
+
+
+# 
+# Prepare necessary functions
+# 
+# usage
+usage() {
+    echo "Usage: "
+    echo "  $HOME/Softwares/magphys/magphys_highz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat # columns: 1 wave, 2 flux, 3 flux error"
+    echo "  $HOME/Softwares/magphys/magphys_highz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat -w 3 -f 5 -err 7 # columns: 3 wave, 5 flux, 7 flux error"
+    echo "  $HOME/Softwares/magphys/magphys_highz_go galaxy_1.dat galaxy_2.dat galaxy_3.dat -redshift 1.455 # fixed redshift"
+    echo "  $HOME/Softwares/magphys/magphys_highz_go -USER_FILTERS aaa.filter -USER_OBS aaa.flux"
+    echo ""
+}
+# readlinkfull
+readlinkfull() {
+    if [[ $# -gt 1 ]]; then if [[ "$1" == "-f" ]]; then shift; fi; fi
+    DIR=$(echo "${1%/*}"); (cd "$DIR" && echo "$(pwd)/$(basename ${1})")
+}
+# checkDirExistence
+checkDirExistence() {
+    if [[ $# -ge 1 ]]; then
+      if [[ ! -d "$1" ]]; then
+        seq  -f "*" -s '' $(echo "7+1+${#1}+1+16" | bc); echo
+        echo "Error! \"$1\" does not exist!"
+        seq  -f "*" -s '' $(echo "7+1+${#1}+1+16" | bc); echo
+        exit -1
+        return -1
+      else 
+        return 0
+      fi
+    fi
+}
+# checkFileExistence
+checkFileExistence() {
+    if [[ $# -ge 1 ]]; then
+      if [[ ! -f "$1" ]]; then
+        seq  -f "*" -s '' $(echo "7+1+${#1}+1+16" | bc); echo
+        echo "Error! \"$1\" does not exist!"
+        seq  -f "*" -s '' $(echo "7+1+${#1}+1+16" | bc); echo
+        exit -1
+        return -1
+      else 
+        return 0
+      fi
+    fi
+}
+# Is_File
+function Is_File() {
+    if [[ $# -ge 1 ]]; then
+        if [[ -f "$1" ]]; then
+            return 0
+        else
+            seq  -f "*" -s '' $(echo "${#1}+24" | bc); echo
+            echo "Error! \"$1\" was not found!"
+            seq  -f "*" -s '' $(echo "${#1}+24" | bc); echo
+            exit -1
+            return -1
+        fi
+    fi
+    return -1
+}
+
+# Run_Magphys
+
+function Run_Magphys() {
+    # 
+    #
+    # Note by dzliu: to search for best photo-z with the input SED,
+    # we need to run multiple sources at different redshift. 
+    # The zgrid in MAGPHYS is for generating more various models, 
+    # instead of for fitting sources at different z. 
+    # So we need to make multiple source entry in the "$USER_OBS" file. 
+    # 
+    # 
+    # Export system variables
+    # 
+    export magphys="$m_MagphysDir"
+    export FILTERS="$m_MagphysFilter"
+    export OPTILIB="$m_MagphysLibOpt"
+    export OPTILIBIS="$m_MagphysLibExt"
+    export IRLIB="$m_MagphysLibFIR"
+    export USER_FILTERS="$m_MagphysUserFilters"
+    export USER_OBS="$m_MagphysUserObs"
+    export magphys_outdir="$m_MagphysOutputDir"
+    echo "export magphys=\"$m_MagphysDir\""
+    echo "export FILTERS=\"$m_MagphysFilter\""
+    echo "export OPTILIB=\"$m_MagphysLibOpt\""
+    echo "export OPTILIBIS=\"$m_MagphysLibExt\""
+    echo "export IRLIB=\"$m_MagphysLibFIR\""
+    echo "export USER_FILTERS=\"$m_MagphysUserFilters\""
+    echo "export USER_OBS=\"$m_MagphysUserObs\""
+    echo "export magphys_outdir=\"$m_MagphysOutputDir\""
+    echo ""
+    # 
+    # Backup PWD
+    # 
+    magphys_oldpwd="$(pwd)"
+    # 
+    # Change dir to magphys and run magphys
+    # 
+    if [[ x"$magphys" != x ]]; then
+        
+        # Check status
+        magphys_status=0
+        echo "Magphys-highz is running!"
+        echo ""
+        
+        # Change dir to magphys
+        cd "$magphys"
+        
+        # Backup files
+        mv "zlibs.dat"                      "zlibs.dat.backup"                       2>/dev/null
+        mv "fit_sed_highz"                  "fit_sed_highz.backup"                   2>/dev/null
+        mv "fit_sed_highz.log"              "fit_sed_highz.log.backup"               2>/dev/null
+        mv "make_zgrid"                     "make_zgrid.backup"                      2>/dev/null
+        mv "make_zgrid.log"                 "make_zgrid.log.backup"                  2>/dev/null
+        mv "get_optic_colors_highz"         "get_optic_colors_highz.backup"          2>/dev/null
+        mv "get_optic_colors_highz.log"     "get_optic_colors_highz.log.backup"      2>/dev/null
+        mv "get_infrared_colors_highz"      "get_infrared_colors_highz.backup"       2>/dev/null
+        mv "get_infrared_colors_highz.log"  "get_infrared_colors_highz.log.backup"   2>/dev/null
+        
+        # Make files
+        make clean
+        make all
+        echo ""
+        
+        # Make model zgrid and write zlibs.dat
+        echo " make_zgrid"
+        ./make_zgrid | tee "make_zgrid.log"
+        cp "make_zgrid.log" "$magphys_outdir/" 2>/dev/null
+        cp "zlibs.dat" "$magphys_outdir/"
+        echo ""
+        #cat "zlibs.dat"
+        
+        # Make model from zlibs.dat
+        #tcsh -c "source get_libs"
+        magphys_zgrid_0=($(cat "$USER_OBS" | sed -e 's/^ *//g' | grep -v "#" | tr -s ' ' | cut -d ' ' -f 2)) # ($(cat "zlibs.dat" | sed -e 's/^ *//g' | grep -v "^#" | perl -p -e 's/^\s*(\S*)\s*(\S*)\s*$/\2\n/g'))
+        magphys_zgrid=($(printf "%q\n" "${magphys_zgrid_0[@]}" | sort -u)) # remove duplicates, see http://stackoverflow.com/questions/13648410/how-can-i-get-unique-values-from-an-array-in-bash
+        for (( magphys_i=0; magphys_i<${#magphys_zgrid[@]}; magphys_i++ )); do
+            #<TODO># re-use internal data files (only if filters are unchanged)
+            magphys_reuse=0
+            magphys_zstr=$(printf '%0.4f' ${magphys_zgrid[magphys_i]})
+            if [[ -f "starformhist_bc03_z$magphys_zstr.lbr" && -f "starformhist_bc03_z$magphys_zstr.filters" ]]; then
+                #if [[ $(diff "starformhist_bc03_z$magphys_zstr.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]
+                if [[ $(diff <(awk '{print $1,$2,$3}' "starformhist_bc03_z$magphys_zstr.filters") <(awk '{print $1,$2,$3}' "$USER_FILTERS") | wc -l) -eq 0 ]]; then
+                    # -- diff on columns of two files in shell -- https://stackoverflow.com/questions/38372561/diff-on-columns-of-two-files-in-shell
+                    echo " re-using \"starformhist_bc03_z$magphys_zstr.lbr\""
+                    magphys_reuse=1
+                fi
+            fi
+            if [[ $magphys_reuse -eq 0 || ! -f "starformhist_bc03_z$magphys_zstr.lbr" ]]; then
+                echo " " >> "get_optic_colors_highz.log"
+                echo " Input redshift = ${magphys_zgrid[magphys_i]}" >> "get_optic_colors_highz.log"
+                echo " get_optic_colors_highz ${magphys_zgrid[magphys_i]}"
+                echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_optic_colors_highz >> "get_optic_colors_highz.log"
+                if [[ -f "starformhist_bc03_z$magphys_zstr.lbr" ]] && [[ $? -eq 0 ]]; then
+                    cp "$USER_FILTERS" "starformhist_bc03_z$magphys_zstr.filters"
+                else
+                    echo "Error! Failed to run \"get_optic_colors_highz\" and generate \"starformhist_bc03_z$magphys_zstr.lbr\"!"
+                    exit 1
+                fi
+            fi
+            #<TODO># re-use internal data files (only if filters are unchanged)
+            magphys_reuse=0
+            if [[ -f "infrared_dce08_z$magphys_zstr.lbr" && -f "infrared_dce08_z$magphys_zstr.filters" ]]; then
+                #if [[ $(diff "infrared_dce08_z$magphys_zstr.filters" "$USER_FILTERS" | wc -l) -eq 0 ]]
+                if [[ $(diff <(awk '{print $1,$2,$3}' "infrared_dce08_z$magphys_zstr.filters") <(awk '{print $1,$2,$3}' "$USER_FILTERS") | wc -l) -eq 0 ]]; then
+                    # -- diff on columns of two files in shell -- https://stackoverflow.com/questions/38372561/diff-on-columns-of-two-files-in-shell
+                    echo " re-using \"infrared_dce08_z$magphys_zstr.lbr\""
+                    magphys_reuse=1
+                fi
+            fi
+            if [[ $magphys_reuse -eq 0 || ! -f "infrared_dce08_z$magphys_zstr.lbr" ]]; then
+                echo " get_infrared_colors_highz ${magphys_zgrid[magphys_i]}"
+                echo ${magphys_zgrid[magphys_i]} "70.,0.30,0.70" | xargs -n 1 | ./get_infrared_colors_highz >> "get_infrared_colors_highz.log"
+                if [[ -f "infrared_dce08_z$magphys_zstr.lbr" ]] && [[ $? -eq 0 ]]; then
+                    cp "$USER_FILTERS" "infrared_dce08_z$magphys_zstr.filters"
+                else
+                    echo "Error! Failed to run \"get_infrared_colors_highz\" and generate \"infrared_dce08_z$magphys_zstr.lbr\"!"
+                    exit 1
+                fi
+            fi
+        done
+        cp "get_optic_colors_highz.log" "$magphys_outdir/" 2>/dev/null
+        cp "get_infrared_colors_highz.log" "$magphys_outdir/" 2>/dev/null
+        echo ""
+        
+        # Prepare output file
+        if [[ -f "$magphys_outdir/fit_chisq_z.out" ]]; then
+            mv "$magphys_outdir/fit_chisq_z.out" "$magphys_outdir/fit_chisq_z.out.backup"
+        fi
+        
+        # Run source fitting
+        #tcsh -c "source fit_sample"
+        magphys_slist=($(cat "$USER_OBS" | sed -e 's/^ *//g' | grep -v "#" | tr -s ' ' | cut -d ' ' -f 1)) # ($(cat "$USER_OBS" | sed -e 's/^ *//g' | grep -v "#" | perl -p -e 's/^\s*(\S*)\s*.*$/\1\n/g'))
+        for (( magphys_i=0; magphys_i<${#magphys_slist[@]}; magphys_i++ )); do
+            # 
+            # Run source fitting
+            echo " fit_sed_highz $(($magphys_i+1))"
+            echo $(($magphys_i+1)) | xargs -n 1 | ./fit_sed_highz | tee "fit_sed_highz.log"
+            echo ""
+            # 
+            # Plot best fitting and chi2 distribution
+            # And store source fitting results to outdir
+            if [[ -f "${magphys_slist[magphys_i]}.sed" ]]; then
+                if [[ x"$IDL_PATH" != *"+$magphys"* ]]; then 
+                    export IDL_PATH="$IDL_PATH:+$magphys"
+                fi
+                #idl84 -e "plot_sed" -args "${magphys_slist[magphys_i]}"
+                idl -e "plot_sed" -args "${magphys_slist[magphys_i]}"
+                ps2pdf -dEPSCrop "${magphys_slist[magphys_i]}.ps"
+                convert -density 250 "${magphys_slist[magphys_i]}.ps" "${magphys_slist[magphys_i]}.jpg"
+                mv "${magphys_slist[magphys_i]}.sed" "$magphys_outdir/"
+                mv "${magphys_slist[magphys_i]}.fit" "$magphys_outdir/"
+                mv "${magphys_slist[magphys_i]}.ps"  "$magphys_outdir/"
+                mv "${magphys_slist[magphys_i]}.pdf" "$magphys_outdir/"
+                if [[ -f "${magphys_slist[magphys_i]}.jpg" ]]; then mv "${magphys_slist[magphys_i]}.jpg" "$magphys_outdir/"; fi
+                if [[ -f "${magphys_slist[magphys_i]}.sed.um.mJy.txt" ]]; then mv "${magphys_slist[magphys_i]}.sed.um.mJy.txt" "$magphys_outdir/"; fi
+                # 
+                # make chi2 table
+                if [[ ! -f "$magphys_outdir/fit_chisq_z.out" ]]; then
+                    printf "# %8s %9s %9s %11s %25s\n" "i_sfh" "i_ir" "chi2" "redshift" "obj_name" > "$magphys_outdir/fit_chisq_z.out"
+                fi
+                obj_name_str=$(printf "%25s" "${magphys_slist[magphys_i]}")
+                grep -h -A1 "BEST FIT MODEL" "$magphys_outdir/${magphys_slist[magphys_i]}.fit" | grep -v "^#" | grep -v "^--$" | sed -e "s/$/ $obj_name_str/g" >> "$magphys_outdir/fit_chisq_z.out"
+            else
+                echo ""
+                echo "Warning! Failed to run magphys! \"${magphys_slist[magphys_i]}.sed\" was not found under \"$magphys\"! Skip and continue!"
+                echo ""
+                magphys_status=-1
+            fi
+        done
+        # 
+        # sort chi2 table
+        cat "$magphys_outdir/fit_chisq_z.out" | sort -n -k 3 > "$magphys_outdir/fit_chisq_z_sorted.out"
+        # 
+        # get miminum chisq z
+        best_fit_obj_name=$(cat "$magphys_outdir/fit_chisq_z_sorted.out" | grep -v "^#" | head -n 1 | sed -e 's/^ *//g' | tr -s ' ' | cut -d ' ' -f 5)
+        cp "$magphys_outdir/${best_fit_obj_name}.sed" "$magphys_outdir/best-fit_SED.sed"
+        cp "$magphys_outdir/${best_fit_obj_name}.fit" "$magphys_outdir/best-fit_SED.fit"
+        cp "$magphys_outdir/${best_fit_obj_name}.pdf" "$magphys_outdir/best-fit_SED.pdf"
+        cp "$magphys_outdir/${best_fit_obj_name}.sed.um.mJy.txt" "$magphys_outdir/best-fit_SED.sed.um.mJy.txt"
+        # 
+        # copy log file
+        cp "fit_sed_highz.log" "$magphys_outdir/" 2>/dev/null
+        echo ""
+        
+        # Change dir back
+        cd "$magphys_oldpwd/"
+        
+        return $magphys_status
+        
+    else
+        
+        return -1
+        
+    fi
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################
+#              MAIN PROGRAM              #
+##########################################
+
+
+
+# 
+# Check directories and data files
+# 
+m_ScriptDir=$(dirname $(readlinkfull -f "${BASH_SOURCE[0]}"))
+m_MagphysDir="$m_ScriptDir/magphys_highz"
+m_MagphysFilter="$m_MagphysDir/FILTERBIN.RES"
+m_MagphysLibOpt="$m_MagphysDir/OptiLIB_bc03_highz.bin"
+m_MagphysLibExt="$m_MagphysDir/OptiLIBis_bc03_highz.bin"
+m_MagphysLibFIR="$m_MagphysDir/InfraredLIB_highz.bin"
+checkDirExistence "$m_MagphysDir"
+checkFileExistence "$m_MagphysFilter"
+checkFileExistence "$m_MagphysLibOpt"
+checkFileExistence "$m_MagphysLibExt"
+checkFileExistence "$m_MagphysLibFIR"
+
+
+
+# 
+# Check user input WaveData and FluxData
+# 
+m_DataFiles=()
+m_WaveColNo=()
+m_FluxColNo=()
+m_FErrColNo=()
+m_FilterNameColNo=()
+m_FluxUnitColNo=()
+m_WaveInLog=()
+m_FluxInLog=()
+m_FErrInLog=()
+m_Redshifts=()
+m_SourNames=()
+m_Input_ArgType="N/A"
+
+while [[ $# -gt 0 ]]; do
+    
+    TempStr=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+    TempCmd=""
+    #<DEBUG># echo "$TempStr"
+    
+    case "$TempStr" in
+                    
+   "-USER_FILTER"*) 
+                    m_Input_ArgType="MagphysUserFilters"
+                    ;;
+                    
+      "-USER_OBS"*) 
+                    m_Input_ArgType="MagphysUserObs"
+                    ;;
+                    
+              "-W") 
+                    m_Input_ArgType="WCOL"
+                    ;;
+                    
+              "-F") 
+                    m_Input_ArgType="FCOL"
+                    ;;
+                    
+              "-E") 
+                    m_Input_ArgType="ECOL" #<TODO># BASH does not accept "-e" as an input argument!
+                    ;;
+                    
+            "-ERR") 
+                    m_Input_ArgType="ECOL"
+                    ;;
+                    
+           "-WAVE") 
+                    m_Input_ArgType="WCOL"
+                    ;;
+                    
+     "-WAVELENGTH") 
+                    m_Input_ArgType="WCOL"
+                    ;;
+                    
+           "-FLUX") 
+                    m_Input_ArgType="FCOL"
+                    ;;
+                    
+    "-FLUXDENSITY") 
+                    m_Input_ArgType="FCOL"
+                    ;;
+                    
+          "-ERROR") 
+                    m_Input_ArgType="ECOL"
+                    ;;
+                    
+      "-FLUXERROR") 
+                    m_Input_ArgType="ECOL"
+                    ;;
+                    
+              "-Z") 
+                    m_Input_ArgType="REDSHIFT"
+                    ;;
+                    
+      "-REDSHIFT"*) 
+                    m_Input_ArgType="REDSHIFT"
+                    ;;
+                    
+        "-SOURCE"*) 
+                    m_Input_ArgType="SOURNAME"
+                    ;;
+                    
+        "-TARGET"*) 
+                    m_Input_ArgType="SOURNAME"
+                    ;;
+                    
+           "-NAME") 
+                    m_Input_ArgType="SOURNAME"
+                    ;;
+                    
+           "-WLOG") 
+                    m_Input_ArgType="WLOG"
+                    ;;
+                    
+           "-FLOG") 
+                    m_Input_ArgType="FLOG"
+                    ;;
+                    
+                 *) 
+                    ;;
+                    
+    esac
+    
+    case "$m_Input_ArgType" in
+                                        
+                  "MagphysUserFilters") 
+                                        # check followed argument
+                                        if [[ $# -ge 2 ]]; then 
+                                            shift
+                                            # check is file
+                                            if Is_File "$1"; then
+                                                m_MagphysUserFilters="$1"
+                                            else
+                                                echo ""
+                                                echo "Error! Input file \"$1\" does not exist!"
+                                                echo ""
+                                            fi
+                                        else
+                                            echo ""
+                                            echo "Error! Input $1 should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                      "MagphysUserObs") 
+                                        # check followed argument
+                                        if [[ $# -ge 2 ]]; then 
+                                            shift
+                                            # check is file
+                                            if Is_File "$1"; then
+                                                m_MagphysUserObs="$1"
+                                            else
+                                                echo ""
+                                                echo "Error! Input file \"$1\" does not exist!"
+                                                echo ""
+                                            fi
+                                        else
+                                            echo ""
+                                            echo "Error! Input $1 should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                "WLOG") 
+                                        m_WaveInLog[${#m_WaveInLog[@]}-1]=1
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                "FLOG") 
+                                        m_FluxInLog[${#m_FluxInLog[@]}-1]=1
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                "ELOG") 
+                                        m_FErrInLog[${#m_FErrInLog[@]}-1]=1
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                "WCOL") 
+                                        if [[ $# -ge 2 ]]; then shift; m_WaveColNo[${#m_WaveColNo[@]}-1]="$1"; else echo "Error! Input $1 must be followed with 1 argument."; fi
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                "FCOL") 
+                                        if [[ $# -ge 2 ]]; then shift; m_FluxColNo[${#m_FluxColNo[@]}-1]="$1"; else echo "Error! Input $1 must be followed with 1 argument."; fi
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                "ECOL") 
+                                        if [[ $# -ge 2 ]]; then shift; m_FErrColNo[${#m_FErrColNo[@]}-1]="$1"; else echo "Error! Input $1 must be followed with 1 argument."; fi
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                            "REDSHIFT") 
+                                        if [[ $# -ge 2 ]]; then shift; m_Redshifts[${#m_Redshifts[@]}-1]="$1"; else echo "Error! Input $1 must be followed with 1 argument."; fi
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                            "SOURNAME") 
+                                        if [[ $# -ge 2 ]]; then shift; m_SourNames[${#m_SourNames[@]}-1]="$1"; else echo "Error! Input $1 must be followed with 1 argument."; fi
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                 "N/A") 
+                                        # check followed argument
+                                        m_DataFiles+=("$1")
+                                        m_WaveInLog+=(0)
+                                        m_FluxInLog+=(0)
+                                        m_FErrInLog+=(0)
+                                        m_WaveColNo+=(0)
+                                        m_FluxColNo+=(0)
+                                        m_FErrColNo+=(0)
+                                        m_FluxUnitColNo+=(0)
+                                        m_FilterNameColNo+=(0)
+                                        m_Redshifts+=("N/A")
+                                        m_SourNames+=("N/A")
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                     *) #echo "$1"
+                                        shift
+                                        
+    esac
+    
+done
+
+if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]] && [[ ${#m_DataFiles[@]} -eq 0 ]]; then
+    usage
+    exit
+fi
+
+
+
+
+
+# Format input
+if [[ ! -z "$m_MagphysUserFilters" ]]; then
+    if [[ "$m_MagphysUserFilters" != "/"* ]]; then
+        m_MagphysUserFilters=$(readlinkfull -f "$m_MagphysUserFilters")
+    fi 
+fi
+
+if [[ ! -z "$m_MagphysUserObs" ]]; then
+    if [[ "$m_MagphysUserObs" != "/"* ]]; then
+        m_MagphysUserObs=$(readlinkfull -f "$m_MagphysUserObs")
+    fi 
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 
+# Prepare outdir
+# 
+m_OutputDir="$(pwd)/magphys_fitting"
+
+# 
+# Backup outdir
+# 
+if [[ -d "$m_OutputDir" ]]; then
+    if [[ -d "$m_OutputDir.backup" ]]; then
+        if [[ -d "$m_OutputDir.backup.backup" ]]; then
+            rm -rf "$m_OutputDir.backup.backup"
+        fi
+        mv "$m_OutputDir.backup" "$m_OutputDir.backup.backup"
+    fi
+    mv "$m_OutputDir" "$m_OutputDir.backup"
+fi
+
+# 
+# Make outdir
+# 
+if [[ ! -d "$m_OutputDir" ]]; then
+    mkdir -p "$m_OutputDir"
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 
+# Check m_MagphysUserFilters and m_MagphysUserObs
+# 
+if [[ -z "$m_MagphysUserFilters" || -z "$m_MagphysUserObs" ]]; then
+    
+    # 
+    # Load fixed filters <TODO> for A3COSMOS only!
+    # 
+    #IFS=$'\n' read -d '' -r -a m_FiltersNames < "m_FiltersNames.txt"
+    #IFS=$'\n' read -d '' -r -a m_FiltersWaves < "m_FiltersWaves.txt"
+    #IFS=$'\n' read -d '' -r -a m_FiltersCodes < "m_FiltersCodes.txt"
+    m_FiltersWaves=($(cat "$(dirname ${BASH_SOURCE[0]})/m_Filters.txt" | tr -s ' ' | cut -d ' ' -f 1))
+    m_FiltersCodes=($(cat "$(dirname ${BASH_SOURCE[0]})/m_Filters.txt" | tr -s ' ' | cut -d ' ' -f 2))
+    m_FiltersNames=($(cat "$(dirname ${BASH_SOURCE[0]})/m_Filters.txt" | tr -s ' ' | cut -d ' ' -f 3))
+    m_FiltersFluxs=()
+    m_FiltersFErrs=()
+    for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
+        m_FiltersFluxs+=("0") # initialize # if it's a non-positive value, MAGPHYS will not fit it. see "fit_sed_highz.f" "if (flux_obs(i_gal,k).gt.0) then"
+        m_FiltersFErrs+=("0") # initialize # if it's a non-positive value, MAGPHYS will not fit it. see "fit_sed_highz.f" "if (flux_obs(i_gal,k).gt.0) then"
+    done
+    
+    # 
+    # Loop each source
+    # 
+    m_DataFileCount=${#m_DataFiles[@]}
+    m_DataFileDigit=$(echo $(echo ${#m_DataFiles[@]} | wc -c)-1 | bc)
+    for (( i = 0; i<$m_DataFileCount; i++  )); do
+        
+        # 
+        # Source Name (SourName)
+        # 
+        #<DEBUG># echo ${m_DataFiles[@]}
+        #<DEBUG># echo ${m_SourNames[@]}
+        if [[ "${m_SourNames[i]}" != "N/A" ]]; then t_SourName=${m_SourNames[i]}; else t_SourName=$(printf "%0${m_DataFileDigit}i" $(echo $i+1 | bc)); fi
+        
+        # 
+        # Source Redshift (m_Redshifts)
+        # 
+        if [[ "${m_Redshifts[i]}" == "-"* || "${m_Redshifts[i]}" == "0" ]]; then m_Redshifts[i]="N/A"; fi # if input redshift is negative, then put to "N/A"
+        #<20180318>#if [[ "${m_Redshifts[i]}" != "N/A" ]]; then t_Redshifts=(${m_Redshifts[i]}); else t_Redshifts=($(seq 25 25 600)); for (( t_i = 0; t_i<${#t_Redshifts[@]}; t_i++ )); do t_Redshifts[t_i]=$(awk "BEGIN {print ${t_Redshifts[t_i]}/100.0}"); done ; fi # <TODO> Scan redshift 0.25 to 6.00
+        if [[ "${m_Redshifts[i]}" != "N/A" ]]; then t_Redshifts=(${m_Redshifts[i]}); else t_Redshifts=($(seq 0.2 0.1 6.0)); fi # <TODO> Scan redshift 0.2 to 6.0 in step of 0.1
+        
+        # 
+        # Convert wave flux ferr data files into "magphys_input_filters.dat" and "magphys_input_fluxes.dat"
+        # 
+        t_OutputDir="$m_OutputDir/fit_${t_SourName}_with_"$(basename ${m_DataFiles[i]} | sed -e 's/\.[^.]*$//g')
+        mkdir -p "$t_OutputDir"
+        
+        if [[ ${m_WaveColNo[i]} -gt 0 ]]; then t_WaveColNo=${m_WaveColNo[i]}; else t_WaveColNo=1; fi
+        if [[ ${m_FluxColNo[i]} -gt 0 ]]; then t_FluxColNo=${m_FluxColNo[i]}; else t_FluxColNo=2; fi
+        if [[ ${m_FErrColNo[i]} -gt 0 ]]; then t_FErrColNo=${m_FErrColNo[i]}; else t_FErrColNo=3; fi
+        if [[ ${m_FluxUnitColNo[i]} -gt 0 ]]; then t_FluxUnitColNo=${m_FluxUnitColNo[i]}; else t_FluxUnitColNo=4; fi
+        if [[ ${m_FilterNameColNo[i]} -gt 0 ]]; then t_FilterNameColNo=${m_FilterNameColNo[i]}; else t_FilterNameColNo=5; fi
+        
+        t_WaveData=($(cat "${m_DataFiles[i]}"| sed -e 's/^ *//g' | grep -v "^#" | tr -s ' ' | cut -d ' ' -f $t_WaveColNo))
+        t_FluxData=($(cat "${m_DataFiles[i]}"| sed -e 's/^ *//g' | grep -v "^#" | tr -s ' ' | cut -d ' ' -f $t_FluxColNo))
+        t_FErrData=($(cat "${m_DataFiles[i]}"| sed -e 's/^ *//g' | grep -v "^#" | tr -s ' ' | cut -d ' ' -f $t_FErrColNo))
+        t_FluxUnitData=($(cat "${m_DataFiles[i]}"| sed -e 's/^ *//g' | grep -v "^#" | tr -s ' ' | cut -d ' ' -f $t_FluxUnitColNo))
+        t_FilterNameData=($(cat "${m_DataFiles[i]}"| sed -e 's/^ *//g' | grep -v "^#" | tr -s ' ' | cut -d ' ' -f $t_FilterNameColNo))
+        
+        if [[ ${#t_WaveData[@]} -eq 0 ]]; then echo "Warning! Failed to read column $t_WaveColNo as Wave data! Skip and continue!"; continue; fi
+        if [[ ${#t_FluxData[@]} -eq 0 ]]; then echo "Warning! Failed to read column $t_FluxColNo as Flux data! Skip and continue!"; continue; fi
+        if [[ ${#t_FErrData[@]} -eq 0 ]]; then echo "Warning! Failed to read column $t_FErrColNo as Flux error!"; fi
+        if [[ ${#t_FluxUnitData[@]} -eq 0 ]]; then echo "Warning! Failed to read column $t_FluxUnitColNo as Flux unit!"; fi
+        if [[ ${#t_FilterNameData[@]} -eq 0 ]]; then echo "Warning! Failed to read column $t_FilterNameColNo as Filter name!"; fi
+        
+        echo "$t_OutputDir"
+        echo "$t_OutputDir/magphys_input_filters.dat"
+        echo "$t_OutputDir/magphys_input_fluxes.dat"
+        
+        printf "# %26s %18s %18s %18s\n" "filter_name" "lambda_eff" "filter_id" "fit?" > "$t_OutputDir/magphys_input_filters.dat"
+        
+        t_ObsHeadString=$(printf "# %23s %10s " "obj_name" "z")
+        t_ObsDataString=""
+        
+        # loop each observed data point and match to a filter
+        for (( t_i = 0; t_i<${#t_WaveData[@]}; t_i++ )); do
+            # 
+            # get observed data
+            t_FilterWave="${t_WaveData[t_i]}"
+            if [[ ${m_WaveInLog[i]} -gt 0 ]]; then 
+                t_FilterWave=$(awk "BEGIN {print (10)^($t_FilterWave)}") # convert log to linear if needed
+            fi
+            t_FilterFlux="${t_FluxData[t_i]}"
+            if [[ ${m_FluxInLog[i]} -gt 0 ]]; then 
+                t_FilterFlux=$(awk "BEGIN {print (10)^($t_FilterFlux)}") # convert log to linear if needed
+            fi
+            if [[ ${#t_FErrData[@]} -gt $t_i ]]; then 
+                t_FilterFErr="${t_FErrData[t_i]}"
+                if [[ ${m_FluxInLog[i]} -gt 0 ]]; then 
+                    t_FilterFErr=$(awk "BEGIN {print ($t_FilterFErr)*($t_FilterFlux)/1.08;}") # convert log to linear if needed
+                fi
+            else
+                t_FilterFErr=$(awk "BEGIN {print ($t_FilterFlux)/5.0}") #<TODO># If no flux error given, set flux error to S/N=5
+            fi
+            # 
+            # do flux conversion
+            if [[ 1 == 1 ]]; then t_FilterFlux=$(awk "BEGIN {print ($t_FilterFlux)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
+            if [[ 1 == 1 ]]; then t_FilterFErr=$(awk "BEGIN {print ($t_FilterFErr)/1e3}"); fi # convert mJy to Jy, MAGPHYS needs Jy!
+            # 
+            # check if the observed data is ALMA data
+            t_CheckALMA=0
+            if [[ ${#t_FilterNameData[@]} -gt $t_i ]]; then
+                if [[ "${t_FilterNameData[t_i]}" == *"ALMA"* ]]; then
+                    t_CheckALMA=1
+                fi
+            fi
+            # 
+            # prepare to search in the filter list
+            k_FilterIndex="-99"
+            k_FilterWave="-99"
+            k_FilterFlux="-99" # if it's a negative value, then MAGPHYS will not fit it.
+            k_FilterFErr="-99" # if it's a negative value, then MAGPHYS will not fit it.
+            # 
+            # search in the filter list
+            for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
+                # 
+                # get current FilterWave
+                m_FilterName="${m_FiltersNames[m_i]}"
+                m_FilterWave="${m_FiltersWaves[m_i]}"
+                m_FilterCode="${m_FiltersCodes[m_i]}"
+                # 
+                if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= (0.1*($m_FilterWave)));}") -eq 1 ]]; then
+                    t_CheckOK=0
+                    # if previously no match, but current wavelength difference is smaller than 10%, we consider it as a match
+                    #if [[ "$k_FilterWave" == "-99" ]] --#<BUG><20180618>#
+                    if [[ "$k_FilterIndex" == "-99" ]]; then
+                        t_CheckOK=1
+                        echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName $m_FilterWave (first hit)"
+                    else
+                        # if previously matched, then compare current and previous wavelength difference, then choose the nearer one. 
+                        #if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= abs(($k_FilterWave)-($m_FilterWave)));}") -eq 1 ]] --#<BUG><20180618>#
+                        if [[ $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print (abs(($t_FilterWave)-($m_FilterWave)) <= abs(($t_FilterWave)-($k_FilterWave)));}") -eq 1 ]]; then
+                            t_CheckOK=1
+                            echo "Matching observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library $m_FilterName $m_FilterWave (updated) $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print ( abs(($t_FilterWave)-($m_FilterWave)) );}") $(awk "function abs(x){return ((x<0.0)?-x:x)} BEGIN {print ( abs(($t_FilterWave)-($k_FilterWave)) );}") "
+                        fi
+                    fi
+                    # if observing data filter name contains "ALMA", then also make sure library filter name contains "ALMA".
+                    if [[ $t_CheckALMA -eq 1 ]]; then
+                        if [[ "$m_FilterName" != *"ALMA"* ]]; then
+                            t_CheckOK=0
+                        fi
+                    fi
+                    # apply the matched wave, flux, ferr 
+                    if [[ $t_CheckOK -eq 1 ]]; then
+                        k_FilterIndex="${m_i}"
+                        k_FilterWave="$m_FilterWave" #<BUG><20180618># forgot to set k_FilterWave!!!
+                    fi
+                fi
+            done
+            # 
+            # see if we matched to any filter
+            if [[ "$k_FilterIndex" != "-99" ]]; then
+                m_FiltersFluxs[$k_FilterIndex]="$t_FilterFlux"
+                m_FiltersFErrs[$k_FilterIndex]="$t_FilterFErr"
+                # 
+                echo "Matched observed data ${t_FilterNameData[t_i]} $t_FilterWave to filter library ${m_FiltersNames[$k_FilterIndex]}  ${m_FiltersWaves[$k_FilterIndex]}"
+            else
+                echo "Warning! The observed data at wavelength $t_FilterWave um has no matched filter in our filter list!!!"
+            fi
+        done
+        
+        # then we loop all filters (instead of just matched filters)
+        for (( m_i = 0; m_i<${#m_FiltersNames[@]}; m_i++ )); do
+            # 
+            # get current FilterWave
+            m_FilterName="${m_FiltersNames[m_i]}"
+            m_FilterWave="${m_FiltersWaves[m_i]}"
+            m_FilterCode="${m_FiltersCodes[m_i]}"
+            m_FilterFlux="${m_FiltersFluxs[m_i]}"
+            m_FilterFErr="${m_FiltersFErrs[m_i]}"
+            # 
+            # write to the MAGPHYS input filter file
+            #m_FilterGood=$(awk "BEGIN {if (($m_FilterFlux)>=3.0*($m_FilterFErr) && ($m_FilterFlux)>0.0) print 1; else print 0;}") # here we fit only S/N>=3 data points
+            m_FilterGood=$(awk "BEGIN {if (($m_FilterFlux)>=0.0*($m_FilterFErr) && ($m_FilterFlux)>0.0) print 1; else print 0;}") # here we fit all S/N>=1 data points, but this should be used together with michi2_filter_flux_2sigma_fit_infrared_upper_limits.py
+            printf "%28s %18g %18d %18d\n" "$m_FilterName" "$m_FilterWave" "$m_FilterCode" "$m_FilterGood" >> "$t_OutputDir/magphys_input_filters.dat"
+            # 
+            # prepare string that will be written to the MAGPHYS input flux file
+            t_ObsHeadString="${t_ObsHeadString}"$(printf "%-15s" "$m_FilterName" | cut -c 1-15)"   "
+            t_ObsHeadString="${t_ObsHeadString}E_"$(printf "%-15s" "$m_FilterName" | cut -c 1-15)" "
+            t_ObsDataString="${t_ObsDataString}"$(printf "%-18g" "$m_FilterFlux") # >> "$t_OutputDir/magphys_input_fluxes.dat"
+            t_ObsDataString="${t_ObsDataString}"$(printf "%-18g" "$m_FilterFErr") # >> "$t_OutputDir/magphys_input_fluxes.dat"
+        done
+        # 
+        # write to the MAGPHYS input flux file
+        #printf "# \n" > "$t_OutputDir/magphys_input_fluxes.dat"
+        printf "${t_ObsHeadString}\n" > "$t_OutputDir/magphys_input_fluxes.dat"
+        # 
+        # check if there are multiple redshifts or not
+        if [[ ${#t_Redshifts[@]} -eq 1 ]]; then
+            printf "%25s %10.4f " "${t_SourName}" "${t_Redshifts[0]}" >> "$t_OutputDir/magphys_input_fluxes.dat"
+            printf "${t_ObsDataString}" >> "$t_OutputDir/magphys_input_fluxes.dat"
+            printf "\n" >> "$t_OutputDir/magphys_input_fluxes.dat"
+        else
+            for (( t_i = 0; t_i<${#t_Redshifts[@]}; t_i++ )); do 
+                printf "%25s %10.4f " "${t_SourName}_z"$(printf '%0.4f' ${t_Redshifts[t_i]}) "${t_Redshifts[t_i]}" >> "$t_OutputDir/magphys_input_fluxes.dat"
+                printf "$t_ObsDataString" >> "$t_OutputDir/magphys_input_fluxes.dat"
+                printf "\n" >> "$t_OutputDir/magphys_input_fluxes.dat"
+            done
+        fi
+        
+        cat "$t_OutputDir/magphys_input_filters.dat"
+        cat "$t_OutputDir/magphys_input_fluxes.dat" | sed -e 's/^ *//g' | tr -s ' ' | grep    "^#"
+        cat "$t_OutputDir/magphys_input_fluxes.dat" | sed -e 's/^ *//g' | tr -s ' ' | grep -v "^#" | cut -d ' ' -f 1-12 | sed -e 's/$/ .../g'
+        
+        m_MagphysUserFilters="$t_OutputDir/magphys_input_filters.dat"
+        m_MagphysUserObs="$t_OutputDir/magphys_input_fluxes.dat"
+        m_MagphysOutputDir="$t_OutputDir"
+        
+        # 
+        echo ""
+        
+        # Run_Magphys
+        Run_Magphys
+        
+    done
+
+else
+    
+    # 
+    echo ""
+    
+    # m_MagphysOutputDir
+    m_MagphysOutputDir="$m_OutputDir"
+    
+    # Run_Magphys
+    Run_Magphys
+    
+fi
+
+
+
+
+
+
+exit
+
+
+
+
+
+
+
+
+
+
