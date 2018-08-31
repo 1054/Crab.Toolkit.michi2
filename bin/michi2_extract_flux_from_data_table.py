@@ -87,7 +87,11 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
             input_str = str(input_str)
         # skip FLAG
         Pattern_Flag = re.compile(".*(_FLAG_).*", re.IGNORECASE)
-        if Pattern_Flag.match(input_str):
+        if Pattern_Flag.match('_'+input_str+'_'):
+            continue
+        # skip FLAG
+        Pattern_Flag = re.compile(".*(_Original_).*", re.IGNORECASE)
+        if Pattern_Flag.match('_'+input_str+'_'):
             continue
         # fix FLUX_ERR -> FLUX
         if input_str.find('FLUX_ERR')>=0:
