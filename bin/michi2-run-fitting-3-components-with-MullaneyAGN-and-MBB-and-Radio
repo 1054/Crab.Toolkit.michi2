@@ -1,0 +1,202 @@
+#!/bin/bash
+#
+
+if [[ $(type michi2_v04 2>/dev/null | wc -l) -eq 0 ]]; then
+    if [[ -f "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash" ]]; then
+        #echo source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        #echo $PATH
+    else
+        echo "Error! \"$(dirname ${BASH_SOURCE[0]})/bin_setup.bash\" was not found!"
+        exit
+    fi
+fi
+
+
+# 
+# Check user input
+# 
+if [[ $# -eq 0 ]]; then
+    echo "Usage: "
+    echo "    michi2-run-fitting-3-components -redshift 1.5"
+    echo "    michi2-run-fitting-3-components -redshift 1.5 -flux extracted_flux.txt"
+    echo "    michi2-run-fitting-3-components -redshift 1.5 -flux extracted_flux.txt -parallel 2"
+    echo ""
+    echo "Descriptions:"
+    echo "    This code fits the input flux data points with three SED components: "
+    echo "        Mullaney2011 AGN SED (http://adsabs.harvard.edu/abs/2011MNRAS.414.1082M/), "
+    echo "        MBB dust SEDs, "
+    echo "        and radio synchrotron SED."
+    echo "    "
+    echo "    The input flux data file should contain three columns separated by white space, "
+    echo "    with header lines commented out by sharp (#) character, and the three columns should be: "
+    echo "        wavelength in micron meter unit"
+    echo "        flux density in mJy unit"
+    echo "        and error in flux density also in mJy unit"
+    echo "    "
+    echo "    The default input flux data file name is \"extracted_flux.txt\"."
+    echo "    We will try to filter out S/N<2 and radio data points and produce a filtered flux data file \"fit_3.in\"."
+    echo "    However, if a \"fit_3.in\" file already exists, we will directly use that and ignore any input of flux file!"
+    echo "    So make sure you delete \"fit_3.in\" file if you want a fresh new fitting with new input flux data file!"
+    echo "    "
+    echo "    A new feature: if we prepared a folder named \"best-fit_stellar_SED\", and if there is a file named "
+    echo "    \"INDEX_LIB1\" in that folder, then we will fix the stellar SED library index to the value therein, "
+    echo "    and only fit that single SED library! This is useful, for example, for following procedure: "
+    echo "    (1) We first fit the optical to near-infrared flux data with stellar+AGN component with the code "
+    echo "        \"michi2-run-fitting-2-components\", which outputs \"fit_2.out*\" files; "
+    echo "    (2) Then we run the code \"michi2-plot-fitting-results\" \"fit_2.out\", which outputs \"obj_*\" folders "
+    echo "        and \"best-fit*\" files; "
+    echo "    (3) Then we copy \"obj_1\" folder as \"best-fit_stellar_SED\" folder; "
+    echo "    (4) Next, we can fit the full optical to millimeter flux data with five component SED fitting with the code "
+    echo "        \"michi2-run-fitting-4-components\", and at this time the stellar SED will be fixed "
+    echo "        to the previously best-fitted single SED library."
+    echo "    "
+    echo ""
+    exit
+fi
+
+
+# 
+# Read Parallel, Redshift, Flux, Umin
+# 
+Redshift=""
+Parallel=2
+Flux=""
+Umin="" # Added on 2018-03-23 to put an additional constraint on Umin
+if [[ $(hostname) == aida* ]] || [[ $(hostname) == isaac* ]]; then
+    Flux="extracted_flux.txt" #<TODO># 
+fi
+if [[ $# -ge 2 ]]; then
+    i=1
+    while [[ $i -le $# ]]; do
+        Strcmd=$(echo "${!i}" | sed -e 's/^--/-/g' | tr '[:upper:]' '[:lower:]')
+        if [[ "$Strcmd" == "-parallel" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Parallel="${!i}"
+                echo 
+                echo Parallel="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-redshift" ]] || [[ "$Strcmd" == "-z" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Redshift="${!i}"
+                echo 
+                echo Redshift="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-flux" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Flux="${!i}"
+                echo 
+                echo Flux="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-umin" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Umin="${!i}"
+                echo 
+                echo Umin="${!i}"
+            fi
+        fi
+        i=$((i+1))
+    done
+fi
+
+
+# 
+# If no redshift given by "-redshift" argument, then just take first argumetn as the redshift
+# 
+if [[ x"$Redshift" == x"" ]]; then
+    Redshift="$1"
+fi
+
+
+# 
+# Check photometry file
+# 
+if [[ x"$Flux" != x ]]; then
+    if [[ ! -f "$Flux" ]]; then
+        echo "Error! \"$Flux\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+        exit
+    fi
+fi
+
+
+# 
+# Copy SED files
+# 
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/BC03_Constant_SFH_at_time_800Myr/lib.BC03.Padova1994.BaSeL.Z0.0190.Age800Myr.EBV.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.HiExCom.Single.qPAH.2.5.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.LoExCom.Single.qPAH.2.5.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Extracted.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Single.Hotest.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.RadioPowerlaw.Single.SED .
+#cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filters .
+#cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filter.list .
+
+
+# 
+# Check photometry file
+# 
+if [[ ! -f "fit_3.in" ]]; then
+    if [[ -f "$Flux" ]]; then
+        echo ""
+        echo ""
+        echo "Warning! \"fit_3.in\" was not found! But found \"$Flux\"! Will run: "
+        echo "michi2_filter_flux_2sigma_no_radio.py \"$Flux\" \"fit_3.in\""
+        echo "to filter flux data points for SED fitting."
+        echo ""
+        michi2_filter_flux_2sigma_no_radio.py "$Flux" "fit_3.in"
+        echo ""
+        echo ""
+    fi
+fi
+if [[ ! -f "fit_3.in" ]]; then
+    echo 
+    echo "Error! \"fit_3.in\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+    exit
+fi
+
+
+# 
+# Determine whether this is a starburst galaxy so that we constrain the Umin
+# 
+constrain_dust_Umin=()
+if [[ x"$Umin" != x ]]; then
+    constrain_dust_Umin=(-constraint LIB2 PAR1 GE VALUE $Umin)
+fi
+
+
+# 
+# Copy SED LIB
+# 
+echo 
+michi2-deploy-files SED MullaneyAGN MBB no stellar
+
+
+# 
+# Run michi2
+# 
+echo 
+michi2_v04 -obs "fit_3.in" \
+           -redshift $Redshift \
+           -lib "lib.MullaneyAGN.SED" \
+                "lib.MBB.SED" \
+                "RadioPowerlaw.Single.lib.SED" \
+           -out "fit_3.out" \
+           -parallel $Parallel \
+           ${constrain_dust_Umin[@]} \
+           -constraint LIB3 NORM EQ SED "(LIB2*(10^LIB2_PAR3))/3750/10^2.4"
+           #-filter filter.list
+           
+           # -constraint LIB4 NORM EQ SED "LIR(8,1000)*1.061619121e-06" \
+           # calc 1/3750/10**2.4 = 1.061619121e-06, qIR = 2.4. 
+
+
+
+
+
+
+

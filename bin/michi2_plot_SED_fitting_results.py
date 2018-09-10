@@ -388,8 +388,8 @@ def dump_LIB_SEDs_to_files(chisq_file = '', chisq_array = [], lib_dict = {},
                 #os.system(BashCommand)
                 # 
                 # do python way 20180113
-                BashCommand = 'michi2_read_lib_SEDs.py %s %d %s_%d > %s_%d/log.txt'%\
-                                ( \
+                BashCommand = '%s/michi2_read_lib_SEDs.py %s %d %s_%d > %s_%d/log.txt'%\
+                                ( os.path.dirname(os.path.abspath(__file__)), \
                                     chisq_file, \
                                         dump_indices[i]+1, \
                                             output_prefix, \
@@ -484,6 +484,7 @@ else:
     UserInputText = []
     UserInputColorForAGN = ''
     UserThickColorForAGN = 0.0
+    UserInputThickForAGN = 1.5
     iarg = 1
     while iarg < len(sys.argv):
         TempCmd = sys.argv[iarg].replace('--','-').lower()
