@@ -70,7 +70,7 @@ make_Calzetti2000law_BC03
     print +$outputf '\# CVAR1 = 1     \# the colomn number of VAR1\n' {}
     print +$outputf '\# CVAR2 = 2     \# the colomn number of VAR2\n' {}
     print +$outputf '\# NVAR1 = $(NVAR1)  \# NAXIS1 -- the number of wavelength in one spectrum\n' {} #<TODO># NVAR1 is the wavelength grid
-    print +$outputf '\# NVAR2 = $(NPAR2*ebminusv_numb)  \# NAXIS2 -- the number of spectra -- product of all indepedent PAR\n' {} # now 1 Age x ebminusv_numb EBV
+    print +$outputf '\# NVAR2 = $(NPAR2*ebminusv_numb)   \# NAXIS2 -- the number of spectra -- product of all indepedent PAR\n' {} # now 1 Age x ebminusv_numb EBV
     print +$outputf '\# NPAR  = 7     \# Metallicity, Age, Mass (bounded to Age), SFR (bounded to Age), EBV, flux_unattenu\n' {}
     print +$outputf '\# TPAR1 = Metal \# Absolute Metallicity (note that solar metallicity is 0.0190)\n' {}
     print +$outputf '\# TPAR2 = Age   \# Age in unit of Gyr\n' {}
@@ -90,8 +90,8 @@ make_Calzetti2000law_BC03
     print +$outputf '\# NPAR2 = $(NPAR2)   \# Number of different PAR2, Age\n' {} #<TODO># NPAR2 is the age grid
     print +$outputf '\# NPAR3 = 1     \# Number of different PAR3, Mass\n' {}
     print +$outputf '\# NPAR4 = 1     \# Number of different PAR4, SFR\n' {}
-    print +$outputf '\# NPAR5 = $(ebminusv_numb)    \# Number of different PAR5, Mgas\n' {}
-    print +$outputf '\# NPAR6 = 1     \# Number of different PAR6, EBV\n' {}
+    print +$outputf '\# NPAR5 = 1     \# Number of different PAR5, Mgas\n' {}
+    print +$outputf '\# NPAR6 = $(ebminusv_numb)    \# Number of different PAR6, EBV\n' {}
     print +$outputf '\# NPAR7 = 1     \# Number of different PAR7, flux_unattenu\n' {}
     print +$outputf '\# \n' {}
     print +$outputf '\#        lambda           flux    metallicity         age           mass            SFR           Mgas      EBV   flux_unattenu\n' {}
