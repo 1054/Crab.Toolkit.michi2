@@ -67,6 +67,7 @@ Flux=""
 Umin="" # Added on 2018-03-23 to put an additional constraint on Umin
 NoRadio=0
 FreeRadio=0
+FreeDust=0
 Overwrite=0
 FitName="fit_5"
 ObjName="obj"
@@ -135,6 +136,10 @@ if [[ $# -ge 2 ]]; then
             FreeRadio=1
             echo 
             echo FreeRadio=$FreeRadio
+        elif [[ "$Strcmd" == "-free-dust" ]]; then
+            FreeDust=1
+            echo 
+            echo FreeDust=$FreeDust
         elif [[ "$Strcmd" == "-overwrite" ]]; then
             Overwrite=$((Overwrite+1))
             echo 
@@ -230,7 +235,7 @@ fi
 # 
 # Constraint warm cold dust to have the same Umin
 # 
-if [[ 1 -eq 1 ]]; then
+if [[ $FreeDust -eq 0 ]]; then
     constrain_warm_cold_dust=(-constraint "LIB3_INDEX = LIB4_INDEX")
 fi
 
