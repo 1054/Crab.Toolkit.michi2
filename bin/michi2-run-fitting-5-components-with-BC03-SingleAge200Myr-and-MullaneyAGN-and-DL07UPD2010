@@ -66,6 +66,7 @@ Sampling=10000
 Flux=""
 Umin="" # Added on 2018-03-23 to put an additional constraint on Umin
 NoRadio=0
+FreeRadio=0
 Overwrite=0
 FitName="fit_5"
 ObjName="obj"
@@ -130,6 +131,10 @@ if [[ $# -ge 2 ]]; then
             NoRadio=1
             echo 
             echo NoRadio=$NoRadio
+        elif [[ "$Strcmd" == "-free-radio" ]]; then
+            FreeRadio=1
+            echo 
+            echo FreeRadio=$FreeRadio
         elif [[ "$Strcmd" == "-overwrite" ]]; then
             Overwrite=$((Overwrite+1))
             echo 
@@ -223,6 +228,22 @@ fi
 
 
 # 
+# Constraint warm cold dust to have the same Umin
+# 
+if [[ 1 -eq 1 ]]; then
+    constrain_warm_cold_dust=(-constraint "LIB3_INDEX = LIB4_INDEX")
+fi
+
+
+# 
+# Free the radio component or not
+# 
+if [[ $FreeRadio -eq 0 ]]; then
+    constrain_radio_IR=(-constraint "LIB5_NORM = ((LIB3_NORM*(10^LIB3_PAR3))+(LIB4_NORM*(10^LIB4_PAR3)))*40.31970/3750/10^2.4")
+fi
+
+
+# 
 # Determine whether this is a starburst galaxy so that we constrain the Umin
 # 
 constrain_dust_Umin=()
@@ -267,8 +288,8 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
                -sampling $Sampling \
                ${constrain_stellar_index[@]} \
                ${constrain_dust_Umin[@]} \
-               -constraint "LIB3_INDEX = LIB4_INDEX" \
-               -constraint "LIB5_NORM = ((LIB3_NORM*(10^LIB3_PAR3))+(LIB4_NORM*(10^LIB4_PAR3)))*40.31970/3750/10^2.4" \
+               ${constrain_warm_cold_dust[@]} \
+               ${constrain_radio_IR[@]} \
                -filter filter.list \
                ${Debug[*]}
                
