@@ -253,7 +253,8 @@ fi
 # Run michi2
 # 
 if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
-    echo 
+    echo ""
+    echo "Running michi2_v05"
     michi2_v05 -obs "$FitName.in" \
                -redshift $Redshift \
                -lib "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED" \
