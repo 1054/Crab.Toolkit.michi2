@@ -69,6 +69,7 @@ NoRadio=0
 Overwrite=0
 FitName="fit_5"
 ObjName="obj"
+Debug=()
 if [[ $(hostname) == aida* ]] || [[ $(hostname) == isaac* ]]; then
     Flux="extracted_flux.txt" #<TODO># 
 fi
@@ -133,6 +134,10 @@ if [[ $# -ge 2 ]]; then
             Overwrite=$((Overwrite+1))
             echo 
             echo Overwrite=$Overwrite
+        elif [[ "$Strcmd" == "-debug" ]]; then
+            Debug+=(-debug)
+            echo 
+            echo Debug=${Debug[*]}
         fi
         i=$((i+1))
     done
@@ -263,7 +268,8 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
                ${constrain_dust_Umin[@]} \
                -constraint "LIB3_INDEX = LIB4_INDEX" \
                -constraint "LIB5_NORM = ((LIB3_NORM*(10^LIB3_PAR3))+(LIB4_NORM*(10^LIB4_PAR3)))*40.31970/3750/10^2.4" \
-               -filter filter.list
+               -filter filter.list \
+               ${Debug[*]}
                
                # 
                # -constraint LIB5 NORM EQ SED "LIR(8,1000)*1.061619121e-06" \
