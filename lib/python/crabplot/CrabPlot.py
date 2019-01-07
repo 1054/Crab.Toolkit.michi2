@@ -12,6 +12,8 @@
 #   Last-update: 
 #                2017-12-05
 #                2018-01-02 plot_line, plot_text
+#                2018-05-25 plot_xy errorbarlinestyle
+#                2018-10-04 set_xcharsize set_ycharsize
 # 
 #   Notes:
 #     -- to use TeX, we need to install 'texlive-latex-extra' and 'texlive-fonts-recommended'
@@ -26,7 +28,7 @@ except ImportError:
 pkg_resources.require("numpy")
 pkg_resources.require("astropy>=1.3")
 pkg_resources.require("matplotlib")
-pkg_resources.require("wcsaxes") # http://wcsaxes.readthedocs.io/en/latest/getting_started.html
+#pkg_resources.require("wcsaxes") # http://wcsaxes.readthedocs.io/en/latest/getting_started.html #20180611 commented out because it is merged into astropy
 
 # 
 # pip-2.7 install --user --upgrade matplotlib==2.0.1
@@ -66,7 +68,7 @@ except ImportError:
 import platform
 if sys.version_info < (3, 0):
     if platform.system() == 'Darwin':
-        matplotlib.use('Qt5Agg')
+        matplotlib.use('Qt5Agg') # sudo port install py27-pyqt5
     else:
         matplotlib.use('TkAgg')
 
@@ -101,6 +103,15 @@ import warnings
 
 warnings.filterwarnings("ignore",".*GUI is implemented.*")
 
+import matplotlib as mpl # https://matplotlib.org/users/customizing.html
+mpl.rcParams['xtick.top'] = True
+mpl.rcParams['ytick.right'] = True
+#mpl.rcParams['axes.grid'] = True
+#mpl.rcParams['grid.color'] = 'b0b0b0'
+mpl.rcParams['grid.linestyle'] = '--'
+mpl.rcParams['grid.linewidth'] = 0.25
+mpl.rcParams['grid.alpha'] = 0.8
+
 
 
 
@@ -117,16 +128,27 @@ warnings.filterwarnings("ignore",".*GUI is implemented.*")
 class CrabPlot(object):
     # 
     def __init__(self, x = None, y = None, xerr = None, yerr = None, xlog = False, ylog = False, xtitle = None, ytitle = None, xrange = [], yrange = [], 
-                       image_data = None, image_wcs = None, figure_size = (9.0,8.0), figure_dpi = 90, position = None, label = ''):
+                       image_data = None, image_wcs = None, figure_size = None, figure_dpi = 90, position = None, label = '', 
+                       N_panel_per_row = None, N_panel_per_col = None):
         # 
         # open plot
-        self.Plot_device = pyplot.figure(figsize=figure_size, dpi=figure_dpi) # set figure size 9.0 x 8.0 inches, 90 pixels per inch. 
+        if figure_size is None:
+            self.Figure_size = self.default_figure_size()
+        else:
+            self.Figure_size = figure_size
+        if figure_dpi is None:
+            self.Figure_dpi = self.default_figure_dpi()
+        else:
+            self.Figure_dpi = figure_dpi
+        self.Plot_device = pyplot.figure(figsize=self.Figure_size, dpi=self.Figure_dpi) # set figure size 9.0 x 8.0 inches, 90 pixels per inch. 
         self.Plot_panels = [] # each item is a dict {'label': '', 'panel': axis, 'position': position}
         self.Plot_grids = None
         self.Plot_data = {}
         self.Annotation = []
         self.Image_data = image_data
         self.Image_wcs = image_wcs
+        self.N_panel_per_row = N_panel_per_row
+        self.N_panel_per_col = N_panel_per_col
         # 
         # <TODO> position = [0.10, 0.10, 0.85, 0.85]
         # 
@@ -390,7 +412,7 @@ class CrabPlot(object):
     #                bottom = None
     #    return left, right, top, bottom
     # 
-    def add_panel(self, position = None, label = None, projection = None, debug = False):
+    def add_panel(self, position = None, label = None, projection = None, xrange = [], yrange = [], debug = False):
         # aim: 
         #     if position is None, add one panel and adjust panels to new grid, ignoring panels with given position. 
         #     if position is not None, then add one panel according to the position without adjust other panels. 
@@ -404,9 +426,21 @@ class CrabPlot(object):
             n_panel = n_panel + 1
             # make grid number
             grid_ny = int(numpy.sqrt(float(n_panel)))
-            grid_nx = numpy.round((float(n_panel)/grid_ny))
+            grid_nx = int(numpy.round((float(n_panel)/grid_ny)))
             while (n_panel > grid_nx*grid_ny):
                 grid_nx = grid_nx + 1
+            # but if user provided self.N_panel_per_row, then fix to it
+            if self.N_panel_per_row is not None:
+                grid_nx = self.N_panel_per_row
+                grid_ny = numpy.round((float(n_panel)/grid_nx))
+                while (n_panel > grid_nx*grid_ny):
+                    grid_ny = grid_ny + 1
+            # but also if user provided self.N_panel_per_row, then fix to it (in priori)
+            if self.N_panel_per_col is not None:
+                grid_ny = self.N_panel_per_col
+                grid_nx = numpy.round((float(n_panel)/grid_ny))
+                while (n_panel > grid_nx*grid_ny):
+                    grid_nx = grid_nx + 1
             # make gridspec
             self.Plot_grids = gridspec.GridSpec(grid_nx, grid_ny)
             # debug
@@ -437,7 +471,7 @@ class CrabPlot(object):
         label = self.check_label(label)
         # append to self.Plot_panels
         self.Plot_panels.append( { 'label': label, 'panel': panel, 'position': position, 
-                                   'x': None, 'y': None, 'xerr': None, 'yerr': None, 'xlog': False, 'ylog': False, 'xrange': [], 'yrange': [], 
+                                   'x': None, 'y': None, 'xerr': None, 'yerr': None, 'xlog': False, 'ylog': False, 'xrange': xrange, 'yrange': yrange, 
                                    'image_data': None, 'image_wcs': None, 
                                    'margin-left':0.0, 'margin-bottom':0.0, 'margin-right':0.0, 'margin-top':0.0 } )
         # set ticks
@@ -449,20 +483,35 @@ class CrabPlot(object):
         current_position_in_gridspec = self.get_panel_position_in_gridspec(i)
         self.Plot_panels[i]['panel'].set_position(current_position_in_gridspec)
         self.Plot_panels[i]['panel'].set_subplotspec(self.Plot_grids[i])
+        #self.Plot_panels[i]['panel'].xaxis.tick_top()
+        #self.Plot_panels[i]['panel'].yaxis.tick_right()
         # return
         return self.Plot_panels[-1]
+    # 
+    def default_figsize(self):
+        return (9.0,8.0)
+    # 
+    def default_figure_size(self):
+        return self.default_figsize()
+    # 
+    def default_figure_dpi(self):
+        return 90
     # 
     def default_fontname_for_axis_title(self):
         return ['NGC','Helvetica','sans-serif']
     # 
     def default_fontsize_for_axis_title(self):
-        return 14
+        return 20 - (9.0-numpy.max(self.Figure_size)) / (9.0-5.0) * (18-14)
+        # if figure size 9.0inch, then font size 18
+        # if figure size 5.0inch, then font size 14
     # 
     def default_fontname_for_axis_ticks(self):
         return ['NGC','Helvetica','sans-serif']
     # 
     def default_fontsize_for_axis_ticks(self):
-        return 12.5
+        return 18.5 - (9.0-numpy.max(self.Figure_size)) / (9.0-5.0) * (16.5-12.5)
+        # if figure size 9.0inch, then font size 16.5
+        # if figure size 5.0inch, then font size 12.5
     # 
     # def set_xrange
     def set_xrange(self, xrange, ax=None, panel=None):
@@ -471,10 +520,12 @@ class CrabPlot(object):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
+                    # set_xrange for the last panel
                     panel = len(self.Plot_panels)
                     ax = self.Plot_panels[panel-1]['panel']
                     self.Plot_panels[panel-1]['xrange'] = xrange
                 elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_xrange for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
                     self.Plot_panels[panel-1]['xrange'] = xrange
                 else:
@@ -489,10 +540,12 @@ class CrabPlot(object):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
+                    # set_yrange for the last panel
                     panel = len(self.Plot_panels)
                     ax = self.Plot_panels[panel-1]['panel']
                     self.Plot_panels[panel-1]['yrange'] = yrange
                 elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_yrange for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
                     self.Plot_panels[panel-1]['yrange'] = yrange
                 else:
@@ -505,49 +558,78 @@ class CrabPlot(object):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
-                    panel = len(self.Plot_panels)
-                    ax = self.Plot_panels[panel-1]['panel']
-                    self.Plot_panels[panel-1]['xtitle'] = xtitle
+                    panel = -1 # if panel is None, we set for the last active panel
+                if panel == 0:
+                    # set_xtitle for all panels
+                    for panel in range(1,len(self.Plot_panels)+1,1):
+                        self.set_xtitle(xtitle, panel=panel, fontsize=fontsize, fontname=fontname, **kwargs)
+                elif panel < 0:
+                    # set_xtitle for the last panel
+                    ax = self.Plot_panels[len(self.Plot_panels)+panel]['panel']
+                    self.Plot_panels[len(self.Plot_panels)+panel]['xtitle'] = xtitle
                 elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_xtitle for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
                     self.Plot_panels[panel-1]['xtitle'] = xtitle
                 else:
                     return
+            reset_ticksfont = False
             if fontsize is None:
                 fontsize = self.default_fontsize_for_axis_title()
+                reset_ticksfont = True
             if fontname is None:
                 fontname = self.default_fontname_for_axis_title()
             if ax is not None:
                 ax.set_xlabel(xtitle, fontsize=fontsize, fontname=fontname, **kwargs)
-                self.set_xticksfont(fontsize=fontsize-1)
+                if reset_ticksfont == True:
+                    self.set_xticksfont(fontsize=fontsize-1) # when setting title fontsize, we will also reset ticks labelsize.
     # 
     # def set_ytitle
     def set_ytitle(self, ytitle, ax=None, panel=None, fontsize=None, fontname=None, **kwargs):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
-                    panel = len(self.Plot_panels)
-                    ax = self.Plot_panels[panel-1]['panel']
+                    panel = -1 # if panel is None, we set for the last active panel
+                if panel == 0:
+                    # set_ytitle for all panels
+                    for panel in range(1,len(self.Plot_panels)+1,1):
+                        self.set_ytitle(ytitle, panel=panel, fontsize=fontsize, fontname=fontname, **kwargs)
+                elif panel < 0:
+                    # set_ytitle for the last panel
+                    ax = self.Plot_panels[len(self.Plot_panels)+panel]['panel']
+                    self.Plot_panels[len(self.Plot_panels)+panel]['ytitle'] = ytitle
                 elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_ytitle for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
+                    self.Plot_panels[panel-1]['ytitle'] = ytitle
                 else:
                     return
+            reset_ticksfont = False
             if fontsize is None:
                 fontsize = self.default_fontsize_for_axis_title()
+                reset_ticksfont = True
             if fontname is None:
                 fontname = self.default_fontname_for_axis_title()
             if ax is not None:
                 ax.set_ylabel(ytitle, fontsize=fontsize, fontname=fontname, **kwargs)
-                self.set_yticksfont(fontsize=fontsize-1)
+                if reset_ticksfont == True:
+                    self.set_yticksfont(fontsize=fontsize-1) # when setting title fontsize, we will also reset ticks labelsize.
     # 
     # def set_xtickfont
     def set_xtickfont(self, ax=None, panel=None, fontsize=None, fontname=None):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
-                    panel = len(self.Plot_panels)
-                    ax = self.Plot_panels[panel-1]['panel']
+                    panel = -1 # if panel is None, we set for the last active panel
+                if panel == 0:
+                    # set_xtickfont for all panels
+                    for panel in range(1,len(self.Plot_panels)+1,1):
+                        self.set_xtickfont(panel=panel, fontsize=fontsize, fontname=fontname)
+                elif panel < 0:
+                    # set_xtickfont for the last panel
+                    ax = self.Plot_panels[len(self.Plot_panels)+panel]['panel']
                 elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_xtickfont for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
                 else:
                     return
@@ -570,9 +652,16 @@ class CrabPlot(object):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
-                    panel = len(self.Plot_panels)
-                    ax = self.Plot_panels[panel-1]['panel']
+                    panel = -1 # if panel is None, we set for the last active panel
+                if panel == 0:
+                    # set_ytickfont for all panels
+                    for panel in range(1,len(self.Plot_panels)+1,1):
+                        self.set_ytickfont(panel=panel, fontsize=fontsize, fontname=fontname)
+                elif panel < 0:
+                    # set_ytickfont for the last panel
+                    ax = self.Plot_panels[len(self.Plot_panels)+panel]['panel']
                 elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_ytickfont for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
                 else:
                     return
@@ -595,9 +684,16 @@ class CrabPlot(object):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
-                    panel = len(self.Plot_panels)
-                    ax = self.Plot_panels[panel-1]['panel']
+                    panel = -1 # if panel is None, we set for the last active panel
+                if panel == 0:
+                    # set_xticksize for all panels
+                    for panel in range(1,len(self.Plot_panels)+1,1):
+                        self.set_xticksize(panel=panel, majorsize=majorsize, minorsize=minorsize, majorwidth=majorwidth, minorwidth=minorwidth, majordirection=majordirection, minordirection=minordirection)
+                elif panel < 0:
+                    # set_xticksize for the last panel
+                    ax = self.Plot_panels[len(self.Plot_panels)+panel]['panel']
                 elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_xticksize for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
                 else:
                     return
@@ -614,9 +710,16 @@ class CrabPlot(object):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
-                    panel = len(self.Plot_panels)
-                    ax = self.Plot_panels[panel-1]['panel']
+                    panel = -1 # if panel is None, we set for the last active panel
+                if panel == 0:
+                    # set_yticksize for all panels
+                    for panel in range(1,len(self.Plot_panels)+1,1):
+                        self.set_yticksize(panel=panel, majorsize=majorsize, minorsize=minorsize, majorwidth=majorwidth, minorwidth=minorwidth, majordirection=majordirection, minordirection=minordirection)
+                elif panel < 0:
+                    # set_yticksize for the last panel
+                    ax = self.Plot_panels[len(self.Plot_panels)+panel]['panel']
                 elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_yticksize for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
                 else:
                     return
@@ -627,6 +730,63 @@ class CrabPlot(object):
         if ax is not None:
             ax.tick_params(axis='y', which='major', direction=majordirection, length=majorsize, width=majorwidth)
             ax.tick_params(axis='y', which='minor', direction=minordirection, length=minorsize, width=minorwidth)
+    # 
+    # def set_xcharsize
+    def set_xcharsize(self, ax=None, panel=None, charsize=None, minortickscharsize=None, axislabelcharsize=None):
+        # charsize is major ticks char size
+        # minortickscharsize is minor ticks char size
+        # axislabelcharsize is axis label (i.e. title) char size
+        if len(self.Plot_panels)>0:
+            if ax is None:
+                if panel is None:
+                    panel = -1 # if panel is None, we set for the last active panel
+                if panel == 0:
+                    # set_xcharsize for all panels
+                    for panel in range(1,len(self.Plot_panels)+1,1):
+                        self.set_xcharsize(panel=panel, charsize=charsize, minortickscharsize=minortickscharsize, axislabelcharsize=axislabelcharsize)
+                elif panel < 0:
+                    # set_xcharsize for the last panel
+                    ax = self.Plot_panels[len(self.Plot_panels)+panel]['panel']
+                elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_xcharsize for the specified panel
+                    ax = self.Plot_panels[panel-1]['panel']
+                else:
+                    return
+        if ax is not None:
+            if charsize is not None:
+                ax.tick_params(axis='x', which='major', labelsize=charsize)
+            if minortickscharsize is not None:
+                ax.tick_params(axis='x', which='minor', labelsize=minortickscharsize)
+            if axislabelcharsize is not None:
+                if ax.get_xlabel() is not None:
+                    ax.set_xlabel(ax.get_xlabel(), fontsize=axislabelcharsize)
+    # 
+    # def set_ycharsize
+    def set_ycharsize(self, ax=None, panel=None, charsize=None, minortickscharsize=None, axislabelcharsize=None):
+        if len(self.Plot_panels)>0:
+            if ax is None:
+                if panel is None:
+                    panel = -1 # if panel is None, we set for the last active panel
+                if panel == 0:
+                    # set_ycharsize for all panels
+                    for panel in range(1,len(self.Plot_panels)+1,1):
+                        self.set_ycharsize(panel=panel, charsize=charsize, minortickscharsize=minortickscharsize, axislabelcharsize=axislabelcharsize)
+                elif panel < 0:
+                    # set_ycharsize for the last panel
+                    ax = self.Plot_panels[len(self.Plot_panels)+panel]['panel']
+                elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_ycharsize for the specified panel
+                    ax = self.Plot_panels[panel-1]['panel']
+                else:
+                    return
+        if ax is not None:
+            if charsize is not None:
+                ax.tick_params(axis='y', which='major', labelsize=charsize)
+            if minortickscharsize is not None:
+                ax.tick_params(axis='y', which='minor', labelsize=minortickscharsize)
+            if axislabelcharsize is not None:
+                if ax.get_ylabel() is not None:
+                    ax.set_ylabel(ax.get_ylabel(), fontsize=axislabelcharsize)
     # 
     # def set_grid_hspace
     def set_grid_hspace(self, hspace = 0.05):
@@ -798,8 +958,11 @@ class CrabPlot(object):
                 marker = None, size = None, color = '#1b81e5', fillstyle = None, 
                 linestyle = 'None', linewidth = None, drawstyle = None, 
                 facecolor = None, edgecolor = None, edgewidth = None, alpha = 1.0, zorder = 5, 
+                errorbarlinestyle = '', 
                 uplims = None, lolims = None, 
                 margin = None, 
+                grid = None, 
+                verbose = 1, 
                 **kwargs):
         # inputs
         # -- ax is a direct 
@@ -810,7 +973,8 @@ class CrabPlot(object):
         # store x y
         if dataname != '':
             self.Plot_data[dataname] = numpy.column_stack((x,y))
-            print('CrabPlot::plot_xy() Stored the input x and y into self.Plot_data[%s]!'%(dataname))
+            if verbose >= 1:
+                print('CrabPlot::plot_xy() Stored the input x and y into self.Plot_data[%s]!'%(dataname))
         # check x y dimension
         if x.shape != y.shape:
             print('CrabPlot::plot_xy() Error! The input x and y do not have the same shape!')
@@ -818,7 +982,8 @@ class CrabPlot(object):
         # get panel ax
         plot_panel_ax, current, overplot = self.get_panel_ax(ax, current, overplot)
         # set grid
-        plot_panel_ax.grid(False)
+        if grid is not None:
+            plot_panel_ax.grid(grid)
         # set margin if x y title are given
         if xtitle is not None:
             self.set_margin(bottom=0.23)
@@ -841,11 +1006,26 @@ class CrabPlot(object):
                 marker = 's'
             elif symbol == 'cross':
                 marker = 'x'
-            elif symbol == 'open square' or symbol == 'open squares':
+            elif symbol == 'Cross':
+                marker = 'X'
+            elif symbol == 'diamond':
+                marker = 'd'
+            elif symbol == 'Diamond':
+                marker = 'D'
+            elif symbol == 'open square' or symbol == 'open squares' or symbol == 'empty square' or symbol == 'empty squares':
                 marker = 's'
                 facecolor = 'none'
                 if color is not None:
                     edgecolor = color
+            elif symbol == 'open circle' or symbol == 'open circles' or symbol == 'empty circle' or symbol == 'empty circles':
+                marker = 'o'
+                facecolor = 'none'
+                if color is not None:
+                    edgecolor = color
+            elif symbol == 'filled square' or symbol == 'filled squares':
+                marker = 's'
+            elif symbol == 'filled circle' or symbol == 'filled circles':
+                marker = 'o'
             elif symbol == 'upper limit' or symbol == 'upper limits':
                 #marker = u'$\u2193$'
                 marker = self.get_upper_limit_marker()
@@ -872,19 +1052,22 @@ class CrabPlot(object):
         if uplims is None:
             if xlog>0 and ylog>0:
                 if fmt:
-                    plot_panel_ax.loglog(x, y, fmt, zorder=zorder)
+                    plot_panel_ax.loglog(x, y, fmt, label=label, zorder=zorder)
                 else:
-                    plot_panel_ax.loglog(x, y, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, linewidth=linewidth, drawstyle=drawstyle, alpha=alpha, zorder=zorder)
+                    plot_panel_ax.loglog(x, y, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, linewidth=linewidth, drawstyle=drawstyle, alpha=alpha, label=label, zorder=zorder)
             elif xlog>0 and ylog<=0:
-                plot_panel_ax.semilogx(x, y, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, linewidth=linewidth, drawstyle=drawstyle, alpha=alpha, zorder=zorder)
+                plot_panel_ax.semilogx(x, y, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, linewidth=linewidth, drawstyle=drawstyle, alpha=alpha, label=label, zorder=zorder)
             elif xlog<=0 and ylog>0:
-                plot_panel_ax.semilogy(x, y, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, linewidth=linewidth, drawstyle=drawstyle, alpha=alpha, zorder=zorder)
+                plot_panel_ax.semilogy(x, y, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, linewidth=linewidth, drawstyle=drawstyle, alpha=alpha, label=label, zorder=zorder)
             else:
-                plot_panel_ax.plot(x, y, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, linewidth=linewidth, drawstyle=drawstyle, alpha=alpha, zorder=zorder)
+                plot_panel_ax.plot(x, y, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, linewidth=linewidth, drawstyle=drawstyle, alpha=alpha, label=label, zorder=zorder)
             #plot_panel_xy['panel'].scatter(x, y, marker=marker, s=size**2, c=color, edgecolors=edgecolor, linewidths=linewidth, alpha=alpha)
         # plot errorbars
         if xerr is not None or yerr is not None:
-            plot_panel_ax.errorbar(x, y, xerr=xerr, yerr=yerr, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, drawstyle=drawstyle, linewidth=linewidth, alpha=alpha, zorder=zorder, **kwargs)
+            plot_var_errorbar = plot_panel_ax.errorbar(x, y, xerr=xerr, yerr=yerr, marker=marker, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, drawstyle=drawstyle, linewidth=linewidth, alpha=alpha, label=label, zorder=zorder, **kwargs)
+            # set errorbar line style if given by the user
+            if errorbarlinestyle != '':
+                plot_var_errorbar[-1][0].set_linestyle(errorbarlinestyle) # [-1][0] is the LineCollection objects of the errorbar lines -- https://stackoverflow.com/questions/22995797/can-matplotlib-errorbars-have-a-linestyle-set?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
         #if uplims is not None:
         #    plot_panel_ax.errorbar(x, y, xerr=xerr, yerr=0.8*y, markersize=size, color=color, markerfacecolor=facecolor, markeredgecolor=edgecolor, markeredgewidth=edgewidth, fillstyle=fillstyle, linestyle=linestyle, drawstyle=drawstyle, linewidth=linewidth, alpha=alpha, zorder=zorder, uplims=uplims, lolims=lolims, **kwargs)
         # axis ticks format
@@ -956,9 +1139,16 @@ class CrabPlot(object):
                     xtitlefontsize = 14, ytitlefontsize = 14, 
                     linestyle = 'solid', 
                     margin = None, 
+                    thick = 0, linewidth = 0, 
                     **kwargs):
         # get panel ax
         plot_panel_ax, current, overplot = self.get_panel_ax(ax, current, overplot)
+        # set linewidth and thick
+        if thick > 0:
+            if linewidth <= 0:
+                linewidth = thick
+        if linewidth <= 0:
+            linewidth = 1.0 # default linewidth
         # check x1 y1
         # we can input either (x0,y0), or (x0,y0,x1,y1).
         if x1 is not None and y1 is not None:
@@ -974,9 +1164,9 @@ class CrabPlot(object):
                     #yrange_for_plot = plot_panel_ax.get_ylim()
                     #x0_for_plot = x0 * (xrange_for_plot[1]-xrange_for_plot[0]) + xrange_for_plot[0]
                     #y0_for_plot = y0 * (yrange_for_plot[1]-yrange_for_plot[0]) + yrange_for_plot[0]
-                    plot_one_line = matplotlib.lines.Line2D([x0,x1], [y0,y1], linestyle=linestyle, transform=plot_panel_ax.transAxes, **kwargs)
+                    plot_one_line = matplotlib.lines.Line2D([x0,x1], [y0,y1], linestyle=linestyle, linewidth=linewidth, transform=plot_panel_ax.transAxes, label=label, **kwargs)
                 else:
-                    plot_one_line = matplotlib.lines.Line2D([x0,x1], [y0,y1], linestyle=linestyle, **kwargs)
+                    plot_one_line = matplotlib.lines.Line2D([x0,x1], [y0,y1], linestyle=linestyle, linewidth=linewidth, label=label, **kwargs)
                 # 
                 plot_panel_ax.add_line(plot_one_line)
         else:
@@ -988,6 +1178,12 @@ class CrabPlot(object):
             if x0.shape != y0.shape:
                 print('Error! plot_line x0 y0 do not have the same dimension!')
                 return
+            # check non-positive values if ylog
+            if ylog is not None:
+                ylog = int(ylog)
+                if ylog > 0:
+                    if numpy.count_nonzero(y0<=0.0):
+                        y0[y0<=0.0] = numpy.nan
             # store x y
             if dataname != '':
                 self.Plot_data[dataname] = numpy.column_stack((x0,y0))
@@ -1003,9 +1199,9 @@ class CrabPlot(object):
                     #yrange_for_plot = plot_panel_ax.get_ylim()
                     #x0_for_plot = x0 * (xrange_for_plot[1]-xrange_for_plot[0]) + xrange_for_plot[0]
                     #y0_for_plot = y0 * (yrange_for_plot[1]-yrange_for_plot[0]) + yrange_for_plot[0]
-                    plot_one_line = matplotlib.lines.Line2D(x0, y0, linestyle=linestyle, transform=plot_panel_ax.transAxes, **kwargs)
+                    plot_one_line = matplotlib.lines.Line2D(x0, y0, linestyle=linestyle, linewidth=linewidth, transform=plot_panel_ax.transAxes, label=label, **kwargs)
                 else:
-                    plot_one_line = matplotlib.lines.Line2D(x0, y0, linestyle=linestyle, **kwargs)
+                    plot_one_line = matplotlib.lines.Line2D(x0, y0, linestyle=linestyle, linewidth=linewidth, label=label, **kwargs)
                 # 
                 plot_panel_ax.add_line(plot_one_line)
         # 
@@ -1080,7 +1276,9 @@ class CrabPlot(object):
             else:
                 ax.text(x0, y0, text_input, **kwargs) # verticalalignment='center', horizontalalignment='left'
     # 
-    def xyouts(self, x0, y0, text_input, ax = None, current = None, overplot = True, NormalizedCoordinate = False, **kwargs):
+    def xyouts(self, x0, y0, text_input, ax = None, current = None, overplot = True, Data = False, NormalizedCoordinate = True, **kwargs):
+        if Data is True:
+            NormalizedCoordinate = False
         ax, current, overplot = self.get_panel_ax(ax, current, overplot)
         self.plot_text(x0, y0, text_input, ax = ax, NormalizedCoordinate = NormalizedCoordinate, **kwargs)
     # 
@@ -1237,6 +1435,10 @@ class CrabPlot(object):
         # 
         return output_y
     # 
+    def ax(self, ax = None, current = True, overplot = True):
+        plot_panel_ax, current, overplot = self.get_panel_ax(ax, current, overplot)
+        return plot_panel_ax
+    # 
     def show(self, block=True):
         self.Plot_device.canvas.draw()
         self.Plot_device.show()
@@ -1245,11 +1447,24 @@ class CrabPlot(object):
     # 
     def savefig(self, filename):
         self.Plot_device.savefig(filename)
+        print('Output to "%s"!'%(filename))
     # 
     def savepdf(self, filename):
         if not filename.endswith('.pdf') and not filename.endswith('.PDF'):
             filename = filename + '.pdf'
         self.Plot_device.savefig(filename)
+        print('Output to "%s"!'%(filename))
+    # 
+    def save(self, filename):
+        if filename.endswith('.png') or filename.endswith('.PNG'):
+            self.savefig(filename)
+        elif filename.endswith('.jpg') or filename.endswith('.JPG'):
+            self.savefig(filename)
+        elif filename.endswith('.jpeg') or filename.endswith('.JPEG'):
+            self.savefig(filename)
+        else:
+            self.savepdf(filename)
+        #self.Plot_device.savefig(filename)
     # 
     def close(self):
         self.clear()
@@ -1297,6 +1512,7 @@ def plot_line(ax, x0, y0, x1 = None, y1 = None, NormalizedCoordinate = False, **
             plot_one_line = matplotlib.lines.Line2D(x0, y0, **kwargs)
         # 
         ax.add_line(plot_one_line)
+        return plot_one_line
 
 
 # 

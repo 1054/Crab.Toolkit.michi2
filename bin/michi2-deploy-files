@@ -36,6 +36,45 @@ if [[ $# -ge 1 ]]; then
 fi
 
 # 
+# Function
+# 
+function check_input_contains() {
+    if [[ $# -ge 2 ]]; then
+        k=$#
+        last_arg=$(echo "${!k}" | tr -s ' ' | tr '[:upper:]' '[:lower:]')
+        j=$(($#-1))
+        if [[ x"${last_arg}" != x"" ]]; then
+            check_ok=0
+            for (( i = 1; i <= $j; i++ )); do
+                input_arg=$(echo "${!i}" | tr -s ' ' | tr '[:upper:]' '[:lower:]')
+                #echo "${last_arg}" "${input_arg}"
+                if [[ $(echo "${last_arg}" | perl -p -e "s/.*\b(${input_arg})\b.*/\1/g") != "${input_arg}" ]]; then
+                    # the last arg does not match the whole word of current input arg
+                    check_ok=$((check_ok+1))
+                fi
+            done
+            if [[ $check_ok -eq 0 ]]; then
+                #echo "yes"
+                return 0
+            else
+                #echo "no"
+                return $check_ok
+            fi
+        fi
+    fi
+    #echo "no"
+    return 255
+}
+
+#if (check_input_contains "400Myr" "$*") || (check_input_contains "Age400Myr" "$*"); then
+#    echo "yes"
+#else
+#    echo "no"
+#fi
+#exit
+
+
+# 
 # Copy files
 # 
 if echo "$deploy_type" | grep -q -i "SED"; then
@@ -49,39 +88,108 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     cp -r "${deploy_upper_dir}/data/deploy_SED"/filters .
     cp -r "${deploy_upper_dir}/data/deploy_SED"/filter.list .
     # 
-    if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "FSPS SSP" | wc -l) -eq 1 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
-    elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "FSPS" | wc -l) -eq 1 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip"
-    elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "BC03" | wc -l) -eq 1 ]]; then
-        if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "MultiAge" | wc -l) -eq 1 ]]; then
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.MultiAge.EBV.SED.zip"
+    if (check_input_contains "no star" "$*") || (check_input_contains "no stellar" "$*"); then
+        # 
+        echo "We will not deploy any stellar SED library according to the user input"
+    else
+        # 
+        if check_input_contains "BC03" "$*"; then
+            # 
+            if check_input_contains "MultiAge" "$*"; then
+                # 
+                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.MultiAge.EBV.SED.zip"
+                # 
+            elif (check_input_contains "400Myr" "$*") || (check_input_contains "Age400Myr" "$*"); then
+                # 
+                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age400Myr.EBV.SED.zip"
+                # 
+            elif (check_input_contains "200Myr" "$*") || (check_input_contains "Age200Myr" "$*"); then
+                # 
+                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED.zip"
+                # 
+            else
+                # 
+                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip" # BC03 default is BC03 constant SFH single age 200Myr
+                # 
+            fi
+        # 
+        elif check_input_contains "FSPS" "$*"; then
+            # 
+            if check_input_contains "SSP" "$*"; then
+                # 
+                unzip -o "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
+                # 
+            else
+                # 
+                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip" # FSPS default is composite SFH tau-declining at 1Gyr
+                # 
+            fi
+        # 
         else
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip" # single age 200Myr
+            # 
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip" # default is BC03 constant SFH single age 200Myr
+            # 
         fi
-    elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "no stellar" | wc -l) -eq 0 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip"
     fi
     # 
-    if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "single qPAH" | wc -l) -eq 1 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
-    elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "DL07UPD2010" | wc -l) -eq 1 ]]; then
-        cp "${deploy_upper_dir}/data/make_lib_SED/02_Make_Lib_SED/DL07_2014_updates/lib.DL07.2010.03.18.spec.2.0.HiExCom.SED" .
-        cp "${deploy_upper_dir}/data/make_lib_SED/02_Make_Lib_SED/DL07_2014_updates/lib.DL07.2010.03.18.spec.2.0.LoExCom.SED" .
-    elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "MBB" | wc -l) -eq 1 ]]; then
-        cp "${deploy_upper_dir}/data/make_lib_SED/02_Make_Lib_SED/ModifiedBlackbody/lib.MBB.SED" .
-    elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "no dust" | wc -l) -eq 0 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/lib.DL07.DuoCom.SED.zip"
+    if (check_input_contains "no dust" "$*"); then
+        # 
+        echo "We will not deploy any dust SED library according to the user input"
+    else
+        # 
+        if check_input_contains "MBB" "$*"; then
+            # 
+            cp "${deploy_upper_dir}/data/make_lib_SED/02_Make_Lib_SED/ModifiedBlackbody/lib.MBB.SED" .
+            # 
+        elif check_input_contains "DL07UPD2010" "$*"; then
+            # 
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.DL07UPD2010.DuoCom.SED.zip"
+            # 
+        elif (check_input_contains "SINGLEPAH" "$*") || (check_input_contains "SINGLE PAH" "$*") || (check_input_contains "SINGLE QPAH" "$*"); then
+            # 
+            unzip -o "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
+            # 
+        else
+            # 
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.DL07.DuoCom.SED.zip" # default
+            # 
+        fi
     fi
     # 
-    if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "Siebenmorgen" | wc -l) -eq 1 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/lib.SiebenmorgenAGN.Extrapolated.SED.zip"
-    elif [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "no AGN" | wc -l) -eq 0 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/lib.MullaneyAGN.SED.zip"
+    if (check_input_contains "no AGN" "$*"); then
+        # 
+        echo "We will not deploy any AGN SED library according to the user input"
+    else
+        # 
+        if check_input_contains "siebenmorgen" "$*"; then
+            # 
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.SiebenmorgenAGN.Extrapolated.SED.zip"
+            # 
+        elif (check_input_contains "mullaney" "$*") || (check_input_contains "mullaneyagn" "$*") || (check_input_contains "mullaney2010" "$*"); then
+            # 
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.MullaneyAGN.SED.zip"
+            # 
+        else
+            # 
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.MullaneyAGN.SED.zip" # default
+            # 
+        fi
     fi
     # 
-    if [[ $(echo "$@" | sed -e 's/-/ /g' | tr -s ' ' | grep -i "no radio" | wc -l) -eq 0 ]]; then
-        unzip -o "${deploy_upper_dir}/data/lib_SED/RadioPowerlaw.Single.lib.SED.zip"
+    if [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(no radio)\b.*/\1/g') != "no radio" ]]; then
+        if [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(radio[\._ ]?varied[\._ ]?slope)\b.*/radiovariedslope/g') == "radiovariedslope" ]]; then
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.RadioPowerlaw.Varied.Slope.SED.zip"
+        elif [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(radio)\b.*/\1/g') == "radio" ]]; then
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.RadioPowerlaw.Single.SED.zip"
+        else
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.RadioPowerlaw.Single.SED.zip" # default
+        fi
+    fi
+    # 
+    if [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(no co)\b.*/\1/g') != "no co" ]]; then
+        if [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(co)\b.*/\1/g') == "co" ]]; then
+            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.Radio.mm.FIR.lines.SED.zip"
+        fi
     fi
     # 
     #echo "#!/bin/bash" > "run_fitting_5_components.sh"

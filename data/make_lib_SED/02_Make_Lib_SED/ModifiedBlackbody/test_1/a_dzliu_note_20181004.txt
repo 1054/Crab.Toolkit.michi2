@@ -1,0 +1,4 @@
+'/Volumes/GoogleDrive/Team Drives/AlmaCosmos/Works_cooperated/2018_Paolo_Cassata/20180906_SEDs/Results_20180906a/Gal5_Laigle_ID_647928_SED_v20180907a_with_24um.pdf'
+'/Volumes/GoogleDrive/Team Drives/AlmaCosmos/Works_cooperated/2018_Paolo_Cassata/20180906_SEDs/Results_20180906a/Gal5_Laigle_ID_647928_SED_v20180907a_with_24um.sed.um.mJy.txt'
+
+

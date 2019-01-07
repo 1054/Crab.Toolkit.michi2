@@ -1,0 +1,7 @@
+
+previous BC03 templates got wrong stellar age... should be 200Myr 400Myr etc but actually were 2Myr 4Myr...
+
+
+run make_all.sh
+
+

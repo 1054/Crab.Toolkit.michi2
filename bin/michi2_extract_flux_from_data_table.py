@@ -86,12 +86,16 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
         if type(input_str) is not str:
             input_str = str(input_str)
         # skip FLAG
-        Pattern_Flag = re.compile(".*(_FLAG_).*", re.IGNORECASE)
-        if Pattern_Flag.match('_'+input_str+'_'):
+        if re.match(r'.*(_FLAG_).*', input_str, re.IGNORECASE):
             continue
-        # skip FLAG
-        Pattern_Flag = re.compile(".*(_Original_).*", re.IGNORECASE)
-        if Pattern_Flag.match('_'+input_str+'_'):
+        # skip Original
+        if re.match(r'.*(_Original_).*', input_str, re.IGNORECASE):
+            continue
+        # skip ref_.*
+        if re.match(r'^ref_.*', input_str, re.IGNORECASE):
+            continue
+        # skip tmp_.*
+        if re.match(r'^tmp_.*', input_str, re.IGNORECASE):
             continue
         # fix FLUX_ERR -> FLUX
         if input_str.find('FLUX_ERR')>=0:
@@ -154,8 +158,16 @@ def recognize_Col_FLUXERR(input_list, special_file_name=''):
         if type(input_str) is not str:
             input_str = str(input_str)
         # skip FLAG
-        Pattern_Flag = re.compile(".*(_FLAG_).*", re.IGNORECASE)
-        if Pattern_Flag.match(input_str):
+        if re.match(r'.*(_FLAG_).*', input_str, re.IGNORECASE):
+            continue
+        # skip Original
+        if re.match(r'.*(_Original_).*', input_str, re.IGNORECASE):
+            continue
+        # skip ref_.*
+        if re.match(r'^ref_.*', input_str, re.IGNORECASE):
+            continue
+        # skip tmp_.*
+        if re.match(r'^tmp_.*', input_str, re.IGNORECASE):
             continue
         # fix FLUX_ERR -> FLUX
         if input_str.find('FLUX_ERR')>=0:
@@ -261,70 +273,119 @@ def recognize_Col_MAGERR(input_list, special_file_name=''):
 
 def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict = {}
-    Filter_Dict['IA427'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA464'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA484'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA505'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA527'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA574'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA624'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA679'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA709'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA738'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA767'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IA827'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB427'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB464'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB484'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB505'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB527'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB574'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB624'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB679'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB709'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB738'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB767'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['IB827'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['NB711'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['NB816'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-    Filter_Dict['SPLASH_1'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['SPLASH_2'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['SPLASH_3'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['SPLASH_4'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['ch1'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['ch2'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['ch3'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['ch4'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['IRAC1'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['IRAC2'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['IRAC3'] = 'Spitzer IRAC' # Laigle+2016 Table 1
-    Filter_Dict['IRAC4'] = 'Spitzer IRAC' # Laigle+2016 Table 1
+    Filter_Dict['IA427'] = 'Subaru Suprime Cam IA427' # Laigle+2016 Table 1
+    Filter_Dict['IA464'] = 'Subaru Suprime Cam IA464' # Laigle+2016 Table 1
+    Filter_Dict['IA484'] = 'Subaru Suprime Cam IA484' # Laigle+2016 Table 1
+    Filter_Dict['IA505'] = 'Subaru Suprime Cam IA505' # Laigle+2016 Table 1
+    Filter_Dict['IA527'] = 'Subaru Suprime Cam IA527' # Laigle+2016 Table 1
+    Filter_Dict['IA574'] = 'Subaru Suprime Cam IA574' # Laigle+2016 Table 1
+    Filter_Dict['IA624'] = 'Subaru Suprime Cam IA624' # Laigle+2016 Table 1
+    Filter_Dict['IA679'] = 'Subaru Suprime Cam IA679' # Laigle+2016 Table 1
+    Filter_Dict['IA709'] = 'Subaru Suprime Cam IA709' # Laigle+2016 Table 1
+    Filter_Dict['IA738'] = 'Subaru Suprime Cam IA738' # Laigle+2016 Table 1
+    Filter_Dict['IA767'] = 'Subaru Suprime Cam IA767' # Laigle+2016 Table 1
+    Filter_Dict['IA827'] = 'Subaru Suprime Cam IA827' # Laigle+2016 Table 1
+    Filter_Dict['IB427'] = 'Subaru Suprime Cam IB427' # Laigle+2016 Table 1
+    Filter_Dict['IB464'] = 'Subaru Suprime Cam IB464' # Laigle+2016 Table 1
+    Filter_Dict['IB484'] = 'Subaru Suprime Cam IB484' # Laigle+2016 Table 1
+    Filter_Dict['IB505'] = 'Subaru Suprime Cam IB505' # Laigle+2016 Table 1
+    Filter_Dict['IB527'] = 'Subaru Suprime Cam IB527' # Laigle+2016 Table 1
+    Filter_Dict['IB574'] = 'Subaru Suprime Cam IB574' # Laigle+2016 Table 1
+    Filter_Dict['IB624'] = 'Subaru Suprime Cam IB624' # Laigle+2016 Table 1
+    Filter_Dict['IB679'] = 'Subaru Suprime Cam IB679' # Laigle+2016 Table 1
+    Filter_Dict['IB709'] = 'Subaru Suprime Cam IB709' # Laigle+2016 Table 1
+    Filter_Dict['IB738'] = 'Subaru Suprime Cam IB738' # Laigle+2016 Table 1
+    Filter_Dict['IB767'] = 'Subaru Suprime Cam IB767' # Laigle+2016 Table 1
+    Filter_Dict['IB827'] = 'Subaru Suprime Cam IB827' # Laigle+2016 Table 1
+    Filter_Dict['NB711'] = 'Subaru Suprime Cam NB711' # Laigle+2016 Table 1
+    Filter_Dict['NB816'] = 'Subaru Suprime Cam NB816' # Laigle+2016 Table 1
+    Filter_Dict['SPLASH_1'] = 'Spitzer IRAC ch1' # Laigle+2016 Table 1
+    Filter_Dict['SPLASH_2'] = 'Spitzer IRAC ch2' # Laigle+2016 Table 1
+    Filter_Dict['SPLASH_3'] = 'Spitzer IRAC ch3' # Laigle+2016 Table 1
+    Filter_Dict['SPLASH_4'] = 'Spitzer IRAC ch4' # Laigle+2016 Table 1
+    Filter_Dict['SPLASH1'] = 'Spitzer IRAC ch1' # Laigle+2016 Table 1
+    Filter_Dict['SPLASH2'] = 'Spitzer IRAC ch2' # Laigle+2016 Table 1
+    Filter_Dict['SPLASH3'] = 'Spitzer IRAC ch3' # Laigle+2016 Table 1
+    Filter_Dict['SPLASH4'] = 'Spitzer IRAC ch4' # Laigle+2016 Table 1
+    Filter_Dict['ch1'] = 'Spitzer IRAC ch1' # Laigle+2016 Table 1
+    Filter_Dict['ch2'] = 'Spitzer IRAC ch2' # Laigle+2016 Table 1
+    Filter_Dict['ch3'] = 'Spitzer IRAC ch3' # Laigle+2016 Table 1
+    Filter_Dict['ch4'] = 'Spitzer IRAC ch4' # Laigle+2016 Table 1
+    Filter_Dict['IRAC1'] = 'Spitzer IRAC ch1' # Laigle+2016 Table 1
+    Filter_Dict['IRAC2'] = 'Spitzer IRAC ch2' # Laigle+2016 Table 1
+    Filter_Dict['IRAC3'] = 'Spitzer IRAC ch3' # Laigle+2016 Table 1
+    Filter_Dict['IRAC4'] = 'Spitzer IRAC ch4' # Laigle+2016 Table 1
+    Filter_Dict['IRAC_ch1'] = 'Spitzer IRAC ch1' # 
+    Filter_Dict['IRAC_ch2'] = 'Spitzer IRAC ch2' # 
+    Filter_Dict['IRAC_ch3'] = 'Spitzer IRAC ch3' # 
+    Filter_Dict['IRAC_ch4'] = 'Spitzer IRAC ch4' # 
     if type(catalog_name) is str:
         if catalog_name.find('Laigle')>=0:
-            Filter_Dict['u'] = 'CFHT MegaCam' # Laigle+2016 Table 1
-            Filter_Dict['B'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-            Filter_Dict['V'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-            Filter_Dict['r'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-            Filter_Dict['ip'] ='Subaru Suprime Cam' # Laigle+2016 Table 1
-            Filter_Dict['zp'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-            Filter_Dict['zpp'] = 'Subaru Suprime Cam' # Laigle+2016 Table 1
-            Filter_Dict['yHSC'] = 'VISTA VIRCAM' # Laigle+2016 Table 1
-            Filter_Dict['Y'] = 'VISTA VIRCAM' # Laigle+2016 Table 1
-            Filter_Dict['J'] = 'VISTA VIRCAM' # Laigle+2016 Table 1
-            Filter_Dict['H'] = 'VISTA VIRCAM' # Laigle+2016 Table 1
-            Filter_Dict['Hw'] = 'CFHT WIRCam' # Laigle+2016 Table 1
-            Filter_Dict['Ks'] = 'VISTA VIRCAM' # Laigle+2016 Table 1
-            Filter_Dict['Ksw'] = 'CFHT WIRCam' # Laigle+2016 Table 1
-    if type(catalog_name) is str:
+            Filter_Dict['u'] = 'CFHT MegaCam u' # Laigle+2016 Table 1
+            Filter_Dict['B'] = 'Subaru Suprime Cam B' # Laigle+2016 Table 1
+            Filter_Dict['V'] = 'Subaru Suprime Cam V' # Laigle+2016 Table 1
+            Filter_Dict['r'] = 'Subaru Suprime Cam r' # Laigle+2016 Table 1
+            Filter_Dict['ip'] ='Subaru Suprime Cam i' # Laigle+2016 Table 1
+            Filter_Dict['zp'] = 'Subaru Suprime Cam z' # Laigle+2016 Table 1
+            Filter_Dict['zpp'] = 'Subaru Suprime Cam z' # Laigle+2016 Table 1
+            Filter_Dict['yHSC'] = 'Subaru HSC Y' # Laigle+2016 Table 1
+            Filter_Dict['Y'] = 'VISTA VIRCAM Y' # Laigle+2016 Table 1
+            Filter_Dict['J'] = 'VISTA VIRCAM J' # Laigle+2016 Table 1
+            Filter_Dict['H'] = 'VISTA VIRCAM H' # Laigle+2016 Table 1
+            Filter_Dict['Hw'] = 'CFHT WIRCam H' # Laigle+2016 Table 1
+            Filter_Dict['Ks'] = 'VISTA VIRCAM K' # Laigle+2016 Table 1
+            Filter_Dict['Ksw'] = 'CFHT WIRCam K' # Laigle+2016 Table 1
         if catalog_name.find('Jin')>=0:
             Filter_Dict['K'] = 'CFHT WIRCam or VISTA VIRCAM' # Jin+2018 used McCraken+2010 catalog, or Muzzin+2013 catalog.
+            Filter_Dict['3ghz'] = 'VLA 3GHz'
+            Filter_Dict['1.4ghz'] = 'VLA 1.4GHz'
+            Filter_Dict['10cm'] = 'VLA 3GHz'
+            Filter_Dict['20cm'] = 'VLA 1.4GHz'
+            Filter_Dict['16'] = 'Spitzer IRS PUI' # 
+            Filter_Dict['24'] = 'Spitzer MIPS 24' # 
+            Filter_Dict['70'] = 'Herschel PACS 70' # 
+            Filter_Dict['100'] = 'Herschel PACS 100' # 
+            Filter_Dict['160'] = 'Herschel PACS 160' # 
+            Filter_Dict['250'] = 'Herschel SPIRE 250' # 
+            Filter_Dict['350'] = 'Herschel SPIRE 350' # 
+            Filter_Dict['500'] = 'Herschel SPIRE 500' # 
+            Filter_Dict['850'] = 'JCMT SCUBA2 850' # 
+            Filter_Dict['1100'] = 'IRAM30m AzTEC 1mm' # 
+            Filter_Dict['1160'] = 'Penner2011 AzTEC+MAMBO 1.16mm' # 
+            Filter_Dict['1200'] = 'IRAM30m MAMBO 1.2mm' # 
+            Filter_Dict['2000'] = 'IRAM30m GISMO 2mm' # 
+        if catalog_name.find('Skelton')>=0 or catalog_name.find('3DHST')>=0:
+            Filter_Dict['u'] = 'KPNO u' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['G'] = 'Keck LRIS G' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['R'] = 'Keck LRIS R' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['Rs'] = 'Keck LRIS Rs' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['B'] = 'Subaru Suprime Cam B' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['V'] = 'Subaru Suprime Cam V' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['R'] = 'Subaru Suprime Cam R' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['i'] = 'Subaru Suprime Cam i' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['z'] = 'Subaru Suprime Cam z' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['J'] ='Subaru MOIRCS J' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['H'] = 'Subaru MOIRCS H' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['Ks'] = 'Subaru MOIRCS Ks' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['f435w'] = 'HST ACS F435W' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['f606w'] = 'HST ACS F606W' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['f775w'] = 'HST ACS F775W' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['f850lp'] = 'HST ACS F850LP' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['f125w'] = 'HST WFC3 F125W' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['f140w'] = 'HST WFC3 F140W' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['f160w'] = 'HST WFC3 F160W' # Skelton 2014ApJS..214...24S Table 6
+            # flux column must be: <BAND>_FLUX_<REF>, e.g., u_
     if type(input_str) is str:
         if input_str in Filter_Dict:
             return Filter_Dict[input_str]
+        elif input_str.lower() in Filter_Dict:
+            return Filter_Dict[input_str.lower()]
+        elif input_str.upper() in Filter_Dict:
+            return Filter_Dict[input_str.upper()]
     return 'unknown_' + input_str
 
 
-def recognize_Filter_Wavelength_by_Short_Name(input_str):
+def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict = {}
     Filter_Dict['u'] = 3823.3e-4 # Laigle+2016 Table 1
     Filter_Dict['B'] = 4458.3e-4 # Laigle+2016 Table 1
@@ -371,6 +432,10 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str):
     Filter_Dict['SPLASH_2'] = 45110.1e-4 # Laigle+2016 Table 1
     Filter_Dict['SPLASH_3'] = 57593.4e-4 # Laigle+2016 Table 1
     Filter_Dict['SPLASH_4'] = 79594.9e-4 # Laigle+2016 Table 1
+    Filter_Dict['SPLASH1'] = 35634.3e-4 # Laigle+2016 Table 1
+    Filter_Dict['SPLASH2'] = 45110.1e-4 # Laigle+2016 Table 1
+    Filter_Dict['SPLASH3'] = 57593.4e-4 # Laigle+2016 Table 1
+    Filter_Dict['SPLASH4'] = 79594.9e-4 # Laigle+2016 Table 1
     Filter_Dict['ch1'] = 35634.3e-4 # Laigle+2016 Table 1
     Filter_Dict['ch2'] = 45110.1e-4 # Laigle+2016 Table 1
     Filter_Dict['ch3'] = 57593.4e-4 # Laigle+2016 Table 1
@@ -379,9 +444,26 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str):
     Filter_Dict['IRAC2'] = 45110.1e-4 # Laigle+2016 Table 1
     Filter_Dict['IRAC3'] = 57593.4e-4 # Laigle+2016 Table 1
     Filter_Dict['IRAC4'] = 79594.9e-4 # Laigle+2016 Table 1
+    Filter_Dict['IRAC_ch1'] = 35634.3e-4 # Laigle+2016 Table 1
+    Filter_Dict['IRAC_ch2'] = 45110.1e-4 # Laigle+2016 Table 1
+    Filter_Dict['IRAC_ch3'] = 57593.4e-4 # Laigle+2016 Table 1
+    Filter_Dict['IRAC_ch4'] = 79594.9e-4 # Laigle+2016 Table 1
+    Filter_Dict['10cm'] = 1e5
+    Filter_Dict['20cm'] = 2e5
+    Filter_Dict['3GHz'] = 1e5
+    Filter_Dict['1.4GHz'] = 2e5
+    
     if type(input_str) is str:
-        if input_str in Filter_Dict:
-            return Filter_Dict[input_str]
+        try:
+            test_value = float(input_str) # directly convert to wavelength, e.g. 70, 100, 160, 250, 350, 500, 850, etc.
+            return test_value
+        except:
+            if input_str in Filter_Dict:
+                return Filter_Dict[input_str]
+            elif input_str.lower() in Filter_Dict:
+                return Filter_Dict[input_str.lower()]
+            elif input_str.upper() in Filter_Dict:
+                return Filter_Dict[input_str.upper()]
     return -99
 
 
@@ -397,23 +479,23 @@ def recognize_Filter(input_str, special_file_name=''):
             input_str = input_str.replace('_mJy', '')
         # 
         # Match filters
-        if input_str == 'FLUX_GALEX_NUV' or input_str == 'FLUXERR_GALEX_NUV': 
-            Filter_Name = 'GALEX NUV'
-            Filter_Wave = 2313.9 * 1e-4 # um, Laigle 2016 Table 1
-        # 
-        elif input_str.find('_U_KPNO')>=0: 
-            Filter_Name = 'KPNO'
-            Filter_Wave = 0.3593  # um, Skelton 2014ApJS..214...24S Table 6
-        # 
-        elif input_str.find('_G_Keck')>=0: 
-            Filter_Name = 'Keck LRIS'
-            Filter_Wave = 0.4751  # um, Skelton 2014ApJS..214...24S Table 6
-        elif input_str.find('_R_Keck')>=0: 
-            Filter_Name = 'Keck LRIS'
-            Filter_Wave = 0.6819  # um, Skelton 2014ApJS..214...24S Table 6
-        elif input_str.find('_Rs_Keck')>=0: 
-            Filter_Name = 'Keck LRIS'
-            Filter_Wave = 0.6819  # um, Skelton 2014ApJS..214...24S Table 6
+        #if input_str == 'FLUX_GALEX_NUV' or input_str == 'FLUXERR_GALEX_NUV': 
+        #    Filter_Name = 'GALEX NUV'
+        #    Filter_Wave = 2313.9 * 1e-4 # um, Laigle 2016 Table 1
+        ## 
+        #elif input_str.find('_U_KPNO')>=0: 
+        #    Filter_Name = 'KPNO'
+        #    Filter_Wave = 0.3593  # um, Skelton 2014ApJS..214...24S Table 6
+        ## 
+        #elif input_str.find('_G_Keck')>=0: 
+        #    Filter_Name = 'Keck LRIS'
+        #    Filter_Wave = 0.4751  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_R_Keck')>=0: 
+        #    Filter_Name = 'Keck LRIS'
+        #    Filter_Wave = 0.6819  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_Rs_Keck')>=0: 
+        #    Filter_Name = 'Keck LRIS'
+        #    Filter_Wave = 0.6819  # um, Skelton 2014ApJS..214...24S Table 6
         # 
         #Pattern_Subaru = re.compile("^([IN][AB])([0-9][0-9][0-9])[^0-9]*")
         #Matched_Subaru = Pattern_Subaru.match(input_str)
@@ -480,31 +562,31 @@ def recognize_Filter(input_str, special_file_name=''):
         #    Filter_Name = 'Subaru Suprime-Cam'
         #    Filter_Wave = 9105.7 * 1e-4 # um, Laigle 2016 Table 1
         # 
-        elif input_str.find('_B_Subaru')>=0: 
-            Filter_Name = 'Subaru Suprime-Cam'
-            Filter_Wave = 0.4448  # um, Skelton 2014ApJS..214...24S Table 6
-        elif input_str.find('_V_Subaru')>=0: 
-            Filter_Name = 'Subaru Suprime-Cam'
-            Filter_Wave = 0.5470  # um, Skelton 2014ApJS..214...24S Table 6
-        elif input_str.find('_R_Subaru')>=0: 
-            Filter_Name = 'Subaru Suprime-Cam'
-            Filter_Wave = 0.6276  # um, Skelton 2014ApJS..214...24S Table 6
-        elif input_str.find('_i_Subaru')>=0: 
-            Filter_Name = 'Subaru Suprime-Cam'
-            Filter_Wave = 0.7671  # um, Skelton 2014ApJS..214...24S Table 6
-        elif input_str.find('_z_Subaru')>=0: 
-            Filter_Name = 'Subaru Suprime-Cam'
-            Filter_Wave = 0.9028  # um, Skelton 2014ApJS..214...24S Table 6
-        # 
-        elif input_str.find('_J_Subaru')>=0: 
-            Filter_Name = 'Subaru MOIRCS'
-            Filter_Wave = 1.2517  # um, Skelton 2014ApJS..214...24S Table 6
-        elif input_str.find('_H_Subaru')>=0: 
-            Filter_Name = 'Subaru MOIRCS'
-            Filter_Wave = 1.6347  # um, Skelton 2014ApJS..214...24S Table 6
-        elif input_str.find('_Ks_Subaru')>=0: 
-            Filter_Name = 'Subaru MOIRCS'
-            Filter_Wave = 2.1577  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_B_Subaru')>=0: 
+        #    Filter_Name = 'Subaru Suprime-Cam'
+        #    Filter_Wave = 0.4448  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_V_Subaru')>=0: 
+        #    Filter_Name = 'Subaru Suprime-Cam'
+        #    Filter_Wave = 0.5470  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_R_Subaru')>=0: 
+        #    Filter_Name = 'Subaru Suprime-Cam'
+        #    Filter_Wave = 0.6276  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_i_Subaru')>=0: 
+        #    Filter_Name = 'Subaru Suprime-Cam'
+        #    Filter_Wave = 0.7671  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_z_Subaru')>=0: 
+        #    Filter_Name = 'Subaru Suprime-Cam'
+        #    Filter_Wave = 0.9028  # um, Skelton 2014ApJS..214...24S Table 6
+        ## 
+        #elif input_str.find('_J_Subaru')>=0: 
+        #    Filter_Name = 'Subaru MOIRCS'
+        #    Filter_Wave = 1.2517  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_H_Subaru')>=0: 
+        #    Filter_Name = 'Subaru MOIRCS'
+        #    Filter_Wave = 1.6347  # um, Skelton 2014ApJS..214...24S Table 6
+        #elif input_str.find('_Ks_Subaru')>=0: 
+        #    Filter_Name = 'Subaru MOIRCS'
+        #    Filter_Wave = 2.1577  # um, Skelton 2014ApJS..214...24S Table 6
         # 
         #elif input_str.startswith('Y_'): 
         #    Filter_Name = 'VISTA VIRCAM'
@@ -530,60 +612,60 @@ def recognize_Filter(input_str, special_file_name=''):
         #    Filter_Name = 'CFHT MegaCam'
         #    Filter_Wave = 3823.3 * 1e-4 # um, Laigle 2016 Table 1
         # 
-        elif input_str == 'f_u_3DHST':
-            Filter_Name = 'KPNO 4m/Mosaic' + '_3DHST'
-            Filter_Wave = 0.35929 # um, Skelton 2014 Table 6
-        elif input_str == 'f_b_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
-            Filter_Wave = 0.44480 # um, Skelton 2014 Table 6
-        elif input_str == 'f_v_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
-            Filter_Wave = 0.54702 # um, Skelton 2014 Table 6
-        elif input_str == 'f_g_3DHST':
-            Filter_Name = 'Keck/LRIS' + '_3DHST'
-            Filter_Wave = 0.47508 # um, Skelton 2014 Table 6
-        elif input_str == 'f_rs_3DHST':
-            Filter_Name = 'Keck/LRIS' + '_3DHST'
-            Filter_Wave = 0.68186 # um, Skelton 2014 Table 6
-        elif input_str == 'f_r_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
-            Filter_Wave = 0.62755 # um, Skelton 2014 Table 6
-        elif input_str == 'f_i_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
-            Filter_Wave = 0.76712 # um, Skelton 2014 Table 6
-        elif input_str == 'f_z_3DHST':
-            Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
-            Filter_Wave = 0.90282 # um, Skelton 2014 Table 6
-        elif input_str == 'f_f435w_3DHST':
-            Filter_Name = 'HST/ACS' + '_3DHST'
-            Filter_Wave = 0.43179 # um, Skelton 2014 Table 6
-        elif input_str == 'f_f606w_3DHST':
-            Filter_Name = 'HST/ACS' + '_3DHST'
-            Filter_Wave = 0.59194 # um, Skelton 2014 Table 6
-        elif input_str == 'f_f775w_3DHST':
-            Filter_Name = 'HST/ACS' + '_3DHST'
-            Filter_Wave = 0.76933 # um, Skelton 2014 Table 6
-        elif input_str == 'f_f850lp_3DHST':
-            Filter_Name = 'HST/ACS' + '_3DHST'
-            Filter_Wave = 0.90364 # um, Skelton 2014 Table 6
-        elif input_str == 'f_f125w_3DHST':
-            Filter_Name = 'HST/WFC3' + '_3DHST'
-            Filter_Wave = 1.24710 # um, Skelton 2014 Table 6
-        elif input_str == 'f_f140w_3DHST':
-            Filter_Name = 'HST/WFC3' + '_3DHST'
-            Filter_Wave = 1.39240 # um, Skelton 2014 Table 6
-        elif input_str == 'f_f160w_3DHST':
-            Filter_Name = 'HST/WFC3' + '_3DHST'
-            Filter_Wave = 1.53960 # um, Skelton 2014 Table 6
-        elif input_str == 'f_j_3DHST':
-            Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
-            Filter_Wave = 1.25170 # um, Skelton 2014 Table 6
-        elif input_str == 'f_h_3DHST':
-            Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
-            Filter_Wave = 1.63470 # um, Skelton 2014 Table 6
-        elif input_str == 'f_ks_3DHST':
-            Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
-            Filter_Wave = 2.15770 # um, Skelton 2014 Table 6   # --- 20171025 for GOODSN 3D-HST catalog (Skelton et al. 2014)
+        #elif input_str == 'f_u_3DHST':
+        #    Filter_Name = 'KPNO 4m/Mosaic' + '_3DHST'
+        #    Filter_Wave = 0.35929 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_b_3DHST':
+        #    Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
+        #    Filter_Wave = 0.44480 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_v_3DHST':
+        #    Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
+        #    Filter_Wave = 0.54702 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_g_3DHST':
+        #    Filter_Name = 'Keck/LRIS' + '_3DHST'
+        #    Filter_Wave = 0.47508 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_rs_3DHST':
+        #    Filter_Name = 'Keck/LRIS' + '_3DHST'
+        #    Filter_Wave = 0.68186 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_r_3DHST':
+        #    Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
+        #    Filter_Wave = 0.62755 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_i_3DHST':
+        #    Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
+        #    Filter_Wave = 0.76712 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_z_3DHST':
+        #    Filter_Name = 'Subaru/Suprime-Cam' + '_3DHST'
+        #    Filter_Wave = 0.90282 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_f435w_3DHST':
+        #    Filter_Name = 'HST/ACS' + '_3DHST'
+        #    Filter_Wave = 0.43179 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_f606w_3DHST':
+        #    Filter_Name = 'HST/ACS' + '_3DHST'
+        #    Filter_Wave = 0.59194 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_f775w_3DHST':
+        #    Filter_Name = 'HST/ACS' + '_3DHST'
+        #    Filter_Wave = 0.76933 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_f850lp_3DHST':
+        #    Filter_Name = 'HST/ACS' + '_3DHST'
+        #    Filter_Wave = 0.90364 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_f125w_3DHST':
+        #    Filter_Name = 'HST/WFC3' + '_3DHST'
+        #    Filter_Wave = 1.24710 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_f140w_3DHST':
+        #    Filter_Name = 'HST/WFC3' + '_3DHST'
+        #    Filter_Wave = 1.39240 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_f160w_3DHST':
+        #    Filter_Name = 'HST/WFC3' + '_3DHST'
+        #    Filter_Wave = 1.53960 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_j_3DHST':
+        #    Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
+        #    Filter_Wave = 1.25170 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_h_3DHST':
+        #    Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
+        #    Filter_Wave = 1.63470 # um, Skelton 2014 Table 6
+        #elif input_str == 'f_ks_3DHST':
+        #    Filter_Name = 'Subaru/MOIRCS' + '_3DHST'
+        #    Filter_Wave = 2.15770 # um, Skelton 2014 Table 6   # --- 20171025 for GOODSN 3D-HST catalog (Skelton et al. 2014)
         # 
         #elif input_str == 'f_irac1' or input_str == 'df_irac1' or input_str == 'e_irac1' or input_str == 'fch1' or input_str == 'dfch1' or input_str == '_fch1' or input_str == '_dfch1': 
         #    Filter_Name = 'Spitzer IRAC ch1'
@@ -611,22 +693,22 @@ def recognize_Filter(input_str, special_file_name=''):
         #    Filter_Name = 'Spitzer IRAC ch4'
         #    Filter_Wave = 79594.9 * 1e-4 # um
         # 
-        elif input_str == 'FLUX_IRAC1' or input_str == 'FLUXERR_IRAC1' or input_str.startswith('FLUX_IRAC1_') or input_str.startswith('FLUXERR_IRAC1_') or input_str=='fch1' or input_str=='dfch1' or input_str.lower()=='f_irac1' or input_str.lower()=='df_irac1' or input_str.lower().startswith('f_irac1_') or input_str.lower().startswith('df_irac1_'): 
-            Filter_Name = 'Spitzer IRAC ch1'
-            Filter_Wave = 35634.3 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC2' or input_str == 'FLUXERR_IRAC2' or input_str.startswith('FLUX_IRAC2_') or input_str.startswith('FLUXERR_IRAC2_') or input_str=='fch2' or input_str=='dfch2' or input_str.lower()=='f_irac2' or input_str.lower()=='df_irac2' or input_str.lower().startswith('f_irac2_') or input_str.lower().startswith('df_irac2_'): 
-            Filter_Name = 'Spitzer IRAC ch2'
-            Filter_Wave = 45110.1 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC3' or input_str == 'FLUXERR_IRAC3' or input_str.startswith('FLUX_IRAC3_') or input_str.startswith('FLUXERR_IRAC3_') or input_str=='fch3' or input_str=='dfch3' or input_str.lower()=='f_irac3' or input_str.lower()=='df_irac3' or input_str.lower().startswith('f_irac3_') or input_str.lower().startswith('df_irac3_'): 
-            Filter_Name = 'Spitzer IRAC ch3'
-            Filter_Wave = 57593.4 * 1e-4 # um
-        elif input_str == 'FLUX_IRAC4' or input_str == 'FLUXERR_IRAC4' or input_str.startswith('FLUX_IRAC4_') or input_str.startswith('FLUXERR_IRAC4_') or input_str=='fch4' or input_str=='dfch4' or input_str.lower()=='f_irac4' or input_str.lower()=='df_irac4' or input_str.lower().startswith('f_irac4_') or input_str.lower().startswith('df_irac4_'): 
-            Filter_Name = 'Spitzer IRAC ch4'
-            Filter_Wave = 79594.9 * 1e-4 # um
-        # 
-        elif input_str == 'FLUX_MIPS24' or input_str == 'FLUXERR_MIPS24' or input_str == 'f24' or input_str == 'df24' or input_str == 'f_24' or input_str == 'df_24': 
-            Filter_Name = 'Spitzer MIPS 24'
-            Filter_Wave = 24.0 # um
+        #elif input_str == 'FLUX_IRAC1' or input_str == 'FLUXERR_IRAC1' or input_str.startswith('FLUX_IRAC1_') or input_str.startswith('FLUXERR_IRAC1_') or input_str=='fch1' or input_str=='dfch1' or input_str.lower()=='f_irac1' or input_str.lower()=='df_irac1' or input_str.lower().startswith('f_irac1_') or input_str.lower().startswith('df_irac1_'): 
+        #    Filter_Name = 'Spitzer IRAC ch1'
+        #    Filter_Wave = 35634.3 * 1e-4 # um
+        #elif input_str == 'FLUX_IRAC2' or input_str == 'FLUXERR_IRAC2' or input_str.startswith('FLUX_IRAC2_') or input_str.startswith('FLUXERR_IRAC2_') or input_str=='fch2' or input_str=='dfch2' or input_str.lower()=='f_irac2' or input_str.lower()=='df_irac2' or input_str.lower().startswith('f_irac2_') or input_str.lower().startswith('df_irac2_'): 
+        #    Filter_Name = 'Spitzer IRAC ch2'
+        #    Filter_Wave = 45110.1 * 1e-4 # um
+        #elif input_str == 'FLUX_IRAC3' or input_str == 'FLUXERR_IRAC3' or input_str.startswith('FLUX_IRAC3_') or input_str.startswith('FLUXERR_IRAC3_') or input_str=='fch3' or input_str=='dfch3' or input_str.lower()=='f_irac3' or input_str.lower()=='df_irac3' or input_str.lower().startswith('f_irac3_') or input_str.lower().startswith('df_irac3_'): 
+        #    Filter_Name = 'Spitzer IRAC ch3'
+        #    Filter_Wave = 57593.4 * 1e-4 # um
+        #elif input_str == 'FLUX_IRAC4' or input_str == 'FLUXERR_IRAC4' or input_str.startswith('FLUX_IRAC4_') or input_str.startswith('FLUXERR_IRAC4_') or input_str=='fch4' or input_str=='dfch4' or input_str.lower()=='f_irac4' or input_str.lower()=='df_irac4' or input_str.lower().startswith('f_irac4_') or input_str.lower().startswith('df_irac4_'): 
+        #    Filter_Name = 'Spitzer IRAC ch4'
+        #    Filter_Wave = 79594.9 * 1e-4 # um
+        ## 
+        #elif input_str == 'FLUX_MIPS24' or input_str == 'FLUXERR_MIPS24' or input_str == 'f24' or input_str == 'df24' or input_str == 'f_24' or input_str == 'df_24': 
+        #    Filter_Name = 'Spitzer MIPS 24'
+        #    Filter_Wave = 24.0 # um
         # 
         #elif input_str == 'FLUX_24' or input_str == 'FLUXERR_24' or input_str == 'f24' or input_str == 'df24' or input_str == 'f_24' or input_str == 'df_24': 
         #    Filter_Name = 'Spitzer MIPS 24'
@@ -636,9 +718,9 @@ def recognize_Filter(input_str, special_file_name=''):
         #    Filter_Name = 'Spitzer IRS PUI 16'
         #    Filter_Wave = 16.0 # um
         # 
-        elif input_str == 'FLUX_K' or input_str == 'FLUXERR_K' or input_str == 'fK' or input_str == 'dfK' or input_str == 'f_K' or input_str == 'df_K': 
-            Filter_Name = 'unknown K band'
-            Filter_Wave = 2.15 # um
+        #elif input_str == 'FLUX_K' or input_str == 'FLUXERR_K' or input_str == 'fK' or input_str == 'dfK' or input_str == 'f_K' or input_str == 'df_K': 
+        #    Filter_Name = 'unknown K band'
+        #    Filter_Wave = 2.15 # um
         # 
         #elif input_str.startswith('FLUX_K_') or input_str.startswith('FLUXERR_K_') or input_str.startswith('fK_') or input_str.startswith('dfK_') or input_str.startswith('f_K_') or input_str.startswith('df_K_'): 
         #    search_str = re.search(input_str,'.*K_([^_]*).*')
@@ -665,175 +747,196 @@ def recognize_Filter(input_str, special_file_name=''):
             #      "<wavelength>_FLUX_<instrument>"
             #      "<wavelength>_FLUXERR_<instrument>"
             # 
-            Pattern_FLUX_1 = re.compile("(FLUX_)([0-9Ee.+-]+)([^0-9Ee.+-]*.*)") # e.g., FLUX_20cm, FLUX_3.6um, FLUX_814W(TODO)
-            Pattern_FLUXERR_1 = re.compile("(FLUX[_]?ERR_)([0-9Ee.+-]+)([^0-9.+-]*.*)")
-            Pattern_FLUX_2 = re.compile("[^a-zA-Z]*(f[_]?)([0-9Ee.+-]+)([^0-9.+-]*.*)") # e.g., _f1.4ghz or _f_1.4ghz
-            Pattern_FLUXERR_2 = re.compile("[^a-zA-Z]*(df[_]?)([0-9Ee.+-]+)([^0-9.+-]*.*)")
-            Pattern_FLUX_3 = re.compile("(.*)(_FLUX)(_.*)") # e.g. SPLASH_1_FLUX_Laigle, J_FLUX_APER3_Laigle2016
-            Pattern_FLUXERR_3 = re.compile("(.*)(_FLUX[_]?ERR)(_.*)")
-            Pattern_FLUX_4 = re.compile("[_]?(f_)([^_]+)(.*)") # e.g., f_K_Jin
-            Pattern_FLUXERR_4 = re.compile("[_]?(df_)([^_]+)(.*)") # 
-            Pattern_FLUX_5 = re.compile("[_]?(f)(K)(_.*)") # e.g., fK_Jin
-            Pattern_FLUXERR_5 = re.compile("[_]?(df)(K)(_.*)") # 
-            Pattern_FLUX_6 = re.compile("[_]?(f)(ch[1234])(_.*)") # e.g., fch1_Jin
-            Pattern_FLUXERR_6 = re.compile("[_]?(df)(ch[1234])(_.*)") # 
-            Matched_FLUX_1 = Pattern_FLUX_1.match(input_str)
-            Matched_FLUXERR_1 = Pattern_FLUXERR_1.match(input_str)
-            Matched_FLUX_2 = Pattern_FLUX_2.match(input_str)
-            Matched_FLUXERR_2 = Pattern_FLUXERR_2.match(input_str)
-            Matched_FLUX_3 = Pattern_FLUX_3.match(input_str)
-            Matched_FLUXERR_3 = Pattern_FLUXERR_3.match(input_str)
-            Matched_FLUX_4 = Pattern_FLUX_4.match(input_str)
-            Matched_FLUXERR_4 = Pattern_FLUXERR_4.match(input_str)
-            Matched_FLUX_5 = Pattern_FLUX_5.match(input_str)
-            Matched_FLUXERR_5 = Pattern_FLUXERR_5.match(input_str)
-            Matched_FLUX_6 = Pattern_FLUX_6.match(input_str)
-            Matched_FLUXERR_6 = Pattern_FLUXERR_6.match(input_str)
+            #tmp_str = input_str
+            #if re.match(r'^_?f_?([0-9]+|K|irac[0-9])_(.*)'):
+            #    tmp_str = re.match(r'^_?f_?([0-9]+|K|irac[0-9]|ch[0-9])(cm|um|GHz|ghz|)_(.*)', r'FLUX_\1\2_\2', input_str)
+            #    # test: 
+            #    #   re.match(r'^_?f_?([0-9]+|K|irac[0-9]|ch[0-9])(cm|um|GHz|ghz|)_(.*)', "fK_Jin").groups()
+            #    #   re.match(r'^_?f_?([0-9]+|K|irac[0-9]|ch[0-9])(cm|um|GHz|ghz|)_(.*)', "f20cm_Jin").groups()
+            # 
+            #Pattern_FLUX_1 = re.compile("(FLUX_)([0-9Ee.+-]+(?:cm|um|GHz|ghz|))([^0-9Ee.+-]*.*)") # e.g., FLUX_20cm, FLUX_3.6um, FLUX_814W(TODO)
+            #Pattern_FLUXERR_1 = re.compile("(FLUX[_]?ERR_)([0-9Ee.+-]+(?:cm|um|GHz|ghz|))([^0-9.+-]*.*)")
+            #Pattern_FLUX_2 = re.compile("[^a-zA-Z]*(f[_]?)([0-9Ee.+-]+)([^0-9.+-]*.*)") # e.g., _f1.4ghz or _f_1.4ghz or f_10cm_VLA_Jin
+            #Pattern_FLUXERR_2 = re.compile("[^a-zA-Z]*(df[_]?)([0-9Ee.+-]+)([^0-9.+-]*.*)")
+            #Pattern_FLUX_3 = re.compile("(.*)(_FLUX)(_.*)") # e.g. SPLASH_1_FLUX_Laigle, J_FLUX_APER3_Laigle2016
+            #Pattern_FLUXERR_3 = re.compile("(.*)(_FLUX[_]?ERR)(_.*)")
+            #Pattern_FLUX_4 = re.compile("[_]?(f_)([^_]+)(.*)") # e.g., f_K_Jin
+            #Pattern_FLUXERR_4 = re.compile("[_]?(df_)([^_]+)(.*)") # 
+            #Pattern_FLUX_5 = re.compile("[_]?(f)(K)(_.*)") # e.g., fK_Jin
+            #Pattern_FLUXERR_5 = re.compile("[_]?(df)(K)(_.*)") # 
+            #Pattern_FLUX_6 = re.compile("[_]?(f)(ch[1234])(_.*)") # e.g., fch1_Jin
+            #Pattern_FLUXERR_6 = re.compile("[_]?(df)(ch[1234])(_.*)") # 
+            #Matched_FLUX_1 = Pattern_FLUX_1.match(input_str)
+            #Matched_FLUXERR_1 = Pattern_FLUXERR_1.match(input_str)
+            #Matched_FLUX_2 = Pattern_FLUX_2.match(input_str)
+            #Matched_FLUXERR_2 = Pattern_FLUXERR_2.match(input_str)
+            #Matched_FLUX_3 = Pattern_FLUX_3.match(input_str)
+            #Matched_FLUXERR_3 = Pattern_FLUXERR_3.match(input_str)
+            #Matched_FLUX_4 = Pattern_FLUX_4.match(input_str)
+            #Matched_FLUXERR_4 = Pattern_FLUXERR_4.match(input_str)
+            #Matched_FLUX_5 = Pattern_FLUX_5.match(input_str)
+            #Matched_FLUXERR_5 = Pattern_FLUXERR_5.match(input_str)
+            #Matched_FLUX_6 = Pattern_FLUX_6.match(input_str)
+            #Matched_FLUXERR_6 = Pattern_FLUXERR_6.match(input_str)
+            
+            Matched_FLUX_1    = re.match(r'(FLUX)_([^_]+)_*(.*)', input_str, re.IGNORECASE)
+            Matched_FLUXERR_1 = re.match(r'(FLUXERR)_([^_]+)_*(.*)', input_str, re.IGNORECASE)
+            Matched_FLUX_3    = re.match(r'(.*)_(FLUX)_([^_]+.*)', input_str, re.IGNORECASE)
+            Matched_FLUXERR_3 = re.match(r'(.*)_(FLUXERR)_([^_]+.*)', input_str, re.IGNORECASE)
             Matched = None
             if Matched is None:
                 if Matched_FLUX_1:
                     Matched = Matched_FLUX_1
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
+                    Matched_str_2 = Matched.group(2) # FLUX_20cm_Jin -> 20cm
+                    Matched_str_3 = Matched.group(3) # FLUX_20cm_Jin -> Jin
             if Matched is None:
                 if Matched_FLUXERR_1:
                     Matched = Matched_FLUXERR_1
                     Matched_str_2 = Matched.group(2)
                     Matched_str_3 = Matched.group(3)
-            if Matched is None:
-                if Matched_FLUX_2:
-                    Matched = Matched_FLUX_2
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
-            if Matched is None:
-                if Matched_FLUXERR_2:
-                    Matched = Matched_FLUXERR_2
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
+            #if Matched is None:
+            #    if Matched_FLUX_2:
+            #        Matched = Matched_FLUX_2
+            #        Matched_str_2 = Matched.group(2) # _f1.4ghz -> 1.4
+            #        Matched_str_3 = Matched.group(3) # _f1.4ghz -> ghz
+            #if Matched is None:
+            #    if Matched_FLUXERR_2:
+            #        Matched = Matched_FLUXERR_2
+            #        Matched_str_2 = Matched.group(2)
+            #        Matched_str_3 = Matched.group(3)
             if Matched is None:
                 if Matched_FLUX_3:
                     Matched = Matched_FLUX_3
-                    Matched_str_2 = Matched.group(1)
-                    Matched_str_3 = Matched.group(3)
+                    Matched_str_2 = Matched.group(1) # J_FLUX_APER3_Laigle2016 -> J
+                    Matched_str_3 = Matched.group(3) # J_FLUX_APER3_Laigle2016 -> APER3_Laigle2016
             if Matched is None:
                 if Matched_FLUXERR_3:
                     Matched = Matched_FLUXERR_3
                     Matched_str_2 = Matched.group(1)
                     Matched_str_3 = Matched.group(3)
-            if Matched is None:
-                if Matched_FLUX_4:
-                    Matched = Matched_FLUX_4
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
-            if Matched is None:
-                if Matched_FLUXERR_4:
-                    Matched = Matched_FLUXERR_4
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
-            if Matched is None:
-                if Matched_FLUX_5:
-                    Matched = Matched_FLUX_5
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
-            if Matched is None:
-                if Matched_FLUXERR_5:
-                    Matched = Matched_FLUXERR_5
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
-            if Matched is None:
-                if Matched_FLUX_6:
-                    Matched = Matched_FLUX_6
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
-            if Matched is None:
-                if Matched_FLUXERR_6:
-                    Matched = Matched_FLUXERR_6
-                    Matched_str_2 = Matched.group(2)
-                    Matched_str_3 = Matched.group(3)
+            #if Matched is None:
+            #    if Matched_FLUX_4:
+            #        Matched = Matched_FLUX_4
+            #        Matched_str_2 = Matched.group(2) # f_K_Jin -> K
+            #        Matched_str_3 = Matched.group(3) # f_K_Jin -> Jin
+            #if Matched is None:
+            #    if Matched_FLUXERR_4:
+            #        Matched = Matched_FLUXERR_4
+            #        Matched_str_2 = Matched.group(2)
+            #        Matched_str_3 = Matched.group(3)
+            #if Matched is None:
+            #    if Matched_FLUX_5:
+            #        Matched = Matched_FLUX_5
+            #        Matched_str_2 = Matched.group(2) # fK_Jin -> K
+            #        Matched_str_3 = Matched.group(3) # fK_Jin -> Jin
+            #if Matched is None:
+            #    if Matched_FLUXERR_5:
+            #        Matched = Matched_FLUXERR_5
+            #        Matched_str_2 = Matched.group(2)
+            #        Matched_str_3 = Matched.group(3)
+            #if Matched is None:
+            #    if Matched_FLUX_6:
+            #        Matched = Matched_FLUX_6
+            #        Matched_str_2 = Matched.group(2) # fch1_Jin -> ch1
+            #        Matched_str_3 = Matched.group(3) # fch1_Jin -> Jin
+            #if Matched is None:
+            #    if Matched_FLUXERR_6:
+            #        Matched = Matched_FLUXERR_6
+            #        Matched_str_2 = Matched.group(2)
+            #        Matched_str_3 = Matched.group(3)
             if Matched: 
                 #print('Matched_str_2 '+Matched_str_2)
                 #print('Matched_str_3 '+Matched_str_3)
-                try:
-                    Filter_Name = 'unknown'
-                    Filter_Wave = float(Matched_str_2)
-                    # if matched the pattern 'FLUX_wavelength'
-                    # try to convert Filter_Wave unit
-                    if Matched_str_3.lower() == 'cm' or Matched_str_3.lower().startswith('cm_'):
-                        Filter_Wave = Filter_Wave * 1e4 # convert from cm to um
-                        if Matched_str_2 == '20':
-                            Filter_Name = 'VLA 1.4 GHz'
-                        elif Matched_str_2 == '10':
-                            Filter_Name = 'VLA 3 GHz'
-                        Matched_str_3 = Matched_str_3[2:]
-                    elif Matched_str_3.lower() == 'ghz' or Matched_str_3.lower().startswith('ghz_'):
-                        Filter_Wave = 2.99792458e5 / Filter_Wave # convert from GHz to um
-                        if Matched_str_2 == '1.4':
-                            Filter_Name = 'VLA 1.4 GHz'
-                        elif Matched_str_2 == '3':
-                            Filter_Name = 'VLA 3 GHz'
-                        Matched_str_3 = Matched_str_3[3:]
-                    else:
-                        if not Matched_str_3.lower().startswith('_') and not Matched_str_3=='':
-                            Filter_Wave = -99
-                            Filter_Name = 'unknown wavelength ' + Matched_str_2 # failed to determine a valid wavelength from the input_str
-                    #elif Matched_str_3.upper() == 'W' or Matched_str_3.upper().startswith('W_'):
-                    #    Filter_Wave = Filter_Wave / 1e4 # convert from AA to um, e.g. F814W
-                    # try to guess Filter_Name
-                    if Matched_str_3.upper().find('ALMA')>=0:
-                        Filter_Name = 'ALMA'
-                    elif Matched_str_3.upper().find('SCUBA2')>=0:
-                        Filter_Name = 'JCMT SCUBA2'
-                    elif Matched_str_3.upper().find('JCMT')>=0 and Matched_str_3.upper().find('AZTEC')>=0:
-                        Filter_Name = 'JCMT AzTEC'
-                    elif Matched_str_3.upper().find('MAMBO')>=0:
-                        Filter_Name = 'IRAM 30m MAMBO'
-                    elif Matched_str_3.upper().find('_VLA_')>=0:
-                        Filter_Name = 'VLA'
-                    #if Matched_str_2 == '814' and Matched_str_3.startswith('W'):
-                    #    Filter_Name = 'HST F814W'
-                    #    Matched_str_3 = Matched_str_3[1:]
-                    if Matched_str_3 == '' or Matched_str_3.startswith('_'):
-                        if Matched_str_2 =='ch1':
-                            Filter_Name = 'Spitzer IRAC ch1'
-                        elif Matched_str_2 =='ch2':
-                            Filter_Name = 'Spitzer IRAC ch2'
-                        elif Matched_str_2 =='ch3':
-                            Filter_Name = 'Spitzer IRAC ch3'
-                        elif Matched_str_2 =='ch4':
-                            Filter_Name = 'Spitzer IRAC ch4'
-                        elif Matched_str_2 =='16':
-                            Filter_Name = 'Spitzer IRS PUI'
-                        elif Matched_str_2 =='24':
-                            Filter_Name = 'Spitzer MIPS'
-                        elif Matched_str_2 =='70':
-                            Filter_Name = 'Herschel PACS'
-                        elif Matched_str_2 =='100':
-                            Filter_Name = 'Herschel PACS'
-                        elif Matched_str_2 =='160':
-                            Filter_Name = 'Herschel PACS'
-                        elif Matched_str_2 =='250':
-                            Filter_Name = 'Herschel SPIRE'
-                        elif Matched_str_2 =='350':
-                            Filter_Name = 'Herschel SPIRE'
-                        elif Matched_str_2 =='500':
-                            Filter_Name = 'Herschel SPIRE'
-                        elif Matched_str_2 =='850':
-                            Filter_Name = 'JCMT SCUBA2'
-                        elif Matched_str_2 =='1100':
-                            Filter_Name = 'JCMT AzTEC'
-                        elif Matched_str_2 =='1200':
-                            Filter_Name = 'IRAM 30m MAMBO'
-                        elif Matched_str_2 =='1200':
-                            Filter_Name = 'IRAM 30m MAMBO'
-                        elif Matched_str_2 =='123456':
-                            Filter_Name = 'Test Filter Name'
-                    Filter_Name = Filter_Name + Matched_str_3
-                except:
-                    # if matched the pattern 'FLUX_band_name'
-                    #print('recognize_Filter_Instrument_by_Short_Name '+Matched_str_2)
-                    Filter_Name = recognize_Filter_Instrument_by_Short_Name(Matched_str_2, Matched_str_3)
+                #<20181112># try:
+                #<20181112>#     Filter_Name = 'unknown'
+                #<20181112>#     Filter_Wave = float(Matched_str_2)
+                #<20181112>#     # if matched the pattern 'FLUX_wavelength'
+                #<20181112>#     # try to convert Filter_Wave unit
+                #<20181112>#     #if Matched_str_3.lower() == 'cm' or Matched_str_3.lower().startswith('cm_'):
+                #<20181112>#     #    Filter_Wave = Filter_Wave * 1e4 # convert from cm to um
+                #<20181112>#     #    if Matched_str_2 == '20':
+                #<20181112>#     #        Filter_Name = 'VLA 1.4 GHz'
+                #<20181112>#     #    elif Matched_str_2 == '10':
+                #<20181112>#     #        Filter_Name = 'VLA 3 GHz'
+                #<20181112>#     #    Matched_str_3 = Matched_str_3[2:]
+                #<20181112>#     #elif Matched_str_3.lower() == 'ghz' or Matched_str_3.lower().startswith('ghz_'):
+                #<20181112>#     #    Filter_Wave = 2.99792458e5 / Filter_Wave # convert from GHz to um
+                #<20181112>#     #    if Matched_str_2 == '1.4':
+                #<20181112>#     #        Filter_Name = 'VLA 1.4 GHz'
+                #<20181112>#     #    elif Matched_str_2 == '3':
+                #<20181112>#     #        Filter_Name = 'VLA 3 GHz'
+                #<20181112>#     #    Matched_str_3 = Matched_str_3[3:]
+                #<20181112>#     #else:
+                #<20181112>#     #    if not Matched_str_3.lower().startswith('_') and not Matched_str_3=='':
+                #<20181112>#     #        Filter_Wave = -99
+                #<20181112>#     #        Filter_Name = 'unknown wavelength ' + Matched_str_2 # failed to determine a valid wavelength from the input_str
+                #<20181112>#     #elif Matched_str_3.upper() == 'W' or Matched_str_3.upper().startswith('W_'):
+                #<20181112>#     #    Filter_Wave = Filter_Wave / 1e4 # convert from AA to um, e.g. F814W
+                #<20181112>#     # try to guess Filter_Name
+                #<20181112>#     if Filter_Name == 'unknown':
+                #<20181112>#         if Matched_str_3.upper().find('ALMA')>=0:
+                #<20181112>#             Filter_Name = 'ALMA'
+                #<20181112>#     #    elif Matched_str_3.upper().find('SCUBA2')>=0:
+                #<20181112>#     #        Filter_Name = 'JCMT SCUBA2'
+                #<20181112>#     #    elif Matched_str_3.upper().find('JCMT')>=0 and Matched_str_3.upper().find('AZTEC')>=0:
+                #<20181112>#     #        Filter_Name = 'JCMT AzTEC'
+                #<20181112>#     #    elif Matched_str_3.upper().find('MAMBO')>=0:
+                #<20181112>#     #        Filter_Name = 'IRAM 30m MAMBO'
+                #<20181112>#     #    elif Matched_str_3.upper().find('_VLA_')>=0:
+                #<20181112>#     #        Filter_Name = 'VLA'
+                #<20181112>#     #if Matched_str_2 == '814' and Matched_str_3.startswith('W'):
+                #<20181112>#     #    Filter_Name = 'HST F814W'
+                #<20181112>#     #    Matched_str_3 = Matched_str_3[1:]
+                #<20181112>#     if Matched_str_3 == '' or Matched_str_3.startswith('_'):
+                #<20181112>#         if Matched_str_2 =='ch1':
+                #<20181112>#             Filter_Name = 'Spitzer IRAC ch1'
+                #<20181112>#         elif Matched_str_2 =='ch2':
+                #<20181112>#             Filter_Name = 'Spitzer IRAC ch2'
+                #<20181112>#         elif Matched_str_2 =='ch3':
+                #<20181112>#             Filter_Name = 'Spitzer IRAC ch3'
+                #<20181112>#         elif Matched_str_2 =='ch4':
+                #<20181112>#             Filter_Name = 'Spitzer IRAC ch4'
+                #<20181112>#         elif Matched_str_2 =='16':
+                #<20181112>#             Filter_Name = 'Spitzer IRS PUI'
+                #<20181112>#         elif Matched_str_2 =='24':
+                #<20181112>#             Filter_Name = 'Spitzer MIPS'
+                #<20181112>#         elif Matched_str_2 =='70':
+                #<20181112>#             Filter_Name = 'Herschel PACS'
+                #<20181112>#         elif Matched_str_2 =='100':
+                #<20181112>#             Filter_Name = 'Herschel PACS'
+                #<20181112>#         elif Matched_str_2 =='160':
+                #<20181112>#             Filter_Name = 'Herschel PACS'
+                #<20181112>#         elif Matched_str_2 =='250':
+                #<20181112>#             Filter_Name = 'Herschel SPIRE'
+                #<20181112>#         elif Matched_str_2 =='350':
+                #<20181112>#             Filter_Name = 'Herschel SPIRE'
+                #<20181112>#         elif Matched_str_2 =='500':
+                #<20181112>#             Filter_Name = 'Herschel SPIRE'
+                #<20181112>#         elif Matched_str_2 =='850':
+                #<20181112>#             Filter_Name = 'JCMT SCUBA2'
+                #<20181112>#         elif Matched_str_2 =='1100':
+                #<20181112>#             Filter_Name = 'JCMT AzTEC'
+                #<20181112>#         elif Matched_str_2 =='1200':
+                #<20181112>#             Filter_Name = 'IRAM 30m MAMBO'
+                #<20181112>#         elif Matched_str_2 =='1200':
+                #<20181112>#             Filter_Name = 'IRAM 30m MAMBO'
+                #<20181112>#         elif Matched_str_2 =='123456':
+                #<20181112>#             Filter_Name = 'Test Filter Name'
+                #<20181112>#     Filter_Name = Filter_Name + Matched_str_3
+                #<20181112># except:
+                #<20181112>#     # if matched the pattern 'FLUX_band_name'
+                #<20181112>#     #print('recognize_Filter_Instrument_by_Short_Name '+Matched_str_2)
+                #<20181112>#     Filter_Name = recognize_Filter_Instrument_by_Short_Name(Matched_str_2, Matched_str_3)
+                #<20181112>#     Filter_Wave = recognize_Filter_Wavelength_by_Short_Name(Matched_str_2)
+                #<20181112>#     Filter_Name = Filter_Name + Matched_str_3
+                
+                #print('Matched_str_2', Matched_str_2)
+                #print('Matched_str_3', Matched_str_3)
+                Temp_Name = recognize_Filter_Instrument_by_Short_Name(Matched_str_2, Matched_str_3) # BAND, NOTE
+                if not Temp_Name.startswith('unknown'):
+                    Filter_Name = Temp_Name + '_' + Matched_str_3
                     Filter_Wave = recognize_Filter_Wavelength_by_Short_Name(Matched_str_2)
-                    Filter_Name = Filter_Name + Matched_str_3
+                
     # 
     #if special_file_name.find('Laigle')>=0:
     #    Filter_Name = Filter_Name + ' (Laigle)'

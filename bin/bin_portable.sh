@@ -12,11 +12,17 @@
 # 
 # Linux
 if [[ $(uname -s) == Linux ]]; then
-    if [[ $(bc <<< "$(ldd --version | head -n 1 | tr -s ' ' | cut -d ' ' -f 4 | cut -d '.' -f 2)<14") -eq 1 ]]; then
+    ldd_version_number=$(ldd --version | head -n 1 | tr -s ' ' | cut -d ' ' -f 4 | cut -d '.' -f 2)
+    if [[ $(bc <<< "$ldd_version_number<=12") -eq 1 ]]; then
         # the supercomputer planer has an old GLIBC version 2.5
-        $(dirname $0)/bin_linux_glibc_2_12/$(basename $0)_linux_$(arch) $*
+        $(dirname $0)/bin_linux_glibc_2_12/$(basename $0)_linux_$(arch) $@
+    elif [[ $(bc <<< "$ldd_version_number<=14") -eq 1 ]]; then
+        $(dirname $0)/bin_linux_glibc_2_14/$(basename $0)_linux_$(arch) $@
+    elif [[ $(bc <<< "$ldd_version_number<=22") -eq 1 ]]; then
+        # isaac, aida
+        $(dirname $0)/bin_linux_glibc_2_22/$(basename $0)_linux_$(arch) $@
     else
-        $(dirname $0)/bin_linux_glibc_2_14/$(basename $0)_linux_$(arch) $*
+        $(dirname $0)/bin_linux_glibc_2_22/$(basename $0)_linux_$(arch) $@
     fi
 fi
 # Darwin
@@ -25,7 +31,7 @@ if [[ $(uname -s) == Darwin ]]; then
 fi
 # Cygwin
 if [[ $(uname -s) == *CYGWIN* ]]; then
-    $(dirname $0)/bin_cygwin/$(basename $0)_cygwin_x86.exe $*
+    $(dirname $0)/bin_cygwin/$(basename $0)_cygwin_x86.exe $@
 fi
 
 

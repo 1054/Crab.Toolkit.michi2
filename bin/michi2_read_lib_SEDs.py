@@ -192,7 +192,16 @@ def spline(input_x, input_y, output_x, xlog=0, ylog=0, outputxlog=None, outputyl
     
     # 
     # deal with data out of X range
-    output_mask = (output_x_coord<numpy.nanmin(input_x_coord)) | (output_x_coord>numpy.nanmax(input_x_coord))
+    output_mask = numpy.logical_or(\
+                        numpy.logical_or(\
+                            output_x_coord<numpy.nanmin(input_x_coord), 
+                            output_x_coord>numpy.nanmax(input_x_coord)
+                        ), 
+                        numpy.logical_or(\
+                            numpy.isnan(output_y_value),
+                            ~numpy.isfinite(output_y_value),
+                        )
+                    )
     output_y_value[output_mask] = fill
     # 
     if outputylog>0:
@@ -210,7 +219,7 @@ def integrate_vLv(inpux_wave_um, input_flux_mJy, z):
     from astropy.cosmology import FlatLambdaCDM
     import astropy.units as Unit
     import astropy.constants as Constant
-    cosmo = FlatLambdaCDM(H0=73, Om0=0.27)
+    cosmo = FlatLambdaCDM(H0=73, Om0=0.27, Tcmb0=2.73) # <20181012>
     dL = cosmo.luminosity_distance(z).to(Unit.Mpc).value # Mpc
     pi = numpy.pi
     # 
@@ -310,7 +319,7 @@ if __name__ == "__main__":
     Lib_number = int(info_table['NLIB'])
     Lib_array = {}
     Lib_array['TOT'] = {}
-    Lib_array['TOT']['log_X'] = numpy.arange(-2,6,0.001) # wavelength_um grid
+    Lib_array['TOT']['log_X'] = numpy.arange(-2,6,0.0002) # wavelength_um grid 0.001
     Lib_array['TOT']['X'] = numpy.power(10, Lib_array['TOT']['log_X']) # make it in linear space
     Lib_array['TOT']['Y'] = Lib_array['TOT']['X'] * 0.0
     for iLib in range(Lib_number):

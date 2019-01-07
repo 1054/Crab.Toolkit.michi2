@@ -13,7 +13,8 @@ makelibSED_DL07
     load astroSfig.sm
     # 
     # 
-    !gln -fsT /Users/dzliu/Softwares/CIGALE/cigale-v0.11.0-af9fd2dc7fc7dced5b816fd20582de00e3fbf08b/database_builder/dl2014 DL07spec
+    #!gln -fsT /Users/dzliu/Softwares/CIGALE/cigale-v0.11.0-af9fd2dc7fc7dced5b816fd20582de00e3fbf08b/database_builder/dl2014 DL07spec
+    !gln -fsT /Users/dzliu/Softwares/CIGALE/cigale-v0.12.1/database_builder/dl2014 DL07spec
     # 
     # 
     getDL07Spec
@@ -40,11 +41,15 @@ makelibSED_DL07
             set dimen(fHiExUmn) = dimen(fHiExCom) set fHiExUmn[0,dimen(fHiExUmn)-1]=fUmn[$iTMP]
             set dimen(fLoExPAH) = dimen(fLoExCom) set fLoExPAH[0,dimen(fLoExPAH)-1]=fPAH[$jTMP]
             set dimen(fHiExPAH) = dimen(fHiExCom) set fHiExPAH[0,dimen(fHiExPAH)-1]=fPAH[$jTMP]
-            sort {lambda fLoExCom fLoExUmn fLoExPAH fHiExCom fHiExUmn fHiExPAH}
-            set fLoExLTIR = lambda*0.0 + lg(calc_ltir(lambda,fLoExCom))
-            set fHiExLTIR = lambda*0.0 + lg(calc_ltir(lambda,fHiExCom))
-            print +"lib.DL07.2010.03.18.spec.2.0.LoExCom.SED" '%15.6e%15.6e%12.6f%12.6f%12.6f\n' {lambda fLoExCom fLoExUmn fLoExPAH fLoExLTIR}
-            print +"lib.DL07.2010.03.18.spec.2.0.HiExCom.SED" '%15.6e%15.6e%12.6f%12.6f%12.6f\n' {lambda fHiExCom fHiExUmn fHiExPAH fHiExLTIR}
+            set dimen(fLoExDGR) = dimen(fLoExCom) set fLoExDGR[0,dimen(fLoExDGR)-1]=fDGR[$jTMP]
+            set dimen(fHiExDGR) = dimen(fHiExCom) set fHiExDGR[0,dimen(fHiExDGR)-1]=fDGR[$jTMP]
+            sort {lambda fLoExCom fLoExUmn fLoExPAH fLoExDGR fHiExCom fHiExUmn fHiExPAH fHiExDGR}
+            set fLoExLTIR = lambda*0.0 + lg(calc_ltir(lambda,fLoExCom,0.0,8.0,1000.0,0.0001)) # grid 0.1 MHz
+            set fHiExLTIR = lambda*0.0 + lg(calc_ltir(lambda,fHiExCom,0.0,8.0,1000.0,0.0001)) # grid 0.1 MHz
+            set fLoExLFIR = lambda*0.0 + lg(calc_ltir(lambda,fLoExCom,0.0,40.0,400.0,0.0001)) # grid 0.1 MHz
+            set fHiExLFIR = lambda*0.0 + lg(calc_ltir(lambda,fHiExCom,0.0,40.0,400.0,0.0001)) # grid 0.1 MHz
+            print +"lib.DL07.2010.03.18.spec.2.0.LoExCom.SED" '%15.6e %14.6e %11.6f %11.6f %11.6f %11.6f %9.6f\n' {lambda fLoExCom fLoExUmn fLoExPAH fLoExLTIR fLoExLFIR fLoExDGR}
+            print +"lib.DL07.2010.03.18.spec.2.0.HiExCom.SED" '%15.6e %14.6e %11.6f %11.6f %11.6f %11.6f %9.6f\n' {lambda fHiExCom fHiExUmn fHiExPAH fHiExLTIR fHiExLFIR fHiExDGR}
             undef print_noheader
         }
     }
@@ -69,11 +74,11 @@ getDL07Spec 02
     #[<20180301]#set fPAH = { 0.47 1.12 1.77 2.50 3.19 3.90 4.58 }
     #[≥20180301]#
     #cd DL07Spec
-    #ls -1 | gsort -V | sed -e 's/MW.*//g' | grep "1e7" | sed -e 's/_1e7_//g' | sed -e 's/^U//g' | uniq > list_of_Umin.txt
-    #ls -1d U50.00_50.00_MW3.1_* | gsort -V | sed -e 's/.*MW3.1_//g' > list_of_tPAH.txt
+    !ls -1 "DL07Spec" | gsort -V | sed -e 's/MW.*//g' | grep "1e7" | sed -e 's/_1e7_//g' | sed -e 's/^U//g' | uniq > list_of_Umin.txt
+    !ls -1d "DL07Spec/"U50.00_50.00_MW3.1_* | gsort -V | sed -e 's/.*MW3.1_//g' > list_of_tPAH.txt
     #cd ../
-    data "DL07spec/list_of_Umin.txt" read {tUmn 1.s}
-    data "DL07spec/list_of_tPAH.txt" read {tPAH 1.s}
+    data "list_of_Umin.txt" read {tUmn 1.s}
+    data "list_of_tPAH.txt" read {tPAH 1.s}
     set tDGR = { "0.01" "0.01" "0.0101" "0.0102" "0.0102" "0.0103" "0.0104" "0.0105" "0.0106" "0.0107" "0.0108" } # see Draine 2007 SINGS Table.3 M_dust/M_H. dzliu did some extrapolation....
     set fPAH = 0.00,0.10,0.01 # see "Aniano 2012 Dust Emission.pdf", Table 2, but I think their \Delta_{qPAH} should be 0.01 instead of 0.001
     set dimen(fUmn) = dimen(tUmn) do i=0,dimen(tUmn)-1 { set fUmn[$i] = float($(tUmn[$i])) }
@@ -144,19 +149,25 @@ writeLibHead 01
     print +$1 '\# CVAR2 = 2 \# the colomn number of VAR2\n' {}
     print +$1 '\# NVAR1 = $(nWav) \# NAXIS1\n' {}
     print +$1 '\# NVAR2 = $(dimen(fPAH)*dimen(fUmn)) \# NAXIS2\n' {}
-    print +$1 '\# NPAR  = 3 \# Parameter 1 2 3 ...\n' {}
+    print +$1 '\# NPAR  = 5 \# Parameter 1 2 3 4 5\n' {}
     print +$1 '\# TPAR1 = Umin\n' {}
     print +$1 '\# TPAR2 = qPAH\n' {}
     print +$1 '\# TPAR3 = lgLTIR \# log of the integrated flux density (mJy*GHz) over rest-frame 8-1000 um\n' {}
+    print +$1 '\# TPAR4 = lgLFIR \# log of the integrated flux density (mJy*GHz) over rest-frame 40-400 um\n' {}
+    print +$1 '\# TPAR5 = fGDR\n' {}
     print +$1 '\# NPAR1 = $(dimen(fUmn))\n' {}
     print +$1 '\# NPAR2 = $(dimen(fPAH))\n' {}
     print +$1 '\# NPAR3 = 1 \# non-indepedent\n' {}
+    print +$1 '\# NPAR4 = 1 \# non-indepedent\n' {}
+    print +$1 '\# NPAR5 = 1 \# non-indepedent\n' {}
     print +$1 '\# CPAR1 = 3\n' {}
     print +$1 '\# CPAR2 = 4\n' {}
     print +$1 '\# CPAR3 = 5\n' {}
+    print +$1 '\# CPAR4 = 6\n' {}
+    print +$1 '\# CPAR5 = 7\n' {}
     print +$1 '\# \n' {}
-    print +$1 '\#        lambda           flux        Umin        qPAH      lgLTIR\n' {}
-    print +$1 '\#          [um]          [mJy]                           [mJy*GHz]\n' {}
+    print +$1 '\#        lambda           flux        Umin        qPAH      lgLTIR      lgLFIR      fDGR\n' {}
+    print +$1 '\#          [um]          [mJy]                           [mJy*GHz]   [mJy*GHz]          \n' {}
     return
 
 
