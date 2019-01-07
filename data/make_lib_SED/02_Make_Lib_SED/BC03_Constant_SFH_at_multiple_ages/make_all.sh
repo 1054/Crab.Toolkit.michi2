@@ -27,4 +27,7 @@ else
     readlink -f "$new_file_name" > "$new_file_name".readme
 fi
 
+zip "$new_file_name.zip" \
+    "$new_file_name" \
+    "$new_file_name".readme
 
