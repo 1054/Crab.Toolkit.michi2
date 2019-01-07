@@ -291,6 +291,11 @@ if [[ ! -f "$FitName.out" ]]; then
     echo "Error! Failed to run michi2 and produce \"$FitName.out\"!"
     exit 1
 fi
+if [[ $(cat "$FitName.out" | wc -l) -lt 3 ]]; then
+    rm "$FitName.out"
+    echo "Error! Failed to run michi2 and produce \"$FitName.out\"!"
+    exit 1
+fi
 
 
 # 
