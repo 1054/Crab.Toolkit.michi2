@@ -1,0 +1,533 @@
+#!/bin/bash
+#
+
+if [[ $(type michi2_v05 2>/dev/null | wc -l) -eq 0 ]]; then
+    if [[ -f "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash" ]]; then
+        #echo source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        source "$(dirname ${BASH_SOURCE[0]})/bin_setup.bash"
+        #echo $PATH
+    else
+        echo "Error! \"$(dirname ${BASH_SOURCE[0]})/bin_setup.bash\" was not found!"
+        exit
+    fi
+fi
+
+
+# 
+# Check user input
+# 
+if [[ $# -eq 0 ]]; then
+    echo "Usage: "
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5"
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -trial"
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000"
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-radio"
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-stellar"
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-AGN"
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-dust -lib-stellar BC03.200Myr # fit only stellar SED with the default BC03.200Myr library."
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-dust -lib-stellar BC03.MultiAge # fit only stellar SED with non-default BC03.MultiAge library."
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-dust -lib-stellar FSPS.CSP.tau.1Gyr # fit only stellar SED with FSPS composite library."
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 8 -sampling 10000 # on computing cluster we can do heavy parallel (multi-thread) and large number of sampling."
+    echo ""
+    echo "Descriptions:"
+    echo "    The input flux data file should contain three columns separated by white space, "
+    echo "    with header lines commented out by sharp (#) character, and the three columns should be: "
+    echo "        1. wavelength in micron meter unit"
+    echo "        2. flux density in mJy unit"
+    echo "        3. and error in flux density also in mJy unit"
+    echo "    "
+    echo "    This code will fit the input flux data points with five SED components in default: "
+    echo "        1. Stellar: BC03 stellar SED (http://www.bruzual.org/bc03/) with Calzetti2000 attenuation law, "
+    echo "        2. AGN: Mullaney2011 AGN SED (http://adsabs.harvard.edu/abs/2011MNRAS.414.1082M/), "
+    echo "        3 & 4. Dust: Draine & Li (2007) warm (PDR) and cold (ambient) dust SEDs (https://www.astro.princeton.edu/~draine/dust/irem.html), "
+    echo "        and 5. radio synchrotron SED. "
+    echo "    "
+    echo ""
+    echo ""
+    exit
+fi
+
+
+# 
+# Read Parallel, Redshift, Flux, Umin
+# 
+Redshift=""
+Parallel=2
+Sampling=10000
+Flux=""
+Umin="" # Added on 2018-03-23 to put an additional constraint on Umin
+NoStellar=0
+NoAGN=0
+NoDust=0
+NoRadio=0
+FreeRadio=0
+FreeDust=0
+LibStellar="BC03.200Myr"
+ChosenLibStellar=1 # the index in AcceptableLibStellar
+AcceptableLibStellar=("BC03" "BC03.200Myr" "BC03.400Myr" "BC03.MultiAge" "FSPS.CSP.tau.1Gyr")
+CorrespondingLibStellar=("lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED" \
+                         "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED" \
+                         "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age400Myr.EBV.SED" \
+                         "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.MultiAge.EBV.SED" \
+                         "lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED")
+LibDust="DL07UPD2010"
+ChosenLibDust=1 # the index in AcceptableLibDust
+AcceptableLibDust=("DL07" "DL07UPD2010")
+CorrespondingLibDust=("lib.DL07.2010.03.18.spec.2.0.HiExCom.SED lib.DL07.2010.03.18.spec.2.0.LoExCom.SED" \
+                      "lib.DL07.2010.03.18.spec.2.0.HiExCom.SED lib.DL07.2010.03.18.spec.2.0.LoExCom.SED")
+LibAGN="MullaneyAGN"
+ChosenLibAGN=0 # the index in AcceptableLibAGN
+AcceptableLibAGN=("MullaneyAGN")
+CorrespondingLibAGN=("lib.MullaneyAGN.SED")
+LibRadio="Radio"
+ChosenLibRadio=0 # the index in AcceptableLibRadio
+AcceptableLibRadio=("Radio")
+CorrespondingLibRadio=("lib.RadioPowerlaw.Single.SED")
+Overwrite=0
+FitName="fit_5"
+ObjName="obj"
+Debug=()
+Trial=0
+if [[ $(hostname) == aida* ]] || [[ $(hostname) == isaac* ]]; then
+    Flux="extracted_flux.txt" #<TODO># 
+fi
+if [[ $# -ge 2 ]]; then
+    i=1
+    while [[ $i -le $# ]]; do
+        Strcmd=$(echo "${!i}" | sed -e 's/^--/-/g' | tr '[:upper:]' '[:lower:]')
+        if [[ "$Strcmd" == "-parallel" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Parallel="${!i}"
+                echo Parallel="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-redshift" ]] || [[ "$Strcmd" == "-z" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Redshift="${!i}"
+                echo Redshift="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-flux" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Flux="${!i}"
+                echo Flux="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-umin" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Umin="${!i}"
+                echo Umin="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-sampling" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                Sampling="${!i}"
+                echo Sampling="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-fit-name" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                FitName="${!i}"
+                echo FitName="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-obj-name" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                ObjName="${!i}"
+                echo ObjName="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-lib-stellar" ]] || [[ "$Strcmd" == "-stellar" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                LibStellar="${!i}"
+                echo LibStellar="${!i}"
+                CheckLibStellar=0
+                for (( iLoopLibStellar = 0; iLoopLibStellar < ${#AcceptableLibStellar[@]}; iLoopLibStellar++ )); do
+                    LoopLibStellar="${AcceptableLibStellar[iLoopLibStellar]}"
+                    if [[ x"$LibStellar" == x"$LoopLibStellar" ]]; then
+                        CheckLibStellar=1
+                        ChosenLibStellar=$iLoopLibStellar
+                    fi
+                done
+            else
+                CheckLibStellar=0
+            fi
+            if [[ $CheckLibStellar -eq 0 ]]; then
+                echo ""
+                echo "Incorrect input! -lib-stellar accepts: ${AcceptableLibStellar[@]}"
+                echo ""
+                exit
+            fi
+        elif [[ "$Strcmd" == "-lib-dust" ]] || [[ "$Strcmd" == "-dust" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                LibDust="${!i}"
+                echo LibDust="${!i}"
+                CheckLibDust=0
+                for (( iLoopLibDust = 0; iLoopLibDust < ${#AcceptableLibDust[@]}; iLoopLibDust++ )); do
+                    LoopLibDust="${AcceptableLibDust[iLoopLibDust]}"
+                    if [[ x"$LibDust" == x"$LoopLibDust" ]]; then
+                        CheckLibDust=1
+                        ChosenLibDust=$iLoopLibDust
+                    fi
+                done
+            else
+                CheckLibDust=0
+            fi
+            if [[ $CheckLibDust -eq 0 ]]; then
+                echo ""
+                echo "Incorrect input! -lib-dust accepts: ${AcceptableLibDust[@]}"
+                echo ""
+                exit
+            fi
+        elif [[ "$Strcmd" == "-no-stellar" ]]; then
+            NoStellar=1
+            echo NoStellar=$NoStellar
+        elif [[ "$Strcmd" == "-no-agn" ]]; then
+            NoAGN=1
+            echo NoAGN=$NoAGN
+        elif [[ "$Strcmd" == "-no-dust" ]]; then
+            NoDust=1
+            echo NoDust=$NoDust
+        elif [[ "$Strcmd" == "-no-radio" ]]; then
+            NoRadio=1
+            echo NoRadio=$NoRadio
+        elif [[ "$Strcmd" == "-free-radio" ]]; then
+            FreeRadio=1
+            echo FreeRadio=$FreeRadio
+        elif [[ "$Strcmd" == "-free-dust" ]]; then
+            FreeDust=1
+            echo FreeDust=$FreeDust
+        elif [[ "$Strcmd" == "-overwrite" ]]; then
+            Overwrite=$((Overwrite+1))
+            echo Overwrite=$Overwrite
+        elif [[ "$Strcmd" == "-debug" ]]; then
+            Debug+=(-debug)
+            echo "Debug=${Debug[@]} (debug level ${#Debug[@]})"
+        elif [[ "$Strcmd" == "-trial" ]]; then
+            Trial=1
+            echo Trial=Trial
+        fi
+        i=$((i+1))
+    done
+fi
+
+# 
+# Check user input 
+# 
+if [[ $NoDust -eq 1 ]] && [[ $NoRadio -eq 0 ]]; then
+    NoRadio=1
+    echo NoRadio=$NoRadio
+    echo "Warning! When setting -no-dust, we will automatically set -no-radio"
+fi
+
+if [[ $NoStellar -eq 1 ]] && [[ $NoAGN -eq 1 ]] && [[ $NoDust -eq 1 ]] && [[ $NoRadio -eq 1 ]]; then
+    echo "Error! No model to fit! Do not set all -no-stellar -no-AGN -no-dust -no-radio at the same time!"
+    exit
+fi
+
+#echo "NoStellar=$NoStellar"
+#echo "NoAGN=$NoAGN"
+#echo "NoDust=$NoDust"
+#echo "NoRadio=$NoRadio"
+
+
+# 
+# If no redshift given by "-redshift" argument, then just take first argumetn as the redshift
+# 
+if [[ x"$Redshift" == x"" ]]; then
+    echo "Error! Please input -redshift! (Currently we could not fit the redshift...)"
+    exit
+fi
+if [[ x"$Redshift" == x"-"* ]]; then
+    echo "Error! Please input a positive redshift!"
+    exit
+fi
+
+
+# 
+# Check photometry file
+# 
+if [[ x"$Flux" != x ]]; then
+    if [[ ! -f "$Flux" ]]; then
+        echo "Error! \"$Flux\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+        exit
+    fi
+fi
+
+
+# 
+# Copy SED files
+# 
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/BC03_Constant_SFH_at_time_800Myr/lib.BC03.Padova1994.BaSeL.Z0.0190.Age800Myr.EBV.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.HiExCom.Single.qPAH.2.5.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.DL07.LoExCom.Single.qPAH.2.5.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Extracted.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.SiebenmorgenAGN.Single.Hotest.SED .
+#cp $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/make_lib_SED/02_Make_Lib_SED/lib.RadioPowerlaw.Single.SED .
+#cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filters .
+#cp -r $(dirname $(dirname "${BASH_SOURCE[0]}"))/data/deploy_SED/filter.list .
+
+
+# 
+# Check photometry file
+# 
+if [[ ! -f "$FitName.in" ]] || [[ $Overwrite -ge 2 ]]; then
+    if [[ -f "$Flux" ]]; then
+        echo ""
+        echo ""
+        echo "Warning! \"$FitName.in\" was not found! But found \"$Flux\"! Will run: "
+        if [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 1 ]] && [[ $NoStellar -eq 1 ]]; then
+            # (AGN) + dust
+            echo "michi2_filter_flux_2sigma_no_stellar_no_radio_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
+            echo "to filter flux data points for SED fitting."
+            echo ""
+            michi2_filter_flux_2sigma_no_stellar_no_radio_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
+            # 
+        elif [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 1 ]] && [[ $NoStellar -eq 0 ]]; then
+            # stellar + (AGN) + dust
+            echo "michi2_filter_flux_2sigma_no_radio_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
+            echo "to filter flux data points for SED fitting."
+            echo ""
+            michi2_filter_flux_2sigma_no_radio_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
+            # 
+        elif [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 0 ]] && [[ $NoStellar -eq 1 ]]; then
+            # (AGN) + dust + radio
+            echo "michi2_filter_flux_2sigma_no_stellar_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
+            echo "to filter flux data points for SED fitting."
+            echo ""
+            michi2_filter_flux_2sigma_no_stellar_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
+            # 
+        elif [[ $NoDust -eq 1 ]] && [[ $NoAGN -eq 1 ]]; then
+            # stellar only
+            echo "michi2_filter_flux_2sigma_no_dust_no_radio_no_AGN.py \"$Flux\" \"$FitName.in\""
+            echo "to filter flux data points for SED fitting."
+            echo ""
+            michi2_filter_flux_2sigma_no_dust_no_radio_no_AGN.py "$Flux" "$FitName.in" > "$FitName.in.log"
+            # 
+        elif [[ $NoDust -eq 1 ]] && [[ $NoAGN -eq 0 ]]; then
+            # stellar + AGN
+            echo "michi2_filter_flux_2sigma_no_dust_no_radio.py \"$Flux\" \"$FitName.in\""
+            echo "to filter flux data points for SED fitting."
+            echo ""
+            michi2_filter_flux_2sigma_no_dust_no_radio.py "$Flux" "$FitName.in" > "$FitName.in.log"
+            # 
+        else
+            # stellar + AGN + dust + radio
+            echo "michi2_filter_flux_2sigma_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
+            echo "to filter flux data points for SED fitting."
+            echo ""
+            michi2_filter_flux_2sigma_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
+            # 
+        fi
+        echo ""
+        echo ""
+    fi
+fi
+if [[ ! -f "$FitName.in" ]]; then
+    echo 
+    echo "Error! \"$FitName.in\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
+    exit
+fi
+
+
+# 
+# Detect if we have best-fit stellar SED folder
+# 
+constrain_stellar_index=()
+if [[ $NoStellar -eq 0 ]]; then
+    if [[ -d "best-fit_stellar_SED" ]]; then
+        if [[ -f "best-fit_stellar_SED/INDEX_LIB1" ]]; then
+            best_fit_stellar_index=$(cat "best-fit_stellar_SED/INDEX_LIB1")
+            echo 
+            echo "Found \"best-fit_stellar_SED\" folder! Will fix stellar library index to ${best_fit_stellar_index}!"
+            constrain_stellar_index=(-constraint "LIB1_INDEX = $best_fit_stellar_index")
+            echo "constrain_stellar_index = ${constrain_stellar_index[@]}"
+        fi
+    fi
+fi
+
+
+# 
+# Constraint warm cold dust to have the same Umin
+# 
+constrain_warm_cold_dust=()
+if [[ $FreeDust -eq 0 ]]; then
+    if [[ $NoDust -eq 0 ]]; then
+        i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN) + 1; }")
+        j=$(awk "BEGIN { print ($i+1); }")
+        constrain_warm_cold_dust=(-constraint "LIB${i}_INDEX = LIB${j}_INDEX")
+        echo "constrain_warm_cold_dust = ${constrain_warm_cold_dust[@]}"
+    fi
+fi
+
+
+# 
+# Free the radio component or not
+# 
+constrain_radio_IR=()
+if [[ $FreeRadio -eq 0 ]]; then
+    if [[ $NoRadio -eq 0 ]]; then
+        i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN) + 1; }")
+        j=$(awk "BEGIN { print ($i+1); }")
+        k=$(awk "BEGIN { print ($j+1); }")
+        qIR=2.4
+        constrain_radio_IR=(-constraint "LIB${k}_NORM = ((LIB${i}_NORM*(10^LIB${i}_PAR3))+(LIB${j}_NORM*(10^LIB${j}_PAR3)))*40.31970/3750/10^${qIR}")
+        echo "constrain_radio_IR = ${constrain_radio_IR[@]}  (qIR=${qIR})"
+    fi
+fi
+
+
+# 
+# Determine whether this is a starburst galaxy so that we constrain the Umin
+# 
+constrain_dust_Umin=()
+if [[ x"$Umin" != x ]]; then
+    if [[ $NoDust -eq 0 ]]; then
+        i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN); }")
+        j=$(awk "BEGIN { print ($i+1); }")
+        constrain_dust_Umin=(-constraint "LIB${i}_PAR1 >= $Umin")
+        # 
+        # if warm and cold dust components are not coupled, then we need to set the Umin constraint for both.
+        if [[ $FreeDust -eq 1 ]]; then
+            constrain_dust_Umin+=(-constraint "LIB${j}_PAR1 >= $Umin")
+        fi
+        echo "constrain_dust_Umin = ${constrain_dust_Umin[@]}"
+    fi
+fi
+
+
+# 
+# Copy SED LIB
+# 
+check_lib_files=1
+loop_lib_files=()
+deploy_params=(SED)
+if [[ $NoStellar -eq 0 ]]; then
+    loop_lib_files+=(${CorrespondingLibStellar[ChosenLibStellar]})
+    deploy_params+=(${AcceptableLibStellar[ChosenLibStellar]})
+fi
+if [[ $NoAGN -eq 0 ]]; then
+    loop_lib_files+=(${CorrespondingLibAGN[ChosenLibAGN]})
+    deploy_params+=(${AcceptableLibAGN[ChosenLibAGN]})
+fi
+if [[ $NoDust -eq 0 ]]; then
+    loop_lib_files+=(${CorrespondingLibDust[ChosenLibDust]})
+    deploy_params+=(${AcceptableLibDust[ChosenLibDust]})
+fi
+if [[ $NoRadio -eq 0 ]]; then
+    loop_lib_files+=(${CorrespondingLibRadio[ChosenLibRadio]})
+    deploy_params+=(${AcceptableLibRadio[ChosenLibRadio]})
+fi
+for loop_lib_file in ${loop_lib_files[@]}; do
+    if [[ ! -f "$loop_lib_file" ]] && [[ ! -L "$loop_lib_file" ]]; then
+        echo "Checked \"$loop_lib_file\" not found."
+        check_lib_files=0
+    fi
+done
+if [[ $check_lib_files -eq 0 ]] || [[ $Overwrite -ge 3 ]]; then
+    echo ""
+    michi2-deploy-files ${deploy_params[@]}
+fi
+
+
+# 
+# Run michi2
+# 
+if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
+    echo ""
+    echo "Running michi2_v05 at "$(date +"%Y%m%d %Hh%Mm%Ss %Z")"!"
+    echo ""
+    echo "michi2_v05 -obs $FitName.in \\"
+    echo "           -redshift $Redshift \\"
+    echo "           -lib ${loop_lib_files[@]} \\"
+    echo "           -out $FitName.out \\"
+    echo "           -parallel $Parallel \\"
+    echo "           -sampling $Sampling \\"
+    echo "           ${constrain_stellar_index[@]} \\"
+    echo "           ${constrain_dust_Umin[@]} \\"
+    echo "           ${constrain_warm_cold_dust[@]} \\"
+    echo "           ${constrain_radio_IR[@]} \\"
+    echo "           -filter filter.list \\"
+    echo "           ${Debug[@]}\\"
+    echo "           "
+
+    # 
+    # stop here if in trial mode
+    if [[ $Trial -eq 1 ]]; then
+        #echo "Trial ends here. Next steps are actually running the SED fitting."
+        #exit
+        echo "In trail mode! We will set the sampling to 30 and parallel to 2."
+        Sampling=30
+        Parallel=2
+    fi
+    
+    echo ""
+    michi2_v05 -obs "$FitName.in" \
+               -redshift $Redshift \
+               -lib ${loop_lib_files[@]} \
+               -out "$FitName.out" \
+               -parallel $Parallel \
+               -sampling $Sampling \
+               ${constrain_stellar_index[@]} \
+               ${constrain_dust_Umin[@]} \
+               ${constrain_warm_cold_dust[@]} \
+               ${constrain_radio_IR[@]} \
+               -filter filter.list \
+               ${Debug[@]}
+               
+               # 
+               # -constraint LIB5 NORM EQ SED "LIR(8,1000)*1.061619121e-06" \
+               # calc 1/3750/10**2.4 = 1.061619121e-06, qIR = 2.4. 
+               # 
+               # -constraint LIB5 NORM EQ SED "((LIB3*(10^LIB3_PAR3))+(LIB4*(10^LIB4_PAR3)))*40.31970/3750/10^2.4" \
+               # 
+               # -constraint "LIB5_NORM = ((LIB3_NORM*(10^LIB3_PAR3))+(LIB4_NORM*(10^LIB4_PAR3)))*40.31970/3750/10^2.4"
+               # 
+    
+    echo ""
+    echo "Finished michi2_v05 at "$(date +"%Y%m%d %Hh%Mm%Ss %Z")"!"
+    
+    # 
+    # if we re-ran the fitting, then also clean previous results
+    if [[ -d "results_${FitName}/" ]]; then
+        BackupDate=$(date +"%Y%m%d_%Hh%Mm%Ss_%Z")
+        echo "Backing up \"results_${FitName}/\" as \"results_${FitName}_${BackupDate}/\""
+        mv "results_${FitName}/" "results_${FitName}_${BackupDate}/"
+    fi
+fi
+if [[ ! -f "$FitName.out" ]]; then
+    echo "Error! Failed to run michi2 and produce \"$FitName.out\"!"
+    exit 1
+fi
+if [[ $(cat "$FitName.out" | wc -l) -lt 3 ]]; then
+    rm "$FitName.out"
+    echo "Error! Failed to run michi2 and produce \"$FitName.out\"!"
+    exit 1
+fi
+
+
+# 
+# Plotting results
+# 
+if [[ ! -f "results_${FitName}/${FitName}.pdf" ]] || [[ $Overwrite -ge 1 ]]; then
+    michi2_plot_SED_fitting_results_for_michi2_v05.py "${FitName}.out" \
+        -out "results_${FitName}/${FitName}.pdf" \
+        -flux "$Flux" \
+        -source "$ObjName"
+fi
+# 
+if [[ ! -f "results_${FitName}/${FitName}.best.pdf" ]] || [[ $Overwrite -ge 1 ]]; then
+    michi2_plot_SED_fitting_results_for_michi2_v05.py "${FitName}.out" \
+        -out "results_${FitName}/${FitName}.best.pdf" \
+        -flux "$Flux" \
+        -source "$ObjName" \
+        -only-best
+fi
+
+
+
+
+

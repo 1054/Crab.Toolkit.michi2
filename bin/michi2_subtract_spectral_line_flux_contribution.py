@@ -21,13 +21,14 @@ def usage():
     print('Usage: ')
     print('    michi2_subtract_spectral_line_flux_contribution.py datatable_photometry.txt \\')
     print('                                                       -redshift 3.0 \\')
-    print('                                                       -filter-name "^ALMA.*" \\')
-    print('                                                       -filter-name-column 5 \\')
     print('                                                       -freq-support 667.84 669.84 669.61 671.61 671.42 673.42 673.22 675.22 \\')
+    print('                                                       -IR-luminosity 5e12 \\')
+    print('                                                       [-filter-name "^ALMA.*" \\]')
+    print('                                                       [-filter-name-column 5 \\]')
     print('                                                       -line-name CO CI NII CII H2O \\')
-    print('                                                       -IR-luminosity 5e12')
     print('                                                       [-known-line-name-and-flux \"CO(2-1)\" \"3.0 Jy km/s\"]')
     print('                                                       [-known-line-name-and-flux \"CO(3-2)\" \"5.0 Jy km/s\"]')
+    print('                                                       ')
     print('Notes:')
     print('    The input file name "datatable_photometry.txt" must be put in front.')
     print('    The input table "datatable_photometry.txt" must have wavelength (um) in the first column.')
@@ -51,13 +52,15 @@ if __name__ == '__main__':
     input_filter_names = []
     input_filter_regexes = []
     input_filter_name_column = 5
+    known_line_names = []
+    known_line_fluxes = []
     speed_of_light_kms = 2.99792458e5
     iarg = 0
     tstr = ''
     tmode = ''
     isopt = False
     while iarg < len(sys.argv):
-        tstr = re.sub(r'^[-]+', r'', sys.argv.lower()) # lower case current input argument string
+        tstr = re.sub(r'^[-]+', r'', sys.argv[iarg].lower()) # lower case current input argument string
         isopt = False # whether current input argument is an option (starting with "-")
         if tstr == 'redshift' or tstr == 'z':
             tmode = 'redshift'
@@ -70,6 +73,9 @@ if __name__ == '__main__':
             isopt = True
         elif tstr == 'line-names' or tstr == 'line-name' or tstr == 'linenames' or tstr == 'linename':
             tmode = 'line_names'
+            isopt = True
+        elif tstr == 'known-line-name-and-flux':
+            tmode = 'known_lines'
             isopt = True
         elif tstr == 'filter-names' or tstr == 'filter-name' or tstr == 'filternames' or tstr == 'filtername':
             tmode = 'filter_names'
@@ -93,6 +99,11 @@ if __name__ == '__main__':
             elif tmode == 'filter_names':
                 input_filter_names.append(sys.argv[iarg])
                 input_filter_regexes.append(re.compile(sys.argv[iarg]))
+            elif tmode == 'known_lines':
+                if iarg + 1 < len(sys.argv):
+                    known_line_names.append(sys.argv[iarg])
+                    known_line_fluxes.append(sys.argv[iarg+1])
+                    iarg = iarg + 1
         # 
         iarg = iarg + 1
     
@@ -113,9 +124,11 @@ if __name__ == '__main__':
     filternames = [x for x in tb['FilterName'].data]
     for i in range(len(frequencies)):
         
-        if tb['FilterName'].startswith('ALMA'):
-            if freq_support.intersect1d():
-                line_freqs, line_names = find_radio_lines_in_frequency_range(input_freq_support, Redshift=input_redshift, include_faint_lines = False)
+        if filternames[i].startswith('ALMA'):
+            for j in range(0,len(freq_support),2):
+                if freq_support[j] < frequencies[i] and freq_support[j+1] > frequencies[i]:
+                    line_freqs, line_names = find_radio_lines_in_frequency_range(input_freq_support, Redshift=input_redshift, include_faint_lines = False)
+                    print(line_freqs, line_names)
         
 
 
