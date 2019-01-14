@@ -438,7 +438,7 @@ fi
 # 
 if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
     echo ""
-    echo "Running michi2_v05 at "$(date +"%Y%m%d %Hh%Mm%Ss %Z")"!"
+    echo "Running michi2_v05 at "$(date +"%Y-%m-%d %Hh%Mm%Ss %Z")"!"
     echo ""
     echo "michi2_v05 -obs $FitName.in \\"
     echo "           -redshift $Redshift \\"
@@ -488,7 +488,7 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
                # 
     
     echo ""
-    echo "Finished michi2_v05 at "$(date +"%Y%m%d %Hh%Mm%Ss %Z")"!"
+    echo "Finished michi2_v05 at "$(date +"%Y-%m-%d %Hh%Mm%Ss %Z")"!"
     
     # 
     # if we re-ran the fitting, then also clean previous results
