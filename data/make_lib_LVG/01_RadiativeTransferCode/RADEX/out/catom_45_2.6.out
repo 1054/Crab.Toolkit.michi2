@@ -1,0 +1,16 @@
+* Radex version        : 30nov2011
+* Geometry             : Uniform sphere
+* Molecular data file  : ./data/catom.dat                                                                
+* T(kin)            [K]:   45.000
+* Density of H2  [cm-3]:  3.981E+02
+* Density of pH2 [cm-3]:  9.953E+01
+* Density of oH2 [cm-3]:  2.986E+02
+* T(background)     [K]:   13.800
+* Column density [cm-2]:  1.843E+17
+* Line width     [km/s]:   50.000
+Calculation finished in   12 iterations
+      LINE         E_UP       FREQ        WAVEL     T_EX      TAU        T_R       POP        POP       FLUX        FLUX
+                   (K)        (GHz)       (um)      (K)                  (K)        UP        LOW      (K*km/s) (erg/cm2/s)
+1      -- 0         23.6    492.1607    609.1354   22.598  2.035E-02  1.532E-01  4.499E-01  4.265E-01  8.154E+00  1.252E-05
+2      -- 1         62.5    809.3420    370.4151   21.555  1.162E-02  6.002E-02  1.237E-01  4.499E-01  3.195E+00  2.181E-05
+2      -- 0         62.5   1301.5026    230.3433   21.938  6.121E-10  1.936E-09  1.237E-01  4.265E-01  1.030E-07  2.926E-12

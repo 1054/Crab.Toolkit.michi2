@@ -32,8 +32,9 @@ makelibSED_DL07
     writeLibHead "lib.DL07.2010.03.18.spec.2.0.HiExCom.SED"
     # 
     # 
-    do iTMP = 0, dimen(fUmn)-1 {
-        do jTMP = 0, dimen(fPAH)-1 {
+    # <20190128> column order Umin, qPAH, so first loop qPAH then loop Umin
+    do jTMP = 0, dimen(fPAH)-1 {
+        do iTMP = 0, dimen(fUmn)-1 {
             if ($iTMP==0&&$jTMP==0) {verbose 1} else {verbose 0}
             getDL07Spec $(fUmn[$iTMP]) $(fPAH[$jTMP])
             define print_noheader 1

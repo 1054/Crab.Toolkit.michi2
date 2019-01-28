@@ -16,7 +16,7 @@ makeliblvg
     # 
     set z = 4.055
     set z_str = sprintf('%0.3f',z)
-    set outNAME = <"lib_z_$(z_str)_with_CO_and_C_atom_dV_150.lvg">
+    set outNAME = <"lib_z_$(z_str)_with_CO_and_C_atom_dV_50.lvg">
     set dirRADEX = {"/Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/data/make_lib_LVG/01_RadiativeTransferCode/RADEX"}
     set dirMKLIB = {"/Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/data/make_lib_LVG/02_Make_Lib_LVG/makeliblvg_z_with_CO_and_C_atom"}
     # 
@@ -138,8 +138,11 @@ makeliblvg
     print +"lib.lvg" '    column_N_H_2        mass_H_2  mass_dyn_cloud' {}
     print +"lib.lvg" '\n' {}
     define ii 0
-    foreach TkOne Tk {
-        foreach nHOne nH {
+    # 
+    # Parameter order: Tk nH, therefore we first loop nH (slower) then loop Tk (faster)
+    # 
+    foreach nHOne nH {
+        foreach TkOne Tk {
             # 
             # CO
             # 
@@ -148,7 +151,7 @@ makeliblvg
             define dvddr 5.0    # <TODO> see Weiss 2007 APM08297 Fig.8 Caption, or Weiss 2007 ASPC Sect. 3.2 first paragraph, where they fix NXAbD/dvddr=1E-5. 
                                 # <TODO> ZhangZY+2014 Circinus dv/dr best-fit is 3.0 km/s/pc. 
                                 # <TODO> Curran et al. (2001) fitted dv/dr for Circinus and found 10.0 km/s/pc. 
-            define dVDoW 150.0   # <TODO> Turbulence Doppler Line Width correlated with Dense Core Sizes 
+            define dVDoW 50.0   # <TODO> Turbulence Doppler Line Width correlated with Dense Core Sizes 
                                 # <TODO> 
             define TbCMB $(2.73*(1+z))  # <TODO> T_{CMB} = 2.73 * (1+z) # http://www.astronomy.ohio-state.edu/~dhw/A873/notes4.pdf
             define NHLoS $($dVDoW/$dvddr*(10**$nHOne)*3.086e18) # column density of H_2 gas in cm-2. 

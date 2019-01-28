@@ -21,4 +21,4 @@ quit
 calc 3.085677e18**2
 quit
 macro read makeliblvg_z_with_CO_and_C_atom.sm makeliblvg
-QUIT
+quit
