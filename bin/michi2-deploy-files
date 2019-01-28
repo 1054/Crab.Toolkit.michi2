@@ -202,9 +202,15 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     #echo "$(dirname ${BASH_SOURCE[0]})/michi2-plot-results-of-fitting-5-components \$@" >> "run_plotting_5_components.sh"
     #chmod +x "run_plotting_5_components.sh"
     # 
+
 elif echo "$deploy_type" | grep -q -i "LVG"; then
-    cp "${deploy_upper_dir}/data/deploy_LVG"/*.sm "${deploy_upper_dir}/data/deploy_LVG"/run*.sh .
-    cp "${deploy_upper_dir}/data/lib_LVG/"lib_*.lvg .
+    
+    echo "Please copy the corresponding redshift library from: "
+    ls -1 ${deploy_upper_dir}/data/lib_LVG/lib_*.lvg
+    #cp "${deploy_upper_dir}/data/deploy_LVG"/*.sm "${deploy_upper_dir}/data/deploy_LVG"/run*.sh .
+    #cp "${deploy_upper_dir}/data/lib_LVG/"lib_*.lvg .
+    
+
 fi
 #if [[ $(uname) == "Darwin" ]]; then
 #    echo "Mac!"; sleep 1.0

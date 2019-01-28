@@ -1,0 +1,426 @@
+#!/bin/bash
+# 
+# Aim: 
+#      Easily extract flux from big catalog
+#      Needs python
+# 
+# Usage:
+#     see usage()
+# 
+# updated:
+#     2019-01-25 updated from v1
+# 
+
+
+
+# 
+# Prepare necessary functions
+# 
+# usage
+# 
+usage() {
+    echo "Usage: "
+    echo "  michi2-extract-flux -catalog aaa.fits"
+    echo "  michi2-extract-flux -catalog aaa.fits -id 222"
+    echo "  michi2-extract-flux -catalog aaa.fits -maxsnr 10"
+    echo ""
+}
+# 
+# readlink for Mac (because Mac readlink does not accept "-f" option)
+# 
+if [[ $(uname) == *"Darwin"* ]]; then
+    function readlink() {
+        if [[ $# -gt 1 ]]; then if [[ "$1" == "-f" ]]; then shift; fi; fi
+        DIR="$1"; if [[ "$DIR" != *"/"* ]]; then DIR="./$DIR"; fi # 20170228: fixed bug: path without "/"
+        DIR=$(echo "${DIR%/*}") # 20160410: fixed bug: source SETUP just under the Softwares dir
+        if [[ -d "$DIR" ]]; then cd "$DIR" && echo "$(pwd -P)/$(basename ${1})"; 
+        else echo "$(pwd -P)/$(basename ${1})"; fi
+    }
+fi
+# 
+# recognize wavelength
+# 
+function recognize_wavelength() {
+    if [[ $# -ge 1 ]]; then
+        m_band="$1"
+        m_wave="-99"
+        if   echo "$m_band" | grep -q -i "^K$"  ; then  m_wave="2.15"
+        elif echo "$m_band" | grep -q -i "irac1"; then  m_wave="3.6"
+        elif echo "$m_band" | grep -q -i "irac2"; then  m_wave="4.5"
+        elif echo "$m_band" | grep -q -i "irac3"; then  m_wave="5.8"
+        elif echo "$m_band" | grep -q -i "irac4"; then  m_wave="8.0"
+        elif echo "$m_band" | grep -q -i "ch1"; then  m_wave="3.6"
+        elif echo "$m_band" | grep -q -i "ch2"; then  m_wave="4.5"
+        elif echo "$m_band" | grep -q -i "ch3"; then  m_wave="5.8"
+        elif echo "$m_band" | grep -q -i "ch4"; then  m_wave="8.0"
+        elif echo "$m_band" | grep -q -i "^16$" ; then  m_wave="16"
+        elif echo "$m_band" | grep -q -i "^24$" ; then  m_wave="24"
+        elif echo "$m_band" | grep -q -i "^100$"; then  m_wave="100"
+        elif echo "$m_band" | grep -q -i "^160$"; then  m_wave="160"
+        elif echo "$m_band" | grep -q -i "^250$"; then  m_wave="250"
+        elif echo "$m_band" | grep -q -i "^350$"; then  m_wave="350"
+        elif echo "$m_band" | grep -q -i "^500$"; then  m_wave="500"
+        elif echo "$m_band" | grep -q -i "^850$"; then  m_wave="850"
+        elif echo "$m_band" | grep -q -i "^1160$"; then  m_wave="1160"
+        elif echo "$m_band" | grep -q -i "^2050$"; then  m_wave="2050"
+        elif echo "$m_band" | grep -q -i "^20cm$"; then  m_wave="2e5"
+        fi
+        echo "$m_wave"
+    fi
+}
+# 
+# append SED data structure
+# 
+function append_sed_data() {
+    # we define the sed data as a 4xN array in bash, in orders of band, wave, flux, error.
+    # this function add/append an sed data to the input array. 
+    # so $1 is an input array
+    # $2, $3 and $4 are band, type and value. Type should be either "flux" or "error"
+    if [[ $# -ge 4 ]]; then
+        declare -a m_SED=("${!1}")
+        m_band="$2"
+        m_type="$3"
+        m_value="$4"
+        m_wave=$(recognize_wavelength "$m_band")
+        m_append=0
+        for (( m_loop=0; m_loop<${#m_SED[@]}; m_loop+=4 )); do
+            if [[ "${m_SED[m_loop]}" == "$m_band" ]]; then
+                m_append=1
+                if echo "$m_type" | grep -q -i "flux"; then
+                    m_SED[$(($m_loop+2))]="$m_value"
+                elif echo "$m_type" | grep -q -i "err"; then
+                    m_SED[$(($m_loop+3))]="$m_value"
+                fi
+            fi
+        done
+        if [[ $m_append -eq 0 ]]; then
+            if echo "$m_type" | grep -q -i "flux"; then
+                m_SED=("${m_SED[@]}" "$m_band" "$m_wave" "$m_value" "1e+99")
+            elif echo "$m_type" | grep -q -i "err"; then
+                m_SED=("${m_SED[@]}" "$m_band" "$m_wave" "1e-99" "$m_value")
+            fi
+        fi
+        echo "${m_SED[@]}"
+    fi
+}
+# 
+# Clean source str
+# 
+function clean_source_str() {
+    if [[ $# -gt 0 ]]; then
+        if [[ $(echo "$1" | grep "{" | wc -l) -eq 1 ]]; then
+            # if the input is a dict
+            m_Source_Char=($(echo "${m_Sources[j]}" | tr -c '[[:alnum:]]' ' ')) # tr -c '[[:alnum:]]._-' ' '
+            m_Source_Name="${m_Source_Char[@]}"
+        else
+            m_Source_Name="${m_Sources[j]}"
+        fi
+        echo "$m_Source_Name" | perl -p -e 's/ +/_/g'
+    fi
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################
+#              MAIN PROGRAM              #
+##########################################
+
+
+
+# 
+# Check directories and data files
+# 
+m_ScriptDir=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
+
+
+
+# 
+# Check user input WaveData and FluxData
+# 
+m_Catalogs=()
+m_Sources=()
+m_MaxSNR=""
+m_OutputDir=""
+m_Input_ArgType="N/A"
+
+while [[ $# -gt 0 ]]; do
+    
+    TempStr=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+    TempCmd=""
+    
+    case "$TempStr" in
+                    
+             "-ID") TempCmd="$1"; shift
+                    m_Input_ArgType="Source"
+                    ;;
+                    
+           "-CAT"*) TempCmd="$1"; shift
+                    m_Input_ArgType="Catalog"
+                    ;;
+                    
+           "-OUT"*) TempCmd="$1"; shift
+                    m_Input_ArgType="OutputDir"
+                    ;;
+                    
+        "-MAXSNR"*) TempCmd="$1"; shift
+                    m_Input_ArgType="MaxSNR"
+                    ;;
+                    
+                 *) #echo "$1"
+                    #shift
+                    
+    esac
+    
+    case "$m_Input_ArgType" in
+                                        
+                           "Source") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_Sources+=("$1")
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with at least 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                           "Catalog") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_Catalogs+=("$1")
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                           "OutputDir") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_OutputDir="$1"
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                               "MaxSNR") 
+                                        # check followed argument
+                                        if [[ $# -ge 1 ]]; then
+                                            m_MaxSNR="$1"
+                                        else
+                                            echo ""
+                                            echo "Error! Input argument $TempCmd should be followed with 1 argument!"
+                                            echo ""
+                                            exit 1
+                                        fi
+                                        shift
+                                        ;;
+                                        
+                                 "N/A") 
+                                        # check followed argument
+                                        m_Input_ArgType="N/A"
+                                        shift
+                                        ;;
+                                        
+                                     *) #echo "$1"
+                                        shift
+                                        
+    esac
+    
+done
+
+if [[ "${#m_Catalogs[@]}" -eq 0 ]]; then
+    usage
+    exit
+fi
+
+
+
+
+
+
+# 
+# Prepare outdir
+# 
+#m_OutputDir="$(pwd -P)/catalog_flux"
+
+# 
+# Backup outdir
+# 
+#if [[ -d "$m_OutputDir" ]]; then
+#    if [[ -d "$m_OutputDir.backup" ]]; then
+#        if [[ -d "$m_OutputDir.backup.backup" ]]; then
+#            rm -rf "$m_OutputDir.backup.backup"
+#        fi
+#        mv "$m_OutputDir.backup" "$m_OutputDir.backup.backup"
+#    fi
+#    mv "$m_OutputDir" "$m_OutputDir.backup"
+#fi
+
+# 
+# Make outdir
+# 
+if [[ "$m_OutputDir"x != x ]]; then
+    if [[ ! -d "$m_OutputDir" ]]; then
+        mkdir -p "$m_OutputDir"
+    fi
+fi
+
+# 
+# run python code to get flux
+# 
+if [[ ! -f "$m_ScriptDir/michi2_extract_flux_from_data_table_v2.py" ]]; then
+    echo "Error! Failed to call \"$m_ScriptDir/michi2_extract_flux_from_data_table_v2.py\", which should be distributed along with this code!"
+    exit 1
+fi
+
+for (( i=0; i<${#m_Catalogs[@]}; i++ )); do
+    
+    m_CatalogUrl=$(perl -MCwd -e 'print Cwd::abs_path shift' "${m_Catalogs[i]}")
+    
+    if [[ "$m_OutputDir"x != x ]]; then
+        cd "$m_OutputDir"
+    fi
+    
+    # if no source id is given, we extract all sources in a catalog
+    # so we need to check existing files and do some backup
+    if [[ ${#m_Sources[@]} -eq 0 ]]; then
+        if [[ $(find . -maxdepth 1 -type f -name "extracted_flux_for_obj_at_row_*.txt" | grep -v "from_cat_*.txt" | wc -l) -gt 0 ]]; then
+            m_BackupDir=$(date +"backup_extracted_flux_for_objects_%Y%m%d_%Hh%Mm%Ss")
+            echo "Warning! Found existing \"extracted_flux_for_obj_at_row_*.txt\"! Backing-up them into \"$m_BackupDir\"!"
+            mkdir "$m_BackupDir"
+            mv extracted_flux_for_obj_at_row_*.txt "$m_BackupDir/"
+        fi
+    fi
+    
+    # if there is only one input catalog, the do not name the output file by catalog id
+    if [[ ${#m_Catalogs[@]} -gt 1 ]]; then
+        m_CatalogId=(-catid $((i+1)))
+    else
+        m_CatalogId=()
+    fi
+    
+    if [[ ! -z "$m_MaxSNR" ]]; then
+        echo "$m_ScriptDir/michi2_extract_flux_from_data_table_v2.py" "${m_CatalogUrl}" "${m_Sources[@]}" -maxsnr "$m_MaxSNR" ${m_CatalogId[@]} ">" "extracted_flux.log"
+        "$m_ScriptDir/michi2_extract_flux_from_data_table_v2.py" "${m_CatalogUrl}" "${m_Sources[@]}" -maxsnr "$m_MaxSNR" ${m_CatalogId[@]} 2>&1 | tee "extracted_flux.log"
+    else
+        echo "$m_ScriptDir/michi2_extract_flux_from_data_table_v2.py" "${m_CatalogUrl}" "${m_Sources[@]}" ${m_CatalogId[@]} ">" "extracted_flux.log"
+        "$m_ScriptDir/michi2_extract_flux_from_data_table_v2.py" "${m_CatalogUrl}" "${m_Sources[@]}" ${m_CatalogId[@]} 2>&1 | tee "extracted_flux.log"
+    fi
+    
+    #if [[ ${#m_Catalogs[@]} -ge 1 ]]; then
+    #    if [[ ${#m_Sources[@]} -gt 0 ]]; then
+    #        for (( j=0; j<${#m_Sources[@]}; j++ )); do
+    #            m_Source_Name=$(clean_source_str "${m_Sources[j]}")
+    #            if [[ -f "extracted_flux_for_obj_$j.txt" ]]; then
+    #                cp "extracted_flux_for_obj_$j.txt" "extracted_flux_for_source_${m_Source_Name}_from_cat_${i}.txt"
+    #                cp "extracted_flux_for_obj_$j.log" "extracted_flux_for_source_${m_Source_Name}_from_cat_${i}.log"
+    #            fi
+    #        done
+    #    else
+    #        # if no source id is given, we extract all sources in a catalog
+    #        # so we need to check whether any source is extracted and how many
+    #        if [[ $(find . -maxdepth 1 -type f -name "extracted_flux_for_obj_at_row_*.txt" | grep -v "from_cat_*.txt" | wc -l) -gt 0 ]]; then
+    #        if [[ -f "extracted_flux.txt" ]]; then
+    #            cp "extracted_flux.txt" "extracted_flux_from_cat_${i}.txt"
+    #            cp "extracted_flux.log" "extracted_flux_from_cat_${i}.log"
+    #        fi
+    #    fi
+    #fi
+    
+    if [[ "$m_OutputDir"x != x ]]; then
+        cd "../"
+    fi
+    
+done
+
+
+
+if [[ "$m_OutputDir"x != x ]]; then
+    cd "$m_OutputDir"
+fi
+
+# if the input catalog is not only one, then we 
+# combine the photometry in all catalogs for each source
+if [[ ${#m_Catalogs[@]} -gt 1 ]]; then
+    if [[ ${#m_Sources[@]} -gt 0 ]]; then
+        for (( j=0; j<${#m_Sources[@]}; j++ )); do
+            m_Source_Name=$(clean_source_str "${m_Sources[j]}")
+            head -n 2 "extracted_flux_for_source_${m_Source_Name}_from_cat_1.txt" > "extracted_flux_for_source_${m_Source_Name}_combined.txt"
+            for (( i=1; i<=${#m_Catalogs[@]}; i++ )); do
+                cat "extracted_flux_for_source_${m_Source_Name}_from_cat_$i.txt" | grep -v "^#" >> "extracted_flux_for_source_${m_Source_Name}_combined.txt"
+            done
+        done
+    fi
+fi
+
+if [[ "$m_OutputDir"x != x ]]; then
+    cd "../"
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

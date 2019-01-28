@@ -33,6 +33,7 @@ def usage():
     print('                                                       -redshift 3.0 \\')
     print('                                                       -IR-luminosity 5e12 \\')
     print('                                                       -freq-support extracted_freq_support.json \\')
+    print('                                                       -subtraction-threshold 1.0 \\')
     print('                                                       [-line-names CO CI NII CII] \\')
     print('                                                       [-wavelength-column 1] \\')
     print('                                                       [-flux-value-column 2] \\')
@@ -75,6 +76,7 @@ if __name__ == '__main__':
     known_line_fluxes = []
     output_file_name = ''
     speed_of_light_kms = 2.99792458e5
+    subtraction_threshold = 1.0 # the line-flux-as-continuum S/N threshold above which we will subtract the line
     iarg = 1
     tstr = ''
     tmode = ''
@@ -105,6 +107,9 @@ if __name__ == '__main__':
             isopt = True
         elif tstr == '-output-file-name' or tstr == '-output-file' or tstr == '-output' or tstr == '-out':
             tmode = 'output_file_name'
+            isopt = True
+        elif tstr == '-subtraction-threshold':
+            tmode = 'subtraction_threshold'
             isopt = True
         elif tstr.startswith('-'):
             raise ValueError('The input argument "%s" is not allowed!'%(sys.argv[iarg]))
@@ -159,6 +164,8 @@ if __name__ == '__main__':
                     iarg = iarg + 1
             elif tmode == 'output_file_name':
                 output_file_name = sys.argv[iarg]
+            elif tmode == 'subtraction_threshold':
+                subtraction_threshold = float(sys.argv[iarg])
         # 
         iarg = iarg + 1
     
@@ -201,14 +208,15 @@ if __name__ == '__main__':
             filter_ferr = fluxerrors[i]
             original_flux = filter_flux
             original_ferr = filter_ferr
-            print('filter_name:', "filter_name")
-            print('filter_flux:', filter_flux)
+            print('filter_name:', filter_name)
+            print('filter_flux:', filter_flux, '[mJy]')
+            print('filter_ferr:', filter_ferr, '[mJy]')
             freq_list = input_freq_support_freq_lists[input_freq_support_filter_names.index(filternames[i])]
             filter_freqcenter = np.mean(np.array(freq_list))
             filter_bandwidth = np.sum(np.array(freq_list)[1::2]-np.array(freq_list)[0::2])
             print('freq_list:', freq_list)
-            print('filter_freqcenter:', filter_freqcenter)
-            print('filter_bandwidth:', filter_bandwidth)
+            print('filter_freqcenter:', filter_freqcenter, '[GHz]')
+            print('filter_bandwidth:', filter_bandwidth, '[GHz]')
             line_freqs, line_names = find_radio_lines_in_frequency_range(freq_list, Redshift=z, include_faint_lines = False)
             # 
             # -- 20181203 bug fixed: there are some duplicates in line_names if the spectral_setups have overlaps
@@ -236,9 +244,9 @@ if __name__ == '__main__':
                 # 
                 # line_flux_contribution_as_a_continuum
                 line_flux_contribution_as_a_continuum = line_flux_prediction / (filter_bandwidth/filter_freqcenter*speed_of_light_kms) * 1e3 # mJy, line flux distributed over 8 GHz at filter_freqcenter GHz
-                print('line_flux_contribution_as_a_continuum = %0.4f [mJy]' % (line_flux_contribution_as_a_continuum))
+                print('line_flux_contribution_as_a_continuum = %0.6g [mJy]' % (line_flux_contribution_as_a_continuum))
                 line_flux_contribution_to_the_continuum = line_flux_contribution_as_a_continuum / filter_flux
-                print('line_flux_contribution_to_the_measured_flux = %0.4f%%' % (line_flux_contribution_to_the_continuum * 100))
+                print('line_flux_contribution_to_the_measured_flux = %0.4g%%' % (line_flux_contribution_to_the_continuum * 100))
                 # 
                 # 20180828: we need iterate a little bit, because IR_luminosity is based on the measured flux by assuming no line contamination
                 # if there has a line contamination, say 
@@ -268,23 +276,27 @@ if __name__ == '__main__':
                         a = 1
                         break
                 line_flux_contribution_to_the_continuum = a
-                print('line_flux_contribution_to_the_measured_flux = %0.4f%% (after iteration)' % (line_flux_contribution_to_the_continuum * 100))
-                # 
-                # decontamination
+                print('line_flux_contribution_to_the_measured_flux = %0.4g%% (after iteration)' % (line_flux_contribution_to_the_continuum * 100))
                 line_flux_contribution_as_a_continuum = line_flux_contribution_to_the_continuum * filter_flux
-                filter_flux = (1-line_flux_contribution_to_the_continuum) * filter_flux # if there are multiple lines, this can iteratively remove all line contaminations
-                filter_ferr = original_ferr # keep original flux error rather than S/N
-                #filter_ferr = np.sqrt((original_ferr/original_flux)**2 ) * filter_flux # keep original S/N
-                #filter_ferr = np.sqrt((original_ferr/original_flux)**2 + len(line_names) * 0.2**2) * filter_flux # assuming each line prediction has an error of 0.2 dex, then the error propagation is as this line of code.
+                print('line_flux_contribution_as_a_continuum = %0.6g [mJy] (after iteration)' % (line_flux_contribution_as_a_continuum))
+                print('line_flux_contribution_as_a_continuum / filter_ferr = %0.6g (after iteration)' % (line_flux_contribution_as_a_continuum / filter_ferr))
                 # 
-                # print message
-                print('"line_name":"%s", z:%0.6f, "IR_luminosity_for_prediction":%0.6e, "line_flux_prediction":%0.12f, '%(line_name, z, (1-line_flux_contribution_to_the_continuum) * IR_luminosity, line_flux_prediction))
-                print('"line_flux_as_a_continuum":%0.12f, "total_filter_flux_measured":%0.12f, "filter_flux_after_line_subtraction":%0.12f, "ratio_of_line_contribution":%0.12f, '%(line_flux_contribution_as_a_continuum, original_flux, filter_flux, line_flux_contribution_to_the_continuum))
-                subtracted_line_name.append(line_name)
-                subtracted_line_flux_Jykms.append('%0.4e'%(line_flux_prediction))
-                subtracted_line_flux_mJy.append('%0.4e'%(line_flux_contribution_as_a_continuum))
-                
-                countlines += 1
+                # subtract line contribution (only when line flux as continuum's S/N >= threshold)
+                if line_flux_contribution_as_a_continuum / filter_ferr >= subtraction_threshold:
+                    filter_flux = (1-line_flux_contribution_to_the_continuum) * filter_flux # if there are multiple lines, this can iteratively remove all line contaminations
+                    filter_ferr = original_ferr # keep original flux error rather than S/N
+                    #filter_ferr = np.sqrt((original_ferr/original_flux)**2 ) * filter_flux # keep original S/N
+                    #filter_ferr = np.sqrt((original_ferr/original_flux)**2 + len(line_names) * 0.2**2) * filter_flux # assuming each line prediction has an error of 0.2 dex, then the error propagation is as this line of code.
+                    # 
+                    # print message
+                    print('"line_name":"%s", z:%0.6f, "IR_luminosity_for_prediction":%0.6e, "line_flux_prediction":%0.12f, '%(line_name, z, (1-line_flux_contribution_to_the_continuum) * IR_luminosity, line_flux_prediction))
+                    print('"line_flux_as_a_continuum":%0.12f, "total_filter_flux_measured":%0.12f, "filter_flux_after_line_subtraction":%0.12f, "ratio_of_line_contribution":%0.12f, '%(line_flux_contribution_as_a_continuum, original_flux, filter_flux, line_flux_contribution_to_the_continuum))
+                    subtracted_line_name.append(line_name)
+                    subtracted_line_flux_Jykms.append('%0.4e'%(line_flux_prediction))
+                    subtracted_line_flux_mJy.append('%0.4e'%(line_flux_contribution_as_a_continuum))
+                    # 
+                    # count subtracted lines
+                    countlines += 1
         # 
         if len(subtracted_line_name) > 0:
             subtractedlinename.append('"'+';'.join(subtracted_line_name)+'"')
@@ -299,23 +311,27 @@ if __name__ == '__main__':
     # 
     # 
     # save to output table
-    tbout[tb.colnames[input_wavelength_column-1]] = wavelengths # um
-    tbout[tb.colnames[input_flux_value_column-1]] = fluxvalues # mJy
-    tbout[tb.colnames[input_flux_error_column-1]] = fluxerrors # mJy
-    tbout[tb.colnames[input_flux_unit_column-1]] = fluxunits # str
-    tbout[tb.colnames[input_filter_name_column-1]] = filternames # str
-    tbout.add_column(Column(np.array(subtractedlinename)), name='subt_line_name')
-    tbout.add_column(Column(np.array(subtractedlineflux_Jykms)), name='subt_line_flux_Jykms')
-    tbout.add_column(Column(np.array(subtractedlineflux_mJy)), name='subt_line_flux_mJy')
-    if os.path.isfile(output_file_name):
-        print('Found existing "%s"! Backup as "%s.backup"!'%(output_file_name, output_file_name))
-        shutil.move(output_file_name, output_file_name+'.backup')
-    tbout.write(output_file_name, format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=False)
-    with open(output_file_name, 'r+') as fp:
-        fp.seek(0)
-        fp.write('#')
-    print('Output to "%s"!'%(output_file_name))
-    print('')
+    if countlines >= 1:
+        tbout[tb.colnames[input_wavelength_column-1]] = wavelengths # um
+        tbout[tb.colnames[input_flux_value_column-1]] = fluxvalues # mJy
+        tbout[tb.colnames[input_flux_error_column-1]] = fluxerrors # mJy
+        tbout[tb.colnames[input_flux_unit_column-1]] = fluxunits # str
+        tbout[tb.colnames[input_filter_name_column-1]] = filternames # str
+        tbout.add_column(Column(np.array(subtractedlinename)), name='subt_line_name')
+        tbout.add_column(Column(np.array(subtractedlineflux_Jykms)), name='subt_line_flux_Jykms')
+        tbout.add_column(Column(np.array(subtractedlineflux_mJy)), name='subt_line_flux_mJy')
+        if os.path.isfile(output_file_name):
+            print('Found existing "%s"! Backup as "%s.backup"!'%(output_file_name, output_file_name))
+            shutil.move(output_file_name, output_file_name+'.backup')
+        tbout.write(output_file_name, format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=False)
+        with open(output_file_name, 'r+') as fp:
+            fp.seek(0)
+            fp.write('#')
+        print('Output to "%s"!'%(output_file_name))
+        print('')
+    else:
+        print('No line within bandwidth! Will not output anything!')
+        print('')
     # 
 
 

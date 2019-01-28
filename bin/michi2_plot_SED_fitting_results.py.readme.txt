@@ -1,0 +1,3 @@
+identical to "michi2_plot_SED_fitting_results_for_michi2_v04.py", 
+now replaced by "michi2_plot_SED_fitting_results_for_michi2_v05.py". 
+

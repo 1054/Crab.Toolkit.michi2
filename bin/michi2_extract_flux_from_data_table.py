@@ -88,6 +88,9 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
         # skip FLAG
         if re.match(r'.*(_FLAG_).*', input_str, re.IGNORECASE):
             continue
+        # skip FLAG
+        if re.match(r'.*(_FLAG)', input_str, re.IGNORECASE):
+            continue
         # skip Original
         if re.match(r'.*(_Original_).*', input_str, re.IGNORECASE):
             continue
@@ -159,6 +162,9 @@ def recognize_Col_FLUXERR(input_list, special_file_name=''):
             input_str = str(input_str)
         # skip FLAG
         if re.match(r'.*(_FLAG_).*', input_str, re.IGNORECASE):
+            continue
+        # skip FLAG
+        if re.match(r'.*(_FLAG)', input_str, re.IGNORECASE):
             continue
         # skip Original
         if re.match(r'.*(_Original_).*', input_str, re.IGNORECASE):
@@ -335,7 +341,7 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['Hw'] = 'CFHT WIRCam H' # Laigle+2016 Table 1
             Filter_Dict['Ks'] = 'VISTA VIRCAM K' # Laigle+2016 Table 1
             Filter_Dict['Ksw'] = 'CFHT WIRCam K' # Laigle+2016 Table 1
-        if catalog_name.find('Jin')>=0:
+        if catalog_name.find('Jin')>=0 or catalog_name.find('Liu')>=0:
             Filter_Dict['K'] = 'CFHT WIRCam or VISTA VIRCAM' # Jin+2018 used McCraken+2010 catalog, or Muzzin+2013 catalog.
             Filter_Dict['3ghz'] = 'VLA 3GHz'
             Filter_Dict['1.4ghz'] = 'VLA 1.4GHz'
