@@ -21,6 +21,7 @@ if [[ $# -eq 0 ]]; then
     echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5"
     echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -trial"
     echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000"
+    echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -obj-name YourSourceName"
     echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-radio"
     echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-stellar"
     echo "    michi2-run-SED-fitting-v5 -flux data_table_wave_flux_and_flux_errors.txt -redshift 1.5 -parallel 2 -sampling 3000 -no-AGN"

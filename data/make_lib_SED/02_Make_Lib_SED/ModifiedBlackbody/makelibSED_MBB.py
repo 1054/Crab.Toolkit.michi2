@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # 
-# run this after running "a_dzliu_code_output_datatable_ID_RA_Dec_z_Mstar_SFR_sSFR_with_SED_fluxes.py"
+# This code generates a grid of modified blackbody
+# Parameter grid:
+#   list_beta = np.arange(1.5, 3.2+0.1, 0.1)
+#   list_T_dust = np.arange(10.0, 100.0+2.0, 2.0)
 # 
 
 from __future__ import print_function
@@ -336,8 +339,8 @@ if __name__ == '__main__':
     beta = []
     T_dust = []
     L_dust = []
-    for i in range(len(list_beta)):
-        for j in range(len(list_T_dust)):
+    for j in range(len(list_T_dust)):
+        for i in range(len(list_beta)):
             print('list_beta[%d/%d], list_T_dust[%d/%d]'%(i+1,len(list_beta),j+1,len(list_T_dust)))
             SED = get_SED_MBB(beta = list_beta[i], T_dust = list_T_dust[j], verbose = False)
             lambda_um.extend(SED['lambda_um'])

@@ -892,13 +892,13 @@ else:
             # if only plot the best solution, then we plot no chi2 on the figure, but only source name
             if i == 0:
                 # 
-                PlotTextPosY = 0.95
+                PlotTextPosY = 0.90
                 # 
                 if SourceName != '':
                     Plot_engine.xyouts(0.05, 0.90, SourceName, NormalizedCoordinate=True, fontsize=15)
-                    PlotTextPosY = 0.90
+                    PlotTextPosY = 0.825
                 # 
-                #Plot_engine.xyouts(0.20, 0.90, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
+                Plot_engine.xyouts(0.05, PlotTextPosY, '$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True, fontsize=15)
                 #<20180216># allow user input text with the "-text" argument
                 if len(UserInputText) > 0:
                     for UserInputTextIndex in range(len(UserInputText)):
@@ -944,8 +944,8 @@ else:
             Plot_engine.set_yrange([1.0,1e10])
         #if Redshift < 0.003:
         #    Plot_engine.set_yrange([1e3,1e13])
-    Plot_engine.set_xtitle('Observing-frame wavelength [um]')
-    Plot_engine.set_ytitle('Flux density [mJy]')
+    Plot_engine.set_xtitle(r'Observed-frame wavelength [$\mu$m]')
+    Plot_engine.set_ytitle(r'Flux density [mJy]')
     Plot_engine.set_xcharsize(charsize=12, axislabelcharsize=16)
     Plot_engine.set_ycharsize(charsize=12, axislabelcharsize=16)
     Plot_engine.savepdf(Output_dir+Output_name+'.pdf')
