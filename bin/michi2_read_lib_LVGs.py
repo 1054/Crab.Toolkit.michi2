@@ -15,8 +15,9 @@
 
 import os
 import sys
+import re
 
-sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
+sys.path.append(os.path.dirname(os.path.dirname(__file__)) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
 
 from CrabTable import *
 
@@ -39,32 +40,66 @@ def lib_file_get_header(Lib_file):
     # return the number of '#' commented lines at the beginning of the Lib_file.
     Lib_header = {}
     NLINE = 0
+    NBYTE = 0
     with open(Lib_file,'r') as fp:
+        last_valid_header_line = ''
+        first_valid_data_line = ''
         while True:
             data_line = fp.readline()
             if not data_line:
                 break
             if data_line.startswith('#'):
                 NLINE = NLINE + 1
-                for header_key in ['NVAR1', 'NVAR2', \
-                                   'NPAR', \
-                                   'NPAR1', 'NPAR2', 'NPAR3', 'NPAR4', 'NPAR5', 'NPAR6', 'NPAR7', 'NPAR8', \
-                                   'CPAR1', 'CPAR2', 'CPAR3', 'CPAR4', 'CPAR5', 'CPAR6', 'CPAR7', 'CPAR8', \
-                                   'TPAR1', 'TPAR2', 'TPAR3', 'TPAR4', 'TPAR5', 'TPAR6', 'TPAR7', 'TPAR8', ]:
-                    if data_line.startswith('# %s'%(header_key)):
-                        data_line_split = data_line.split('=')
-                        if len(data_line_split) >= 2:
-                            data_line_split = data_line_split[1]
-                            if data_line_split.find('#') > 0:
-                                data_line_split = data_line_split.split('#')[0]
-                            if header_key.startswith('N') or header_key.startswith('C'):
-                                Lib_header[header_key] = int(data_line_split)
-                            else:
-                                Lib_header[header_key] = data_line_split.strip()
+                #NBYTE = fp.tell() # the last +1 accounts for the ending 
+                if data_line.strip() != '#':
+                    for header_key in ['NVAR1', 'NVAR2', \
+                                       'NPAR', \
+                                       'NPAR1', 'NPAR2', 'NPAR3', 'NPAR4', 'NPAR5', 'NPAR6', 'NPAR7', 'NPAR8', \
+                                       'CPAR1', 'CPAR2', 'CPAR3', 'CPAR4', 'CPAR5', 'CPAR6', 'CPAR7', 'CPAR8', \
+                                       'TPAR1', 'TPAR2', 'TPAR3', 'TPAR4', 'TPAR5', 'TPAR6', 'TPAR7', 'TPAR8', ]:
+                        #if data_line.startswith('# %s'%(header_key)):
+                        if re.match(r'^#\s*%s\s*=.*'%(header_key), data_line):
+                            data_line_split = data_line.split('=')
+                            if len(data_line_split) >= 2:
+                                data_line_split = data_line_split[1]
+                                if data_line_split.find('#') > 0:
+                                    data_line_split = data_line_split.split('#')[0]
+                                if header_key.startswith('N') or header_key.startswith('C'):
+                                    Lib_header[header_key] = int(data_line_split)
+                                else:
+                                    Lib_header[header_key] = data_line_split.strip()
+                    last_valid_header_line = data_line
+            elif data_line.strip() == '':
+                continue
             else:
+                first_valid_data_line = data_line
+                NBYTE = fp.tell() - len(data_line)
                 break
         fp.close()
     Lib_header['NLINE'] = NLINE
+    Lib_header['NBYTE'] = NBYTE
+    # 
+    if last_valid_header_line == '':
+        raise Exception('Error! Failed to read header column names from "%s"!'%(Lib_file))
+    else:
+        Lib_header['colnames'] = last_valid_header_line.replace('#','').strip().split()
+    # 
+    if len(Lib_header['colnames']) != Lib_header['NPAR'] + 2:
+        raise Exception('Error! The column number and header NPAR do not match in "%s"!'%(Lib_file))
+    # 
+    if first_valid_data_line == '':
+        raise Exception('Error! Failed to read a first data line from "%s"!'%(Lib_file))
+    else:
+        data_array = first_valid_data_line.strip().split()
+        Lib_header['coltypes'] = []
+        for i,data_str in enumerate(data_array):
+            if re.match(r'^[0-9eE.+-]+$', data_str):
+                Lib_header['coltypes'].append(numpy.float64)
+                #Lib_header['coltypes'].append( (Lib_header['colnames'][i], float) )
+            else:
+                Lib_header['coltypes'].append(numpy.str)
+                #Lib_header['coltypes'].append( (Lib_header['colnames'][i], str) )
+    # 
     return Lib_header
 
 
@@ -93,16 +128,24 @@ def lib_file_get_data_block_quick(Lib_file, starting_data_line_index, every_data
     from itertools import islice
     if Lib_header == []: Lib_header = lib_file_get_header(Lib_file)
     if max_data_line_count == 0:
-        max_data_line_count = int(Lib_header['NVAR1']) * every_data_line
+        #max_data_line_count = int(Lib_header['NVAR1']) * every_data_line #<BUG><20190920>#
+        max_data_line_count = int(Lib_header['NVAR2'])
     Lib_arr = []
     with open(Lib_file,'r') as fp:
+        # read lib file by slice
         Lib_lines = list(islice(fp, 
                                 Lib_header['NLINE'] + starting_data_line_index, 
                                 Lib_header['NLINE'] + starting_data_line_index + max_data_line_count * every_data_line, 
                                 every_data_line))
-        Lib_arr = numpy.fromstring(''.join(Lib_lines), dtype=float, sep=' ')
+        #print('len(Lib_lines)', len(Lib_lines))
+        #print('Lib_lines[0]', Lib_lines[0])
+        #Lib_arr = numpy.fromstring(' '.join(Lib_lines), dtype=float, sep=' ')
+        Lib_arr = numpy.fromstring(' '.join(Lib_lines), sep=' ') # dtype=float is removed because now we allow string value for some params
+        #print('Lib_arr.shape', Lib_arr.shape)
+        #print('Lib_arr', Lib_arr)
         #print('reshape', len(Lib_lines), len(Lib_arr)/len(Lib_lines))
-        Lib_arr = Lib_arr.reshape((len(Lib_lines),int(len(Lib_arr)/len(Lib_lines))))
+        #Lib_arr = Lib_arr.reshape((len(Lib_lines), int(len(Lib_arr)/len(Lib_lines))) ) #<BUG><20190920>#
+        Lib_arr = Lib_arr.reshape((len(Lib_lines), int(len(Lib_arr)/len(Lib_lines))) )
     # 
     #for iLib_line in range(max_data_line_count):
     #    Lib_arr.append( \
@@ -128,6 +171,75 @@ def lib_file_get_data_block_quick_2(Lib_file, starting_data_line_index, Lib_head
     Lib_arr = Flat_arr.reshape( (int(Lib_header['NVAR1']), int(len(Flat_arr)/Lib_header['NVAR1'])) ) # numpy.column_stack((Flat_arr[::2],Flat_arr[1::2]))
     #print(Lib_arr[0])
     return Lib_arr
+
+
+def lib_file_get_data_lines(Lib_file, select_nth_line, max_data_block_count = 0, Lib_header = [], verbose = True):
+    # 20190920 new
+    # select_nth_lines means the nth line in each data block (single model)
+    # select_nth_lines can be a list or a single number
+    # select_nth_lines 1 means the first line in each data block (LVG model)
+    # we use mmap now
+    # we allow multiple 'select_nth_lines' input as a list
+    # 
+    import shlex
+    import mmap
+    from itertools import islice
+    # 
+    if numpy.isscalar(select_nth_line):
+        select_nth_lines = [select_nth_line]
+    else:
+        select_nth_lines = select_nth_line
+    # 
+    if Lib_header == []: 
+        Lib_header = lib_file_get_header(Lib_file)
+    # 
+    model_rows = Lib_header['NVAR1'] # number of rows for each single model
+    model_nums = Lib_header['NVAR2'] # number of models in the library
+    model_cols = Lib_header['NPAR'] + 2 # number of parameters (columns) plus X and Y
+    if max_data_block_count > 0:
+        model_nums = max_data_block_count
+    # 
+    all_data_lines = numpy.full((len(select_nth_lines), model_nums, model_cols), '', dtype=object)
+    #print('all_data_lines.shape', all_data_lines.shape, model_cols)
+    # 
+    with open(Lib_file, 'r') as fp:
+        # memory-map the file, size 0 means whole file
+        # note that for Windows OS use access=mmap.ACCESS_READ
+        with mmap.mmap(fp.fileno(), 0, flags=mmap.MAP_SHARED, prot=mmap.PROT_READ, offset=0) as mm:
+            # skip header bytes
+            mm.seek(Lib_header['NBYTE'])
+            # read each model block
+            data_lines = ['']*model_rows
+            for i in range(model_rows * model_nums):
+                data_line = mm.readline()
+                #<debug>
+                #if i == 0:
+                #    print(data_line)
+                for j in range(len(select_nth_lines)):
+                    if select_nth_lines[j] == int(i % model_rows)+1:
+                        if type(data_line) is bytes:
+                            data_line = data_line.decode('utf-8')
+                        #<debug>
+                        #print(i, j, select_nth_lines[j], int(i % model_rows), int(i/model_rows))
+                        #if data_line.find('C_atom')>=0:
+                        #    print(i, j, select_nth_lines[j], int(i % model_rows), int(i/model_rows))
+                        #    sys.exit()
+                        all_data_lines[j,int(i/model_rows),:] = shlex.split(data_line)
+    # 
+    # convert str to float when needed
+    #for k in range(all_data_lines.shape[2]):
+    #    #print(k, all_data_lines[0,0,k])
+    #    #if re.match(r'^[0-9]+$', all_data_lines[0,0,k]):
+    #    #    all_data_lines[:,:,k] = all_data_lines[:,:,k].astype(numpy.int64)
+    #    if re.match(r'^[0-9eE.+-]+$', all_data_lines[0,0,k]):
+    #        all_data_lines[:,:,k] = all_data_lines[:,:,k].astype(numpy.float64)
+    #    else:
+    #        all_data_lines[:,:,k] = all_data_lines[:,:,k].astype(numpy.str)
+    # 
+    if numpy.isscalar(select_nth_line):
+        return all_data_lines[0]
+    else:
+        return all_data_lines
 
 
 def check_array(arr):

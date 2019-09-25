@@ -632,6 +632,12 @@ else:
     # Get Redshift
     Redshift = float(InfoDict['REDSHIFT'])
     # 
+    # Get Redshift
+    if 'DISTANCE' in InfoDict:
+        Distance = float(InfoDict['DISTANCE'])
+    else:
+        Distance = -99
+    # 
     # Set default OBS data file name <TODO><DEBUG>
     if UserInputFluxFile == '' and os.path.isfile('extracted_flux.txt'):
         UserInputFluxFile = 'extracted_flux.txt'
@@ -925,23 +931,23 @@ else:
     # 
     # Plot OBS data points
     try:
-        Plot_engine.plot_xy(Wavelength_obs[Detection_mask], Flux_obs[Detection_mask], yerr=FluxErr_obs[Detection_mask], dataname='obs', overplot=True, symbol='open square', symsize=3, thick=1.5, capsize=4, zorder=10, verbose=UserInputVerbose)
+        Plot_engine.plot_xy(Wavelength_obs[Detection_mask], Flux_obs[Detection_mask], yerr=FluxErr_obs[Detection_mask], dataname='obs', overplot=True, symbol='o', symsize=2, thick=1.5, capsize=4, alpha=0.6, zorder=10, verbose=UserInputVerbose)
         Plot_engine.plot_xy(Wavelength_obs[UpperLimits_mask], 3.0*FluxErr_obs[UpperLimits_mask], dataname='upper limits', overplot=True, symbol='upper limits', symsize=3, thick=1.25, alpha=0.5, zorder=9, verbose=UserInputVerbose)
     except Exception as err:
         print(err)
     # 
     # 
-    Plot_engine.set_xrange([0.1,1e6])
-    Plot_engine.set_yrange([1e-6,1e4])
+    Plot_engine.set_xrange([0.1, 1e6])
+    Plot_engine.set_yrange([1e-6, 1e4])
     if len(PlotYRange) == 2:
         Plot_engine.set_yrange(PlotYRange)
     else:
         if Redshift < 0.1:
-            Plot_engine.set_yrange([1e-3,1e7])
+            Plot_engine.set_yrange([0.8e-3, 1e6])
         if Redshift < 0.05:
-            Plot_engine.set_yrange([0.1,1e9])
+            Plot_engine.set_yrange([0.8e-2, 1e7])
         if Redshift < 0.01:
-            Plot_engine.set_yrange([1.0,1e10])
+            Plot_engine.set_yrange([0.8e-1, 1e8])
         #if Redshift < 0.003:
         #    Plot_engine.set_yrange([1e3,1e13])
     Plot_engine.set_xtitle(r'Observed-frame wavelength [$\mu$m]')
@@ -983,7 +989,11 @@ else:
     Mass_total_dust_dict = {}
     fPDR_total_dust_dict = {}
     Umean_total_dust_dict = {}
+    dust_emissivity_beta_warm_dust_dict = {}
+    dust_emissivity_beta_cold_dust_dict = {}
     dust_emissivity_beta_dict = {}
+    dust_temperature_warm_dust_dict = {}
+    dust_temperature_cold_dust_dict = {}
     dust_temperature_dict = {}
     # 
     # define constants
@@ -1012,7 +1022,10 @@ else:
         #    print('We need that to compute the luminosity distance!')
         #    sys.exit()
         #dL = float(dL_str)
-        print('dL = %s [Mpc]'%(dL))
+        print('dL = %s [Mpc] (lumdist)'%(dL))
+    if Distance > 0.0:
+        dL = Distance
+        print('dL = %s [Mpc] (set by user)'%(dL))
     # 
     # get parameter list for each lib
     Lib_number = int(InfoDict['NLIB'])
@@ -1052,11 +1065,11 @@ else:
                     Stellar_mass_dict['Lib_file'] = InfoDict[Lib_name]
                     Stellar_mass_dict['Lib_name'] = Lib_name
                     Stellar_mass_dict['Lib_numb'] = j+1
-                    Stellar_mass_dict['Par_name'] = r'$\log \ M_{*}$ [$\mathrm{M}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    Stellar_mass_dict['Par_name'] = r'$\log_{10} \ M_{*} \ \mathrm{[\mathrm{M}_{\odot}]}$' # Lib_dict[Key_TPAR]
                     Stellar_mass_dict['Par_file'] = 'Mstar'
                     Stellar_mass_dict['Col_numb'] = Col_number
                     Stellar_mass_dict['Log_calc'] = True
-                    Stellar_mass_dict['range'] = numpy.power(10,[8.0,13.5])
+                    Stellar_mass_dict['range'] = numpy.power(10,[7.0,13.5])
                     Stellar_mass_dict['value'] = DataArray['a%d'%(j+1)] / (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * DataTable.getColumn(Col_number) / (1+Redshift)
                     Stellar_mass_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1064,11 +1077,11 @@ else:
                     Stellar_age_dict['Lib_file'] = InfoDict[Lib_name]
                     Stellar_age_dict['Lib_name'] = Lib_name
                     Stellar_age_dict['Lib_numb'] = j+1
-                    Stellar_age_dict['Par_name'] = 'Age [Gyr]' # Lib_dict[Key_TPAR]
+                    Stellar_age_dict['Par_name'] = r'$\log_{10} \ \mathrm{Age} \ \mathrm{[Gyr]}$' # Lib_dict[Key_TPAR]
                     Stellar_age_dict['Par_file'] = 'Age'
                     Stellar_age_dict['Col_numb'] = Col_number
-                    Stellar_age_dict['Log_calc'] = False
-                    Stellar_age_dict['range'] = [0.1, 5.0]
+                    Stellar_age_dict['Log_calc'] = True
+                    Stellar_age_dict['range'] = [0.05, 15.0]
                     Stellar_age_dict['value'] = DataTable.getColumn(Col_number)
                     Stellar_age_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1091,11 +1104,11 @@ else:
                     LTIR_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     LTIR_warm_dust_dict['Lib_name'] = Lib_name
                     LTIR_warm_dust_dict['Lib_numb'] = j+1
-                    LTIR_warm_dust_dict['Par_name'] = r'$\log \ L_{\mathrm{IR}}$ (warm) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    LTIR_warm_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{IR}}$ (warm) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     LTIR_warm_dust_dict['Par_file'] = 'LIR_warm'
                     LTIR_warm_dust_dict['Col_numb'] = Col_number
                     LTIR_warm_dust_dict['Log_calc'] = True
-                    LTIR_warm_dust_dict['range'] = numpy.power(10,[9.0,14.5])
+                    LTIR_warm_dust_dict['range'] = numpy.power(10,[6.0,14.5])
                     LTIR_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn(Col_number)) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     LTIR_warm_dust_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1103,11 +1116,11 @@ else:
                     LFIR_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     LFIR_warm_dust_dict['Lib_name'] = Lib_name
                     LFIR_warm_dust_dict['Lib_numb'] = j+1
-                    LFIR_warm_dust_dict['Par_name'] = r'$\log \ L_{\mathrm{FIR,\,40-400{\mu}\mathrm{m}}}$ (warm) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    LFIR_warm_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{FIR,\,40-400{\mu}\mathrm{m}}}$ (warm) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     LFIR_warm_dust_dict['Par_file'] = 'LFIR_warm'
                     LFIR_warm_dust_dict['Col_numb'] = Col_number
                     LFIR_warm_dust_dict['Log_calc'] = True
-                    LFIR_warm_dust_dict['range'] = numpy.power(10,[9.0,14.5])
+                    LFIR_warm_dust_dict['range'] = numpy.power(10,[6.0,14.5])
                     LFIR_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn(Col_number)) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     LFIR_warm_dust_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1119,18 +1132,18 @@ else:
                     Umin_warm_dust_dict['Par_file'] = 'Umin_warm'
                     Umin_warm_dust_dict['Col_numb'] = Col_number
                     Umin_warm_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
-                    Umin_warm_dust_dict['range'] = [0.08,30.0]
+                    Umin_warm_dust_dict['range'] = [0.08,50.0]
                     Umin_warm_dust_dict['value'] = DataTable.getColumn(Col_number)
                     Umin_warm_dust_dict['chisq'] = DataArray['chi2']
                     # 
                     Mass_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     Mass_warm_dust_dict['Lib_name'] = Lib_name
                     Mass_warm_dust_dict['Lib_numb'] = j+1
-                    Mass_warm_dust_dict['Par_name'] = r'$\log \ M_{\mathrm{dust}}$ (warm) [$\mathrm{M}_{\odot}$]'
+                    Mass_warm_dust_dict['Par_name'] = r'$\log_{10} \ M_{\mathrm{dust}}$ (warm) [$\mathrm{M}_{\odot}$]'
                     Mass_warm_dust_dict['Par_file'] = 'Mdust_warm'
                     Mass_warm_dust_dict['Col_numb'] = 2+2*(j+1)
                     Mass_warm_dust_dict['Log_calc'] = True
-                    Mass_warm_dust_dict['range'] = numpy.power(10,[7.0,12.0])
+                    Mass_warm_dust_dict['range'] = numpy.power(10,[5.0,12.0])
                     Mass_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * dL**2 / (1+Redshift) # Mdust #NOTE# no need to multiply a '4*pi'!
                     Mass_warm_dust_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1143,11 +1156,11 @@ else:
                     LTIR_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     LTIR_cold_dust_dict['Lib_name'] = Lib_name
                     LTIR_cold_dust_dict['Lib_numb'] = j+1
-                    LTIR_cold_dust_dict['Par_name'] = r'$\log \ L_{\mathrm{IR}}$ (cold) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    LTIR_cold_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{IR}}$ (cold) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     LTIR_cold_dust_dict['Par_file'] = 'LIR_cold'
                     LTIR_cold_dust_dict['Col_numb'] = Col_number
                     LTIR_cold_dust_dict['Log_calc'] = True
-                    LTIR_cold_dust_dict['range'] = numpy.power(10,[9.0,14.5])
+                    LTIR_cold_dust_dict['range'] = numpy.power(10,[6.0,14.5])
                     LTIR_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn(Col_number)) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     LTIR_cold_dust_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1155,11 +1168,11 @@ else:
                     LFIR_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     LFIR_cold_dust_dict['Lib_name'] = Lib_name
                     LFIR_cold_dust_dict['Lib_numb'] = j+1
-                    LFIR_cold_dust_dict['Par_name'] = r'$\log \ L_{\mathrm{FIR,\,40-400{\mu}\mathrm{m}}}$ (cold) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    LFIR_cold_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{FIR,\,40-400{\mu}\mathrm{m}}}$ (cold) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     LFIR_cold_dust_dict['Par_file'] = 'LFIR_cold'
                     LFIR_cold_dust_dict['Col_numb'] = Col_number
                     LFIR_cold_dust_dict['Log_calc'] = True
-                    LFIR_cold_dust_dict['range'] = numpy.power(10,[9.0,14.5])
+                    LFIR_cold_dust_dict['range'] = numpy.power(10,[6.0,14.5])
                     LFIR_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * numpy.power(10,DataTable.getColumn(Col_number)) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     LFIR_cold_dust_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1171,18 +1184,18 @@ else:
                     Umin_cold_dust_dict['Par_file'] = 'Umin_cold'
                     Umin_cold_dust_dict['Col_numb'] = Col_number
                     Umin_cold_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
-                    Umin_cold_dust_dict['range'] = [0.08,30.0]
+                    Umin_cold_dust_dict['range'] = [0.08,50.0]
                     Umin_cold_dust_dict['value'] = DataTable.getColumn(Col_number)
                     Umin_cold_dust_dict['chisq'] = DataArray['chi2']
                     # 
                     Mass_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     Mass_cold_dust_dict['Lib_name'] = Lib_name
                     Mass_cold_dust_dict['Lib_numb'] = j+1
-                    Mass_cold_dust_dict['Par_name'] = r'$\log \ M_{\mathrm{dust}}$ (cold) [$\mathrm{M}_{\odot}$]'
+                    Mass_cold_dust_dict['Par_name'] = r'$\log_{10} \ M_{\mathrm{dust}}$ (cold) [$\mathrm{M}_{\odot}$]'
                     Mass_cold_dust_dict['Par_file'] = 'Mdust_cold'
                     Mass_cold_dust_dict['Col_numb'] = 2+2*(j+1)
                     Mass_cold_dust_dict['Log_calc'] = True
-                    Mass_cold_dust_dict['range'] = numpy.power(10,[7.0,12.0])
+                    Mass_cold_dust_dict['range'] = numpy.power(10,[5.0,12.0])
                     Mass_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * dL**2 / (1+Redshift) # Mdust # Mdust #NOTE# no need to multiply a '4*pi'!
                     Mass_cold_dust_dict['chisq'] = DataArray['chi2']
                     # 
@@ -1198,7 +1211,7 @@ else:
                     Lumin_AGN_dict['Lib_file'] = InfoDict[Lib_name]
                     Lumin_AGN_dict['Lib_name'] = Lib_name
                     Lumin_AGN_dict['Lib_numb'] = j+1
-                    Lumin_AGN_dict['Par_name'] = r'$\log \ L_{\mathrm{AGN}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    Lumin_AGN_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{AGN}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     Lumin_AGN_dict['Par_file'] = 'LAGN'
                     Lumin_AGN_dict['Col_numb'] = Col_number
                     Lumin_AGN_dict['Log_calc'] = True
@@ -1213,7 +1226,7 @@ else:
                     Lumin_AGN_dict['Lib_file'] = InfoDict[Lib_name]
                     Lumin_AGN_dict['Lib_name'] = Lib_name
                     Lumin_AGN_dict['Lib_numb'] = j+1
-                    Lumin_AGN_dict['Par_name'] = r'$\log \ L_{\mathrm{AGN}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    Lumin_AGN_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{AGN}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                     Lumin_AGN_dict['Par_file'] = 'LAGN'
                     Lumin_AGN_dict['Col_numb'] = Col_number
                     Lumin_AGN_dict['Log_calc'] = True
@@ -1227,28 +1240,88 @@ else:
             elif InfoDict[Lib_name].find('.MBB.') >= 0:
                 # MBB dust
                 if 'BETA' == Lib_dict[Key_TPAR].upper():
-                    dust_emissivity_beta_dict['Lib_file'] = InfoDict[Lib_name]
-                    dust_emissivity_beta_dict['Lib_name'] = Lib_name
-                    dust_emissivity_beta_dict['Lib_numb'] = j+1
-                    dust_emissivity_beta_dict['Par_name'] = r'$\beta$'
-                    dust_emissivity_beta_dict['Par_file'] = 'beta'
-                    dust_emissivity_beta_dict['Col_numb'] = Col_number
-                    dust_emissivity_beta_dict['range'] = [1.5,2.5]
-                    dust_emissivity_beta_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
-                    dust_emissivity_beta_dict['chisq'] = DataArray['chi2']
+                    has_two_same_lib = False
+                    if 'LIB%d'%(j+1+1) in InfoDict:
+                        # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the first place
+                        if InfoDict['LIB%d'%(j+1+1)] == InfoDict[Lib_name]:
+                            dust_emissivity_beta_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                            dust_emissivity_beta_warm_dust_dict['Lib_name'] = Lib_name
+                            dust_emissivity_beta_warm_dust_dict['Lib_numb'] = j+1
+                            dust_emissivity_beta_warm_dust_dict['Par_name'] = r'$\beta$ (warm)'
+                            dust_emissivity_beta_warm_dust_dict['Par_file'] = 'beta_warm'
+                            dust_emissivity_beta_warm_dust_dict['Col_numb'] = Col_number
+                            dust_emissivity_beta_warm_dust_dict['range'] = [1.0,3.5]
+                            dust_emissivity_beta_warm_dust_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                            dust_emissivity_beta_warm_dust_dict['chisq'] = DataArray['chi2']
+                            has_two_same_lib = True
+                    if 'LIB%d'%(j+1-1) in InfoDict:
+                        # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the second place
+                        if InfoDict['LIB%d'%(j+1-1)] == InfoDict[Lib_name]:
+                            # if previous LIB is the same dust.MBB.SED
+                            dust_emissivity_beta_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                            dust_emissivity_beta_cold_dust_dict['Lib_name'] = Lib_name
+                            dust_emissivity_beta_cold_dust_dict['Lib_numb'] = j+1
+                            dust_emissivity_beta_cold_dust_dict['Par_name'] = r'$\beta$ (cold)'
+                            dust_emissivity_beta_cold_dust_dict['Par_file'] = 'beta_cold'
+                            dust_emissivity_beta_cold_dust_dict['Col_numb'] = Col_number
+                            dust_emissivity_beta_cold_dust_dict['range'] = [1.0,3.5]
+                            dust_emissivity_beta_cold_dust_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                            dust_emissivity_beta_cold_dust_dict['chisq'] = DataArray['chi2']
+                            has_two_same_lib = True
                     # 
-                elif 'T_DUST' == Lib_dict[Key_TPAR].upper():
-                    dust_temperature_dict['Lib_file'] = InfoDict[Lib_name]
-                    dust_temperature_dict['Lib_name'] = Lib_name
-                    dust_temperature_dict['Lib_numb'] = j+1
-                    dust_temperature_dict['Par_name'] = r'$T_{dust}$'
-                    dust_temperature_dict['Par_file'] = 'T_dust'
-                    dust_temperature_dict['Col_numb'] = Col_number
-                    dust_temperature_dict['range'] = [10.0,100.0]
-                    dust_temperature_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
-                    dust_temperature_dict['chisq'] = DataArray['chi2']
+                    if has_two_same_lib == False:
+                        dust_emissivity_beta_dict['Lib_file'] = InfoDict[Lib_name]
+                        dust_emissivity_beta_dict['Lib_name'] = Lib_name
+                        dust_emissivity_beta_dict['Lib_numb'] = j+1
+                        dust_emissivity_beta_dict['Par_name'] = r'$\beta$'
+                        dust_emissivity_beta_dict['Par_file'] = 'beta'
+                        dust_emissivity_beta_dict['Col_numb'] = Col_number
+                        dust_emissivity_beta_dict['range'] = [1.0,3.5]
+                        dust_emissivity_beta_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                        dust_emissivity_beta_dict['chisq'] = DataArray['chi2']
                     # 
-                elif 'L_DUST' == Lib_dict[Key_TPAR].upper():
+                if 'T_DUST' == Lib_dict[Key_TPAR].upper():
+                    has_two_same_lib = False
+                    if 'LIB%d'%(j+1+1) in InfoDict:
+                        # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the first place
+                        if InfoDict['LIB%d'%(j+1+1)] == InfoDict[Lib_name]:
+                            dust_temperature_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                            dust_temperature_warm_dust_dict['Lib_name'] = Lib_name
+                            dust_temperature_warm_dust_dict['Lib_numb'] = j+1
+                            dust_temperature_warm_dust_dict['Par_name'] = r'$T_{dust}$ (warm)'
+                            dust_temperature_warm_dust_dict['Par_file'] = 'T_dust_warm'
+                            dust_temperature_warm_dust_dict['Col_numb'] = Col_number
+                            dust_temperature_warm_dust_dict['range'] = [10.0,100.0]
+                            dust_temperature_warm_dust_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                            dust_temperature_warm_dust_dict['chisq'] = DataArray['chi2']
+                            has_two_same_lib = True
+                    if 'LIB%d'%(j+1-1) in InfoDict:
+                        # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the second place
+                        if InfoDict['LIB%d'%(j+1-1)] == InfoDict[Lib_name]:
+                            dust_temperature_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                            dust_temperature_cold_dust_dict['Lib_name'] = Lib_name
+                            dust_temperature_cold_dust_dict['Lib_numb'] = j+1
+                            dust_temperature_cold_dust_dict['Par_name'] = r'$T_{dust}$ (cold)'
+                            dust_temperature_cold_dust_dict['Par_file'] = 'T_dust_cold'
+                            dust_temperature_cold_dust_dict['Col_numb'] = Col_number
+                            dust_temperature_cold_dust_dict['range'] = [10.0,100.0]
+                            dust_temperature_cold_dust_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                            dust_temperature_cold_dust_dict['chisq'] = DataArray['chi2']
+                            has_two_same_lib = True
+                    # 
+                    if has_two_same_lib == False:
+                        dust_temperature_dict['Lib_file'] = InfoDict[Lib_name]
+                        dust_temperature_dict['Lib_name'] = Lib_name
+                        dust_temperature_dict['Lib_numb'] = j+1
+                        dust_temperature_dict['Par_name'] = r'$T_{dust}$'
+                        dust_temperature_dict['Par_file'] = 'T_dust'
+                        dust_temperature_dict['Col_numb'] = Col_number
+                        dust_temperature_dict['range'] = [10.0,100.0]
+                        dust_temperature_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                        dust_temperature_dict['chisq'] = DataArray['chi2']
+                    # 
+                if 'L_DUST' == Lib_dict[Key_TPAR].upper():
+                    has_two_same_lib = False
                     if 'LIB%d'%(j+1+1) in InfoDict:
                         # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the first place
                         if InfoDict['LIB%d'%(j+1+1)] == InfoDict[Lib_name]:
@@ -1256,13 +1329,15 @@ else:
                             LTIR_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
                             LTIR_warm_dust_dict['Lib_name'] = Lib_name
                             LTIR_warm_dust_dict['Lib_numb'] = j+1
-                            LTIR_warm_dust_dict['Par_name'] = r'$\log \ L_{\mathrm{IR}}$ (warm) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                            LTIR_warm_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{IR}}$ (warm) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                             LTIR_warm_dust_dict['Par_file'] = 'LIR_warm'
                             LTIR_warm_dust_dict['Col_numb'] = Col_number
                             LTIR_warm_dust_dict['Log_calc'] = True
-                            LTIR_warm_dust_dict['range'] = numpy.power(10,[9.0,14.5])
+                            LTIR_warm_dust_dict['range'] = numpy.power(10,[6.0,14.5])
                             LTIR_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * (DataTable.getColumn(Col_number)) * dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
                             LTIR_warm_dust_dict['chisq'] = DataArray['chi2']
+                            has_two_same_lib = True
+                    # 
                     if 'LIB%d'%(j+1-1) in InfoDict:
                         # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the second place
                         if InfoDict['LIB%d'%(j+1-1)] == InfoDict[Lib_name]:
@@ -1270,13 +1345,27 @@ else:
                             LTIR_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
                             LTIR_cold_dust_dict['Lib_name'] = Lib_name
                             LTIR_cold_dust_dict['Lib_numb'] = j+1
-                            LTIR_cold_dust_dict['Par_name'] = r'$\log \ L_{\mathrm{IR}}$ (cold) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                            LTIR_cold_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{IR}}$ (cold) [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
                             LTIR_cold_dust_dict['Par_file'] = 'LIR_cold'
                             LTIR_cold_dust_dict['Col_numb'] = Col_number
                             LTIR_cold_dust_dict['Log_calc'] = True
-                            LTIR_cold_dust_dict['range'] = numpy.power(10,[9.0,14.5])
+                            LTIR_cold_dust_dict['range'] = numpy.power(10,[6.0,14.5])
                             LTIR_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * (DataTable.getColumn(Col_number)) * dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
                             LTIR_cold_dust_dict['chisq'] = DataArray['chi2']
+                            has_two_same_lib = True
+                    # 
+                    if has_two_same_lib == False:
+                        LTIR_total_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                        LTIR_total_dust_dict['Lib_name'] = Lib_name
+                        LTIR_total_dust_dict['Lib_numb'] = j+1
+                        LTIR_total_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{IR}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                        LTIR_total_dust_dict['Par_file'] = 'LIR_total'
+                        LTIR_total_dust_dict['Col_numb'] = Col_number
+                        LTIR_total_dust_dict['Log_calc'] = True
+                        LTIR_total_dust_dict['range'] = numpy.power(10,[6.0,14.5])
+                        LTIR_total_dust_dict['value'] = DataArray['a%d'%(j+1)] * (DataTable.getColumn(Col_number)) * dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
+                        LTIR_total_dust_dict['chisq'] = DataArray['chi2']
+                    # 
             # 
             # finished checking library properties
             # 
@@ -1290,7 +1379,7 @@ else:
         LTIR_total_dust_dict['Lib_file'] = [LTIR_warm_dust_dict['Lib_file'], LTIR_cold_dust_dict['Lib_file']]
         LTIR_total_dust_dict['Lib_name'] = [LTIR_warm_dust_dict['Lib_name'], LTIR_cold_dust_dict['Lib_name']]
         LTIR_total_dust_dict['Col_numb'] = [LTIR_warm_dust_dict['Col_numb'], LTIR_cold_dust_dict['Col_numb']]
-        LTIR_total_dust_dict['Par_name'] = r'$\log \ L_{\mathrm{IR}}$ (total) [$\mathrm{L}_{\odot}$]'
+        LTIR_total_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{IR}}$ (total) [$\mathrm{L}_{\odot}$]'
         LTIR_total_dust_dict['Par_file'] = 'LIR_total'
     # 
     # Total LIR 40-400um
@@ -1300,7 +1389,7 @@ else:
         LFIR_total_dust_dict['Lib_file'] = [LFIR_warm_dust_dict['Lib_file'], LFIR_cold_dust_dict['Lib_file']]
         LFIR_total_dust_dict['Lib_name'] = [LFIR_warm_dust_dict['Lib_name'], LFIR_cold_dust_dict['Lib_name']]
         LFIR_total_dust_dict['Col_numb'] = [LFIR_warm_dust_dict['Col_numb'], LFIR_cold_dust_dict['Col_numb']]
-        LFIR_total_dust_dict['Par_name'] = r'$\log \ L_{\mathrm{FIR},\,40-400{\mu}\mathrm{m}}$ (total) [$\mathrm{L}_{\odot}$]'
+        LFIR_total_dust_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{FIR},\,40-400{\mu}\mathrm{m}}$ (total) [$\mathrm{L}_{\odot}$]'
         LFIR_total_dust_dict['Par_file'] = 'LIR_total_40_400'
     # 
     # Total Mdust
@@ -1310,7 +1399,7 @@ else:
         Mass_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
         Mass_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
         Mass_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
-        Mass_total_dust_dict['Par_name'] = r'$\log \ M_{\mathrm{dust}}$ (total) [$\mathrm{M}_{\odot}$]'
+        Mass_total_dust_dict['Par_name'] = r'$\log_{10} \ M_{\mathrm{dust}}$ (total) [$\mathrm{M}_{\odot}$]'
         Mass_total_dust_dict['Par_file'] = 'Mdust_total'
     # 
     # Total fPDR Umean
@@ -1332,7 +1421,7 @@ else:
         fPDR_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
         fPDR_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
         fPDR_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]
-        fPDR_total_dust_dict['Par_name'] = r'$\log \ \delta_{\mathrm{PDR}}$ (total)'
+        fPDR_total_dust_dict['Par_name'] = r'$\log_{10} \ f_{\mathrm{PDR}}$ (total)'
         fPDR_total_dust_dict['Par_file'] = 'fPDR_total'
         fPDR_total_dust_dict['Log_calc'] = True
         fPDR_total_dust_dict['range'] = [1e-6,1.0]
@@ -1392,8 +1481,16 @@ else:
         analyze_chisq_distribution(fPDR_total_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in Umean_total_dust_dict:
         analyze_chisq_distribution(Umean_total_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in dust_emissivity_beta_warm_dust_dict:
+        analyze_chisq_distribution(dust_emissivity_beta_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in dust_emissivity_beta_cold_dust_dict:
+        analyze_chisq_distribution(dust_emissivity_beta_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in dust_emissivity_beta_dict:
         analyze_chisq_distribution(dust_emissivity_beta_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in dust_temperature_warm_dust_dict:
+        analyze_chisq_distribution(dust_temperature_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in dust_temperature_cold_dust_dict:
+        analyze_chisq_distribution(dust_temperature_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in dust_temperature_dict:
         analyze_chisq_distribution(dust_temperature_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     Plot_engine.set_xcharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels

@@ -1,7 +1,0 @@
-
-    Welcome to Radex, version of 30nov2011           
-
-Molecular data file ? Name of output file ? Minimum and maximum output frequency [GHz] ? Kinetic temperature [K] ?  Number of collision partners ?  Type of partner 1 ? Density of collision partner  1 [cm^-3] ? Type of partner 2 ? Density of collision partner  2 [cm^-3] ? Background temperature [K] ?  Molecular column density [cm^-2] ?  Line width [km/s] ?   Starting calculations ...
-  Warning : Tkin lower than temperatures for which rates are present.
- Finished in           12  iterations.
-  Another calculation [0/1] ?     Have a nice day.

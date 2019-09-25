@@ -20,4 +20,5 @@ calc (1./180/3600*pi)**2
 quit
 calc 3.085677e18**2
 quit
-QUIT
+macro read makeliblvg_subbeam_modeling.sm makeliblvg
+quit

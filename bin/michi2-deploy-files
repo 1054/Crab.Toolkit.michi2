@@ -97,7 +97,7 @@ if echo "$deploy_type" | grep -q -i "SED"; then
             # 
             if check_input_contains "MultiAge" "$*"; then
                 # 
-                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.MultiAge.EBV.SED.zip"
+                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.MultiAge.EBV.SED.zip"
                 # 
             elif (check_input_contains "400Myr" "$*") || (check_input_contains "Age400Myr" "$*"); then
                 # 

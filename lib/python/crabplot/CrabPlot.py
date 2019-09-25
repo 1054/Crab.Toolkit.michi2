@@ -95,6 +95,8 @@ except ImportError:
 
 import matplotlib.gridspec as gridspec
 
+import matplotlib.ticker as ticker
+
 from matplotlib.ticker import FormatStrFormatter, NullFormatter, AutoMinorLocator, LogLocator
 
 
@@ -1022,9 +1024,9 @@ class CrabPlot(object):
                 facecolor = 'none'
                 if color is not None:
                     edgecolor = color
-            elif symbol == 'filled square' or symbol == 'filled squares':
+            elif symbol == 'filled square' or symbol == 'filled squares' or symbol == 'solid square' or symbol == 'solid squares':
                 marker = 's'
-            elif symbol == 'filled circle' or symbol == 'filled circles':
+            elif symbol == 'filled circle' or symbol == 'filled circles' or symbol == 'solid circle' or symbol == 'solid circles':
                 marker = 'o'
             elif symbol == 'upper limit' or symbol == 'upper limits':
                 #marker = u'$\u2193$'
@@ -1078,6 +1080,7 @@ class CrabPlot(object):
             #plot_panel_xy['panel'].xaxis.set_tick_params(which='minor', length=4.0)
             plot_panel_ax.xaxis.set_major_locator(LogLocator(base=10,numticks=30))
             plot_panel_ax.xaxis.set_minor_locator(LogLocator(base=10,numticks=30,subs=numpy.arange(2.0,10.0,1.0)))
+            plot_panel_ax.xaxis.set_major_formatter(ticker.FuncFormatter(self.major_formatter_function_for_logarithmic_axis))
             #plot_panel_ax.xaxis.set_minor_formatter(NullFormatter())
             #plot_panel_ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
             #plot_panel_ax.xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
@@ -1088,6 +1091,7 @@ class CrabPlot(object):
             #plot_panel_xy['panel'].yaxis.set_tick_params(which='minor', length=4.0)
             plot_panel_ax.yaxis.set_major_locator(LogLocator(base=10,numticks=30))
             plot_panel_ax.yaxis.set_minor_locator(LogLocator(base=10,numticks=30,subs=numpy.arange(2.0,10.0,1.0)))
+            plot_panel_ax.yaxis.set_major_formatter(ticker.FuncFormatter(self.major_formatter_function_for_logarithmic_axis))
             #plot_panel_ax.yaxis.set_minor_formatter(NullFormatter())
             #plot_panel_ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
             #plot_panel_ax.yaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
@@ -1130,6 +1134,13 @@ class CrabPlot(object):
             self.Plot_panels[current-1]['yerr'] = yerr
             self.Plot_panels[current-1]['xlog'] = xlog
             self.Plot_panels[current-1]['ylog'] = ylog
+    # 
+    @ticker.FuncFormatter
+    def major_formatter_function_for_logarithmic_axis(x, pos):
+        if x > 1000 or x < 0.001:
+            return '10$^{%g}$'%(numpy.log10(x))
+        else:
+            return '%g'%(x)
     # 
     def plot_line(self, x0, y0, x1 = None, y1 = None, xlog = None, ylog = None, xrange = [], yrange = [], 
                     ax = None, NormalizedCoordinate = False, overplot = True, current = 0, 
@@ -1210,11 +1221,13 @@ class CrabPlot(object):
             xlog = int(xlog)
             if xlog > 0:
                 plot_panel_ax.set_xscale('log')
+                plot_panel_ax.xaxis.set_major_formatter(ticker.FuncFormatter(self.major_formatter_function_for_logarithmic_axis))
                 if current>0: self.Plot_panels[current-1]['xlog'] = xlog
         if ylog is not None:
             ylog = int(ylog)
             if ylog > 0:
                 plot_panel_ax.set_yscale('log')
+                plot_panel_ax.yaxis.set_major_formatter(ticker.FuncFormatter(self.major_formatter_function_for_logarithmic_axis))
                 if current>0: self.Plot_panels[current-1]['ylog'] = ylog
         if xtitle is not None:
             if xtitle != '':
@@ -1298,6 +1311,7 @@ class CrabPlot(object):
             xlog = int(xlog)
             if xlog > 0:
                 plot_panel_ax.set_xscale('log')
+                plot_panel_ax.xaxis.set_major_formatter(ticker.FuncFormatter(self.major_formatter_function_for_logarithmic_axis))
                 if current>0: self.Plot_panels[current-1]['xlog'] = xlog
                 #<TODO># how to apply xlog?
             else:
@@ -1308,6 +1322,7 @@ class CrabPlot(object):
             ylog = int(ylog)
             if ylog > 0:
                 plot_panel_ax.set_yscale('log')
+                plot_panel_ax.yaxis.set_major_formatter(ticker.FuncFormatter(self.major_formatter_function_for_logarithmic_axis))
                 if current>0: self.Plot_panels[current-1]['ylog'] = ylog
                 log = True
             else:

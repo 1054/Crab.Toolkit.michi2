@@ -16,7 +16,7 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lib', 'python', 'crabtable'))
 
 from CrabTable import *
 
@@ -185,10 +185,14 @@ def spline(input_x, input_y, output_x, xlog=0, ylog=0, outputxlog=None, outputyl
     
     #output_y_value = nearest_interp(output_x_coord, input_x_coord, input_y_value)
     
-    output_y_value = scipy.interpolate.spline(input_x_coord, input_y_value, output_x_coord, order='1') # order=3, kind='smoothest', conds=None
+    #output_y_value = scipy.interpolate.spline(input_x_coord, input_y_value, output_x_coord, order='1') # order=3, kind='smoothest', conds=None
     
     #spl = scipy.interpolate.CubicSpline(input_x_coord, input_y_value) # axis=0, bc_type='not-a-knot', extrapolate=None
     #output_y_value = spl(output_x_coord)
+    
+    # 
+    # prepare output array
+    output_y_value = output_x_coord * 0.0
     
     # 
     # deal with data out of X range
@@ -202,7 +206,11 @@ def spline(input_x, input_y, output_x, xlog=0, ylog=0, outputxlog=None, outputyl
                             ~numpy.isfinite(output_y_value),
                         )
                     )
+    
     output_y_value[output_mask] = fill
+    
+    output_y_value[~output_mask] = scipy.interpolate.interp1d(input_x_coord, input_y_value, kind='linear')(output_x_coord[~output_mask]) # error on outside data
+    
     # 
     if outputylog>0:
         output_y = numpy.power(10,output_y_value)

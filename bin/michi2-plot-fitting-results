@@ -54,7 +54,8 @@ fi
 #
 #cp "extracted_flux.txt" "flux_obsframe.dat"
 
-michi2_plot_SED_fitting_results.py $@
+#michi2_plot_SED_fitting_results.py $@
+michi2_plot_SED_fitting_results_for_michi2_v05.py $@
 
 
 

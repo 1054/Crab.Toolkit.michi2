@@ -279,6 +279,8 @@ def recognize_Col_MAGERR(input_list, special_file_name=''):
 
 def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict = {}
+    Filter_Dict['FUV'] = 'GALEX FUV' # 
+    Filter_Dict['NUV'] = 'GALEX NUV' # Laigle+2016 Table 1
     Filter_Dict['IA427'] = 'Subaru Suprime Cam IA427' # Laigle+2016 Table 1
     Filter_Dict['IA464'] = 'Subaru Suprime Cam IA464' # Laigle+2016 Table 1
     Filter_Dict['IA484'] = 'Subaru Suprime Cam IA484' # Laigle+2016 Table 1
@@ -381,6 +383,32 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['f140w'] = 'HST WFC3 F140W' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['f160w'] = 'HST WFC3 F160W' # Skelton 2014ApJS..214...24S Table 6
             # flux column must be: <BAND>_FLUX_<REF>, e.g., u_
+        if catalog_name.find('Clark2018')>=0:
+            Filter_Dict['u'] = 'SDSS u' # Clark+2018 Table 1
+            Filter_Dict['g'] = 'SDSS g' # Clark+2018 Table 1
+            Filter_Dict['r'] = 'SDSS r' # Clark+2018 Table 1
+            Filter_Dict['i'] = 'SDSS i' # Clark+2018 Table 1
+            Filter_Dict['z'] = 'SDSS z' # Clark+2018 Table 1
+            Filter_Dict['J']  = '2MASS J' # Clark+2018 Table 1
+            Filter_Dict['H']  = '2MASS H' # Clark+2018 Table 1
+            Filter_Dict['Ks'] = '2MASS Ks' # Clark+2018 Table 1
+            Filter_Dict['3.4'] = 'WISE W1' # Clark+2018 Table 1
+            Filter_Dict['4.6'] = 'WISE W2' # Clark+2018 Table 1
+            Filter_Dict['12']  = 'WISE W3' # Clark+2018 Table 1
+            Filter_Dict['22']  = 'WISE W4' # Clark+2018 Table 1
+            Filter_Dict['3.6'] = 'Spitzer IRAC ch1' # Clark+2018 Table 1
+            Filter_Dict['4.5'] = 'Spitzer IRAC ch2' # Clark+2018 Table 1
+            Filter_Dict['5.8'] = 'Spitzer IRAC ch3' # Clark+2018 Table 1
+            Filter_Dict['8.0'] = 'Spitzer IRAC ch4' # Clark+2018 Table 1
+            Filter_Dict['24']  = 'Spitzer MIPS 24' # Clark+2018 Table 1
+            Filter_Dict['70']  = 'Spitzer MIPS 70' # Clark+2018 Table 1
+            Filter_Dict['160'] = 'Spitzer MIPS 160' # Clark+2018 Table 1
+            Filter_Dict['70P']  = 'Herschel PACS 70' # Clark+2018 Table 1
+            Filter_Dict['100P'] = 'Herschel PACS 100' # Clark+2018 Table 1
+            Filter_Dict['160P'] = 'Herschel PACS 160' # Clark+2018 Table 1
+            Filter_Dict['250'] = 'Herschel SPIRE 250' # Clark+2018 Table 1
+            Filter_Dict['350'] = 'Herschel SPIRE 350' # Clark+2018 Table 1
+            Filter_Dict['500'] = 'Herschel SPIRE 500' # Clark+2018 Table 1
     if type(input_str) is str:
         if input_str in Filter_Dict:
             return Filter_Dict[input_str]
@@ -393,6 +421,8 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
 
 def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict = {}
+    Filter_Dict['FUV'] = 2267e-4 # https://asd.gsfc.nasa.gov/archive/galex/Documents/ERO_data_description_2.htm
+    Filter_Dict['NUV'] = 2313.9e-4 # Laigle+2016 Table 1
     Filter_Dict['u'] = 3823.3e-4 # Laigle+2016 Table 1
     Filter_Dict['B'] = 4458.3e-4 # Laigle+2016 Table 1
     Filter_Dict['V'] = 5477.8e-4 # Laigle+2016 Table 1
@@ -459,17 +489,51 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict['3GHz'] = 1e5
     Filter_Dict['1.4GHz'] = 2e5
     
+    if type(catalog_name) is str:
+        if catalog_name.find('Clark2018')>=0:
+            Filter_Dict['u'] = 0.353 # Clark+2018 Table 1
+            Filter_Dict['g'] = 0.475 # Clark+2018 Table 1
+            Filter_Dict['r'] = 0.622 # Clark+2018 Table 1
+            Filter_Dict['i'] = 0.763 # Clark+2018 Table 1
+            Filter_Dict['z'] = 0.905 # Clark+2018 Table 1
+            Filter_Dict['J']  = 1.24 # Clark+2018 Table 1
+            Filter_Dict['H']  = 1.66 # Clark+2018 Table 1
+            Filter_Dict['Ks'] = 2.16 # Clark+2018 Table 1
+            Filter_Dict['3.4'] = 3.4 # Clark+2018 Table 1
+            Filter_Dict['4.6'] = 4.6 # Clark+2018 Table 1
+            Filter_Dict['12']  = 12 # Clark+2018 Table 1
+            Filter_Dict['22']  = 22 # Clark+2018 Table 1
+            Filter_Dict['3.6'] = 3.6 # Clark+2018 Table 1
+            Filter_Dict['4.5'] = 4.5 # Clark+2018 Table 1
+            Filter_Dict['5.8'] = 5.8 # Clark+2018 Table 1
+            Filter_Dict['8.0'] = 8.0 # Clark+2018 Table 1
+            Filter_Dict['24']  = 24 # Clark+2018 Table 1
+            Filter_Dict['70']  = 70 # Clark+2018 Table 1
+            Filter_Dict['160'] = 160 # Clark+2018 Table 1
+            Filter_Dict['70P']  = 71.8 # dzliu
+            Filter_Dict['100P'] = 103.0 # dzliu
+            Filter_Dict['160P'] = 167.0 # dzliu
+            Filter_Dict['250'] = 252.0 # dzliu
+            Filter_Dict['350'] = 353.0 # dzliu
+            Filter_Dict['500'] = 511.0 # dzliu
+    
     if type(input_str) is str:
+        # 
+        # try to find it in the dict
+        if input_str in Filter_Dict:
+            return Filter_Dict[input_str]
+        elif input_str.lower() in Filter_Dict:
+            return Filter_Dict[input_str.lower()]
+        elif input_str.upper() in Filter_Dict:
+            return Filter_Dict[input_str.upper()]
+        # 
+        # if not found, then try to directly pharse it as a float
         try:
             test_value = float(input_str) # directly convert to wavelength, e.g. 70, 100, 160, 250, 350, 500, 850, etc.
             return test_value
         except:
-            if input_str in Filter_Dict:
-                return Filter_Dict[input_str]
-            elif input_str.lower() in Filter_Dict:
-                return Filter_Dict[input_str.lower()]
-            elif input_str.upper() in Filter_Dict:
-                return Filter_Dict[input_str.upper()]
+            pass
+    
     return -99
 
 
@@ -941,7 +1005,7 @@ def recognize_Filter(input_str, special_file_name=''):
                 Temp_Name = recognize_Filter_Instrument_by_Short_Name(Matched_str_2, Matched_str_3) # BAND, NOTE
                 if not Temp_Name.startswith('unknown'):
                     Filter_Name = Temp_Name + '_' + Matched_str_3
-                    Filter_Wave = recognize_Filter_Wavelength_by_Short_Name(Matched_str_2)
+                    Filter_Wave = recognize_Filter_Wavelength_by_Short_Name(Matched_str_2, Matched_str_3)
                 
     # 
     #if special_file_name.find('Laigle')>=0:

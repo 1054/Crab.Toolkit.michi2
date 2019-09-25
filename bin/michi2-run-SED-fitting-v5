@@ -57,6 +57,7 @@ Parallel=2
 Sampling=10000
 Flux=""
 Umin="" # Added on 2018-03-23 to put an additional constraint on Umin
+minEBV="" # Added on 2019-08-27 to put an additional constraint on E(B-V), BC03 PAR6
 NoStellar=0
 NoAGN=0
 NoDust=0
@@ -119,6 +120,12 @@ if [[ $# -ge 2 ]]; then
                 i=$((i+1))
                 Umin="${!i}"
                 echo Umin="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-minebv" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                minEBV="${!i}"
+                echo minEBV="${!i}" # minimum E(B-V)
             fi
         elif [[ "$Strcmd" == "-sampling" ]]; then
             if [[ $i -lt $# ]]; then
@@ -401,6 +408,24 @@ fi
 
 
 # 
+# Determine whether to constrain the E(B-V) or not
+# 
+constrain_stellar_EBV=()
+if [[ x"$minEBV" != x ]]; then
+    if [[ $NoStellar -eq 0 ]]; then
+        # 
+        if [[ "${CorrespondingLibStellar[ChosenLibStellar]}" == *"BC03"* ]]; then
+            constrain_stellar_EBV+=(-constraint "LIB1_PAR6 >= $minEBV")
+        else
+            echo "Error! minEBV not implemented for \"${CorrespondingLibStellar[ChosenLibStellar]}\"!"
+            exit 255
+        fi
+        echo "constrain_stellar_EBV = ${constrain_stellar_EBV[@]}"
+    fi
+fi
+
+
+# 
 # Copy SED LIB
 # 
 check_lib_files=1
@@ -448,6 +473,7 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
     echo "           -parallel $Parallel \\"
     echo "           -sampling $Sampling \\"
     echo "           ${constrain_stellar_index[@]} \\"
+    echo "           ${constrain_stellar_EBV[@]} \\"
     echo "           ${constrain_dust_Umin[@]} \\"
     echo "           ${constrain_warm_cold_dust[@]} \\"
     echo "           ${constrain_radio_IR[@]} \\"
@@ -473,6 +499,7 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
                -parallel $Parallel \
                -sampling $Sampling \
                ${constrain_stellar_index[@]} \
+               ${constrain_stellar_EBV[@]} \
                ${constrain_dust_Umin[@]} \
                ${constrain_warm_cold_dust[@]} \
                ${constrain_radio_IR[@]} \
