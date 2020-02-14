@@ -1,0 +1,7 @@
+#  j        f      df
+#     Jy km/s Jy km/s
+   2    0.53    0.37 
+# 
+# Notes:
+# - From Riechers+2013 Nature. 
+# - Note that the j=5 observation is a non-detection, but can be determined from CO SLED interpolation, and it is right about the 3-sigma value.

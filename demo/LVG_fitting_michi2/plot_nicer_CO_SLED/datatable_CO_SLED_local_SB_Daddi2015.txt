@@ -1,0 +1,23 @@
+#        avLine          avFlux          avFErr        countObs        countFit        countSNR
+#
+              1         1.00000         0.00000              14               0        31.77654
+              2         3.59507         0.21812              13               1        28.88344
+              3         7.11473         0.53099              13               1        23.37794
+              4        12.44992         1.39258               4              10         7.09756
+              5        12.15322         1.10110               0              14         0.00000
+              6        10.57736         2.38188              11               3        10.52123
+              7         7.76568         3.05188               0              14         0.00000
+              8         5.98955         3.97601               0              14         0.00000
+              9         5.71522         4.97131               0              14         0.00000
+             10         6.62026         5.96227               0              14         0.00000
+             11         7.70796         6.97760               0              14         0.00000
+# 
+# 20140910
+# avLine   = CO upper J
+# avflux   = CO line flux averaged over 14 local ULIRGs from Papadopoulos 2012 
+# avFErr   = CO line flux uncertainty over 14 local ULIRGs from Papadopoulos 2012 
+# countObs = how many observation data 
+# countFit = how many LVG fitting data
+# countSNR = the signal-to-noise ratio of combined observation data
+# avRCO52  = 3.47362, the average value of CO(5-4)/CO(2-1) among 14 local ULIRGs
+# 

@@ -1,0 +1,9 @@
+i1 3724
+a1 50.191
+numpy.genfromtxt(Lib_file, skip_header=3780, max_rows=19)
+Output to "result_fit_3_2/dump/1/LVG_LIB1"
+i2 7543
+a2 3.78872
+numpy.genfromtxt(Lib_file, skip_header=7599, max_rows=19)
+Output to "result_fit_3_2/dump/1/LVG_LIB2"
+Output to "result_fit_3_2/dump/1/LVG_SUM"
