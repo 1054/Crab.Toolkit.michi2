@@ -1,7 +1,7 @@
 # Crab.Toolkit.michi2
 This is a _Crab_ toolkit for minimumizing chi2 for any 1D model fit, for example, galaxy SED fitting, molecular line ladder fitting. 
 
-# Usage #
+# Usage for SED Fitting #
 
 ## SED Fitting ##
 
@@ -12,19 +12,19 @@ The fitting needs a specific redshift as the input, so it can not directly fit r
 The advantage of this code is that it loops over all DL07 dust models and combinations with AGN models and stellar models, so can fit ISRF and Mdust in a finer parameter grid. 
 
 
-#### Get the code (with git)
+1. ### Get the code (with git)
 ```
 cd /some/path/
 git clone https://github.com/1054/Crab.Toolkit.michi2
 ```
 
-#### Source the code (must under BASH shell)
+2. ### Source the code (must under BASH shell)
 ```
 bash
 source /some/path/Crab.Toolkit.michi2/SETUP.bash
 ```
 
-#### Prepare photometry data
+3. ### Prepare photometry data
 Assuming we have a photometric catalog, where columns are different photometric bands and rows are different sources. Then we need to prepare one SED fitting input file for each source you would like to fit. Each SED fitting input file should be a text file and has three columns: first column the wavelength in micron-meter unit, second column the flux density in milli-Jansky unit, and the third column the error in flux density in milli-Jansky unit. It should have multiple rows corresponding to each photometric band, and better S/N>3 bands. Columns should be separated by white space. Rows can be commented by # character. 
 
 An example of the SED fitting input file is like: 
@@ -44,7 +44,7 @@ An example of the SED fitting input file is like:
       850.0       3.866907        1.258796
 ```
 
-#### Run michi2 ####
+4. ### Run michi2
 If you have already `sourced` the `SETUP.bash`, then just change directory to where you store your SED fitting input file (assuming it's named "extracted_flux.txt"), and run michi2.
 
 ```
@@ -69,7 +69,7 @@ ls fit_5.out.info   # a text file, containing basic informations which will be u
 
 Then we make SED plots and chi-square plots. 
 
-#### Plot chi2 distribution and compute best-fits ####
+5. ### Plot chi2 distribution and compute best-fits
 Here we make the SED and chi-square plots, assuming that you have already `sourced` the `SETUP.bash`. 
 ```
 michi2-plot-fitting-results # call it without any argument will print the usage
@@ -89,21 +89,23 @@ One more step: some times the fitted parameters have too small errors. We need t
 
 
 
+# Usage for LVG Fitting #
+
 ## LVG Fitting ##
 
-#### Get the code (with git)
+### Get the code (with git)
 ```
 cd /some/path/
 git clone https://github.com/1054/Crab.Toolkit.michi2
 ```
 
-#### Source the code (must under BASH shell)
+### Source the code (must under BASH shell)
 ```
 bash
 source /some/path/Crab.Toolkit.michi2/SETUP.bash
 ```
 
-#### Prepare line flux data
+### Prepare line flux data
 An example line flux data table, assuming it is named `flux_co_ci.txt`, is like:
 ```
 # X_species  S_species  E_S_species   Molecule
@@ -124,7 +126,7 @@ The second column is the integrated flux of the line in units of Jy km/s. And th
 The fourth column is optional. You can have more columns as you want, but the fitting code only reads the first three columns.  
 
 
-#### Prepare molecular gas Large-Velocity-Gradient model ####
+### Prepare molecular gas Large-Velocity-Gradient model ####
 We also need a molecular gas Large-Velocity-Gradient (LVG) model file before our fitting. Because the Cosmic Microwave Background (CMB) temperature is different at different redshift, such a model file needs to be generated for each redshift. 
 
 You can try to find if there is any corresponding LVG model file under 
@@ -133,7 +135,7 @@ You can try to find if there is any corresponding LVG model file under
 Please contact us for a LVG model file.
 
 
-#### Run michi2 ####
+### Run michi2
 If you have already `sourced` the `SETUP.bash`, and have prepared your line flux data file and LVG model file, then just change directory to where the data files are stored and run michi2.
 
 ```
