@@ -1,7 +1,0 @@
-# download ci data from LAMDA
-# url: http://home.strw.leidenuniv.nl/~moldata/C.html
-# url: http://home.strw.leidenuniv.nl/~moldata/datafiles/catom.dat
-# 
-cd /f/Radex/
-mkdir out
-bin/radex < test/ci.inp

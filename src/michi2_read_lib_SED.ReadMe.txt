@@ -1,3 +1,0 @@
-20180110
-copy of 
-~/Cloud/Github/Crab/AstronomyUtility/MiChi2/michi2_read_lib_SED/

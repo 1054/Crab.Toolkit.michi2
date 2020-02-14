@@ -91,14 +91,85 @@ One more step: some times the fitted parameters have too small errors. We need t
 
 ## LVG Fitting ##
 
-#### Prepare CO ladder, run michi2, make plots ####
-TODO
+#### Get the code (with git)
 ```
-cat co_ladder.txt
+cd /some/path/
+git clone https://github.com/1054/Crab.Toolkit.michi2
+```
+
+#### Source the code (must under BASH shell)
+```
+bash
 source /some/path/Crab.Toolkit.michi2/SETUP.bash
-michi2-deploy-files LVG
-michi2_v04 -obs co_ladder.txt -lib lib_z_1.500_co_dvddr_5.0_dVDoW_50.0_Faster.lvg lib_z_1.500_co_dvddr_5.0_dVDoW_50.0_Faster.lvg -out fit_2_lvg.out -constraint LIB1 PAR1 LT LIB2 PAR1
-./run_plotting_bestfit_LVG_two_components.sh
 ```
+
+#### Prepare line flux data
+An example line flux data table, assuming it is named `flux_co_ci.txt`, is like:
+```
+# X_species  S_species  E_S_species   Molecule
+#                                             
+101001000  0.21       0.05          CO      
+101002001  1.0        0.25          CO      
+101004003  1.68       0.1           CO      
+101005004  2.2        0.7           CO      
+101006005  1.8        0.2           CO      
+101007006  2.19       0.184         CO      
+102001000  0.70       0.11          C_atom  
+102002001  1.72       0.20          C_atom  
+```
+The first column is a number needed by our fitting, which is unique for each line. The first three digits, 101 means CO, and 102 means C_atom. The second three digits means the upper level, and the third three digits means the lower level. For example CO J=1-0 is 101 001 000, and CO J=9-8 is 101 009 008. For [CI], it's the same, [CI] 3P1-3P0 is 102 001 000, and [CI] 3P2-3P1 is 102 002 001. 
+
+The second column is the integrated flux of the line in units of Jy km/s. And the third column is the error of the line flux. 
+
+The fourth column is optional. You can have more columns as you want, but the fitting code only reads the first three columns.  
+
+
+#### Prepare molecular gas Large-Velocity-Gradient model ####
+We also need a molecular gas Large-Velocity-Gradient (LVG) model file before our fitting. Because the Cosmic Microwave Background (CMB) temperature is different at different redshift, such a model file needs to be generated for each redshift. 
+
+You can try to find if there is any corresponding LVG model file under 
+`data/lib_LVG/`. It is usually named like `lib_z_1.500_with_CO_and_C_atom_dV_50.lvg`. If you found one, and copy it to your working directory and uncompress it if it is a `*.zip` file.  
+
+Please contact us for a LVG model file.
+
+
+#### Run michi2 ####
+If you have already `sourced` the `SETUP.bash`, and have prepared your line flux data file and LVG model file, then just change directory to where the data files are stored and run michi2.
+
+```
+cd /path/to/your/data/directory/
+
+ls "flux_co_ci.txt" # make sure you have your line flux file
+ls "lib_z_4.055_with_CO_and_C_atom_dV_50.lvg" # make sure you have your LVG model file
+
+michi2-run-fitting-5-components-applying-evolving-qIR # call it without any argument will print the usage
+
+# Now let us do a one-component fit with 2 CPU cores, sampling 15000 chi-squares
+michi2_v05 -obs "flux_co_ci.txt" \
+           -lib "lib_z_4.055_with_CO_and_C_atom_dV_50.lvg" \
+           -out "result/fit.out" \
+           -sampling 15000 \
+           -parallel 2 \
+           | tee log.txt
+
+# Now get the result plots
+michi2_plot_LVG_fitting_results.py "result/fit.out"
+ls "result/fit.pdf" "result/fit.chisq.pdf" "best-fit_param_"*.txt
+
+# We now also do a two-component fit by inputting "-lib" twice and set a "-constraint" to make sure that one component always has a lower temperature.  
+michi2_v05 -obs "flux_co_ci.dat" \
+           -lib "lib_z_4.055_with_CO_and_C_atom_dV_50.lvg" \
+           -lib "lib_z_4.055_with_CO_and_C_atom_dV_50.lvg" \
+           -out "result_two_component_fit/fit.out" \
+           -sampling 15000 \
+           -parallel 2 \
+           -constraint "LIB1_PAR2 < LIB2_PAR2" \
+           | tee log_two_component_fit.txt
+
+# Now get the result plots
+michi2_plot_LVG_fitting_results.py "result_two_component_fit/fit.out"
+ls "result/fit.pdf" "result/fit.chisq.pdf" "best-fit_param_"*.txt
+```
+If you have enough lines, say more than 4 lines, it is better to use two-component fit. 
 
 

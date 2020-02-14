@@ -1,5 +1,0 @@
-#!/bin/bash
-gs -q -dSAFER -dNOPAUSE -dBATCH -sDEVICE=pdfwrite \
-   -sOutputFile=Plot_lib_seds_v1.pdf \
-                Plot_lib_seds_v1.eps \
-   -dDOPDFMARKS Plot_lib_seds_v1.pdfmarks

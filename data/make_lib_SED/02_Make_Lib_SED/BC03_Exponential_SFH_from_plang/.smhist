@@ -1,4 +1,0 @@
-macro read make_Calzetti2000law.sm make_Calzetti2000law_BC03
-QUIT
-calc 211*14.
-quit

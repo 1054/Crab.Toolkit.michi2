@@ -242,7 +242,8 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         # Plot xy (left panel)
         Plot_engine.plot_xy(param_array, 1/numpy.array(chisq_array), overplot = False, 
                                 xtitle = param_dict['Par_name'], ytitle = r'$1/\chi^2$', useTex = True, 
-                                size = 2.2, color='#1873cc', symbol = 'o')
+                                size = 2.2, color='#1873cc', symbol = 'o', ylog = 1)
+                                # ylog = True
         # 
         # Plot Cut_chi2 line
         Plot_engine.plot_line(param_stats['xrange'][0], 1/(param_stats['threshold_chisq']), 
@@ -994,14 +995,20 @@ else:
                 print("Error! \"%s\" was not found in \"%s\"!"%(Key_TPAR, InfoDict[Lib_name]))
                 sys.exit()
             # 
+            # check multi-lib suffix
+            if Lib_number > 1:
+                Par_suffix = '_%d'%(j+1)
+            else:
+                Par_suffix = ''
+            # 
             # check Tkin nH2
             if InfoDict[Lib_name].endswith('.lvg'):
                 if 'T_{kin}' == Lib_dict[Key_TPAR]:
                     Tkin_dict['Lib_file'] = InfoDict[Lib_name]
                     Tkin_dict['Lib_name'] = Lib_name
                     Tkin_dict['Lib_numb'] = j+1
-                    Tkin_dict['Par_name'] = r'$T_{\mathrm{kin}}$ [$\mathrm{K}$]' # Lib_dict[Key_TPAR]
-                    Tkin_dict['Par_file'] = 'Tkin'
+                    Tkin_dict['Par_name'] = r'$T_{\mathrm{kin}}$ [$\mathrm{K}$]' + Par_suffix # Lib_dict[Key_TPAR]
+                    Tkin_dict['Par_file'] = 'Tkin' + Par_suffix
                     Tkin_dict['Col_numb'] = Col_number
                     Tkin_dict['Log_calc'] = False
                     Tkin_dict['range'] = [5.0,300]
@@ -1012,8 +1019,8 @@ else:
                     nH2_dict['Lib_file'] = InfoDict[Lib_name]
                     nH2_dict['Lib_name'] = Lib_name
                     nH2_dict['Lib_numb'] = j+1
-                    nH2_dict['Par_name'] = r'$\log \ n_{\mathrm{H_2}}$ [$\mathrm{cm}^{-3}$]' # Lib_dict[Key_TPAR]
-                    nH2_dict['Par_file'] = 'nH2'
+                    nH2_dict['Par_name'] = r'$\log \ n_{\mathrm{H_2}}$ [$\mathrm{cm}^{-3}$]' + Par_suffix # Lib_dict[Key_TPAR]
+                    nH2_dict['Par_file'] = 'nH2' + Par_suffix
                     nH2_dict['Col_numb'] = Col_number
                     nH2_dict['Log_calc'] = True
                     nH2_dict['range'] = numpy.power(10,[2.0, 6.5])
@@ -1024,8 +1031,8 @@ else:
                     MH2_dict['Lib_file'] = InfoDict[Lib_name]
                     MH2_dict['Lib_name'] = Lib_name
                     MH2_dict['Lib_numb'] = j+1
-                    MH2_dict['Par_name'] = r'$\log \ M_{\mathrm{H_2}}$ [$\mathrm{M_{\odot}}$]' # Lib_dict[Key_TPAR]
-                    MH2_dict['Par_file'] = 'MH2'
+                    MH2_dict['Par_name'] = r'$\log \ M_{\mathrm{H_2}}$ [$\mathrm{M_{\odot}}$]' + Par_suffix # Lib_dict[Key_TPAR]
+                    MH2_dict['Par_file'] = 'MH2' + Par_suffix
                     MH2_dict['Col_numb'] = Col_number
                     MH2_dict['Log_calc'] = True
                     MH2_dict['range'] = numpy.power(10,[6.0, 12.5])

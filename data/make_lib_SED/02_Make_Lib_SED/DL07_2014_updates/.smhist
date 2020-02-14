@@ -1,6 +1,0 @@
-macro read makelibSED_DL07.sm makelibSED_DL07
-QUIT
-macro read makelibSED_DL07_spec_2p0.sm makelibSED_DL07
-QUIT
-macro read makelibSED_DL07_spec_1p0.sm makelibSED_DL07
-QUIT

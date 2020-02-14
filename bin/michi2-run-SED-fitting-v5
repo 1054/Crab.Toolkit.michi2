@@ -63,6 +63,7 @@ NoAGN=0
 NoDust=0
 NoRadio=0
 FreeRadio=0
+FreezeRadio=0 # Added on 2019-10-24, so that even when not fitting any radio, we can still output a freezed radio component
 FreeDust=0
 LibStellar="BC03.200Myr"
 ChosenLibStellar=1 # the index in AcceptableLibStellar
@@ -74,9 +75,10 @@ CorrespondingLibStellar=("lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.E
                          "lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED")
 LibDust="DL07UPD2010"
 ChosenLibDust=1 # the index in AcceptableLibDust
-AcceptableLibDust=("DL07" "DL07UPD2010")
+AcceptableLibDust=("DL07" "DL07UPD2010" "DL07UPD2010FIR40122")
 CorrespondingLibDust=("lib.DL07.2010.03.18.spec.2.0.HiExCom.SED lib.DL07.2010.03.18.spec.2.0.LoExCom.SED" \
-                      "lib.DL07.2010.03.18.spec.2.0.HiExCom.SED lib.DL07.2010.03.18.spec.2.0.LoExCom.SED")
+                      "lib.DL07.2010.03.18.spec.2.0.HiExCom.SED lib.DL07.2010.03.18.spec.2.0.LoExCom.SED" \
+                      "lib.DL07.2010.03.18.spec.2.0.with.LFIR.40.122.HiExCom.SED lib.DL07.2010.03.18.spec.2.0.with.LFIR.40.122.LoExCom.SED")
 LibAGN="MullaneyAGN"
 ChosenLibAGN=0 # the index in AcceptableLibAGN
 AcceptableLibAGN=("MullaneyAGN")
@@ -204,6 +206,9 @@ if [[ $# -ge 2 ]]; then
         elif [[ "$Strcmd" == "-free-radio" ]]; then
             FreeRadio=1
             echo FreeRadio=$FreeRadio
+        elif [[ "$Strcmd" == "-freeze-radio" ]]; then
+            FreezeRadio=1
+            echo FreezeRadio=$FreezeRadio
         elif [[ "$Strcmd" == "-free-dust" ]]; then
             FreeDust=1
             echo FreeDust=$FreeDust
@@ -228,6 +233,12 @@ if [[ $NoDust -eq 1 ]] && [[ $NoRadio -eq 0 ]]; then
     NoRadio=1
     echo NoRadio=$NoRadio
     echo "Warning! When setting -no-dust, we will automatically set -no-radio"
+fi
+
+if [[ $NoDust -eq 1 ]] && [[ $FreezeRadio -eq 0 ]]; then
+    FreezeRadio=0
+    echo FreezeRadio=$FreezeRadio
+    echo "Warning! When setting -no-dust, we will automatically turn off -freeze-radio"
 fi
 
 if [[ $NoStellar -eq 1 ]] && [[ $NoAGN -eq 1 ]] && [[ $NoDust -eq 1 ]] && [[ $NoRadio -eq 1 ]]; then
@@ -377,7 +388,7 @@ fi
 # 
 constrain_radio_IR=()
 if [[ $FreeRadio -eq 0 ]]; then
-    if [[ $NoRadio -eq 0 ]]; then
+    if [[ $NoRadio -eq 0 ]] || [[ $FreezeRadio -eq 1 ]]; then
         i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN) + 1; }")
         j=$(awk "BEGIN { print ($i+1); }")
         k=$(awk "BEGIN { print ($j+1); }")
@@ -443,7 +454,7 @@ if [[ $NoDust -eq 0 ]]; then
     loop_lib_files+=(${CorrespondingLibDust[ChosenLibDust]})
     deploy_params+=(${AcceptableLibDust[ChosenLibDust]})
 fi
-if [[ $NoRadio -eq 0 ]]; then
+if [[ $NoRadio -eq 0 ]] || [[ $FreezeRadio -eq 1 ]]; then
     loop_lib_files+=(${CorrespondingLibRadio[ChosenLibRadio]})
     deploy_params+=(${AcceptableLibRadio[ChosenLibRadio]})
 fi

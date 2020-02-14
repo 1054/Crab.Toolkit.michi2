@@ -13,9 +13,7 @@
 # 
 # 
 
-import os
-import sys
-import re
+import os, sys, re
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
 
@@ -323,38 +321,6 @@ def spline(input_x, input_y, output_x, xlog=0, ylog=0, outputxlog=None, outputyl
         output_y = output_y_value
     # 
     return output_y
-
-
-def integrate_vLv(inpux_wave_um, input_flux_mJy, z):
-    # 
-    # lumdist
-    from astropy.cosmology import FlatLambdaCDM
-    import astropy.units as Unit
-    import astropy.constants as Constant
-    cosmo = FlatLambdaCDM(H0=73, Om0=0.27, Tcmb0=2.73) # <20181012>
-    dL = cosmo.luminosity_distance(z).to(Unit.Mpc).value # Mpc
-    pi = numpy.pi
-    # 
-    # wavelength grid
-    log_lambda_interval = 0.005
-    log_lambda_ = numpy.arange(numpy.log10(numpy.nanmin(inpux_wave_um)), numpy.log10(numpy.nanmax(inpux_wave_um)), log_lambda_interval) # um
-    lambda_um = numpy.power(10,log_lambda_) # um, rest-frame
-    flux_nu_mJy = spline(inpux_wave_um, input_flux_mJy, lambda_um*(1+z)) # erg s-1 cm-2 Hz-1, redshift (1+z) is registered to be in common
-    flux_nu = flux_nu_mJy/1e26 # [mJy] -> [erg s-1 cm-2 Hz-1]
-    # 
-    # convert flux unit
-    L_sun = 3.839e33
-    L_nu = flux_nu * 4*pi*dL**2/(1+z)*9.52140e48 / L_sun # convert flux from [erg s-1 cm-2 Hz-1] to [Lsun per Hz]
-    nu_L_nu = L_nu * (2.99792458e8/(lambda_um/1e6))
-    lambda_L_lambda = nu_L_nu # L_lambda * (lambda_um/1e6)
-    L_lambda = lambda_L_lambda / (lambda_um/1e6) # convert from S_{\nu} [Lsun per Hz] to S_{\lambda} [Lsun per meter]
-    # 
-    # compute integrated L_
-    # d\lambda = d(10**\log\lambda) = d(e**\ln\lambda) = e**\ln\lambda d\ln\lambda = \lambda d\ln\lambda = \lambda / \log(e) d\log\lambda
-    # e**\ln\lambda = 10**\log\lambda, so \log(e**\ln\lambda) = \log(10**\log\lambda), so \log(e) * \ln\lambda = \log\lambda
-    # so \int L_lambda d\lambda = \int L_lambda \lambda / \log(e) d\log\lambda
-    L_integrated = numpy.nansum(lambda_L_lambda) / numpy.log10(numpy.exp(1.0)) * log_lambda_interval
-    return L_integrated
 
 
 
