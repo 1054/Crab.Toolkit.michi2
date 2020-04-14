@@ -30,19 +30,18 @@ Assuming we have a photometric catalog, where columns are different photometric 
 
 An example of the SED fitting input file is like: 
 ```
-# wavelength          flux        flux_err
-#        um            mJy             mJy
-    3.56343     0.12417548     0.012417548
-    4.51101     0.09488227     0.009488227
-    5.75934    0.075890755    0.0075890755
-    7.95949     0.08685837     0.009947749
-       24.0      1.3679016      0.13679016
-      100.0      41.577702       4.1577702
-      160.0        60.0042       6.3393602
-      250.0        58.0821         5.80821
-      350.0      36.100101       6.0408401
-      500.0      18.878901       2.2385001
-      850.0       3.866907        1.258796
+# wavelength_um     flux_mJy    flux_err_mJy
+    3.56343       0.12417548     0.012417548
+    4.51101       0.09488227     0.009488227
+    5.75934      0.075890755    0.0075890755
+    7.95949       0.08685837     0.009947749
+       24.0        1.3679016      0.13679016
+      100.0        41.577702       4.1577702
+      160.0          60.0042       6.3393602
+      250.0          58.0821         5.80821
+      350.0        36.100101       6.0408401
+      500.0        18.878901       2.2385001
+      850.0         3.866907        1.258796
 ```
 
 ### 4. Run michi2
@@ -53,24 +52,28 @@ cd /path/to/your/data/directory/
 
 ls "extracted_flux.txt"
 
-michi2-run-fitting-5-components-applying-evolving-qIR # call it without any argument will print the usage
+michi2-run-SED-fitting-v5 # call it without any argument will print the usage
 
-michi2-run-fitting-5-components-applying-evolving-qIR -redshift 1.5 -flux "extracted_flux.txt" -parallel 2
+michi2-run-SED-fitting-v5 -redshift 1.5 -flux "extracted_flux.txt" -parallel 2
 
-# Note that for this example we set redshift to 1.5, and fit with 2 CPU cores. 
+# Note that for this example we set redshift to 1.5, and fit with 2 CPU cores.
+
+# Some optional arguments below
+
+michi2-run-SED-fitting-v5 -redshift 1.5 -flux "extracted_flux.txt" -parallel 2 -sampling 150000 -lib-stellar BC03.MultiAge -lib-dust DL07UPD2010 -lib-AGN MullaneyAGN -lib-radio Radio -freeze-radio -qIR 2.4 -Umin 1 -minEBV 0.2 -obj-name "My Galaxy" -overwrite
 ```
 
-The michi2 SED fitting is currently **VERY SLOW**. It can easily take three hours on a laptop! It is because it stupidly loops over all the combinations of all input models, so if you fit with 5 components, it takes hours and hours. Currently we parallized it. We will adopt Markov chain Monte Carlo method in the future. For now, for our own, we use it on 100plus-CPU-core machine, so it is still fine. 
+[comment]: <> (The michi2 SED fitting is currently **VERY SLOW**. It can easily take three hours on a laptop! It is because it stupidly loops over all the combinations of all input models, so if you fit with 5 components, it takes hours and hours. Currently we parallized it. We will adopt Markov chain Monte Carlo method in the future. For now, for our own, we use it on 100plus-CPU-core machine, so it is still fine.) 
 
 The output of michi2 SED fitting will be: 
 ```
-ls fit_5.out        # a text file, containing chi-square and parameters of each combination of components
-ls fit_5.out.info   # a text file, containing basic informations which will be used later on
+fit_5.out        # a text file, containing chi-square and parameters of each combination of components
+fit_5.out.info   # a text file, containing basic informations which will be used later on
+results_fit_5/*  # best-fit parameters, SED and figures.
 ```
+ 
 
-Then we make SED plots and chi-square plots. 
-
-### 5. Plot chi2 distribution and compute best-fits
+### 5. Optionally re-plotting chi2 distribution and compute best-fits
 Here we make the SED and chi-square plots, assuming that you have already `sourced` the `SETUP.bash`. 
 ```
 michi2-plot-fitting-results # call it without any argument will print the usage

@@ -160,8 +160,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         # 
         # log
         if param_log is True:
-            param_array_mask = (param_array>0)
-            param_array_mask2 = (param_array<=0)
+            param_array_mask = numpy.logical_and(~numpy.isnan(param_array), param_array>0)
+            param_array_mask2 = numpy.logical_and(~numpy.isnan(param_array), param_array<=0)
             param_array[param_array_mask] = numpy.log10(param_array[param_array_mask])
             param_array[param_array_mask2] = numpy.nan
         #pprint(numpy.column_stack((param_bin_x, param_bin_y, 1/param_bin_y)))
@@ -172,29 +172,30 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         #print('------ param_stats.minimum_chisq', param_stats['minimum_chisq'])
         #print('------ param_stats.best_min_chisq', param_stats['best_min_chisq'])
         #print('------ param_stats.best', param_stats['best'])
-        print('param_stats.min', param_stats['min'])
-        print('param_stats.max', param_stats['max'])
-        print('param_stats.xrange', param_stats['xrange'])
-        print('param_stats.yrange', param_stats['yrange'], [1/param_stats['yrange'][1],1/param_stats['yrange'][0]])
-        print('plotting xrange', xrange)
-        print('plotting yrange', yrange)
-        print('param_stats_2p.valid', param_stats_2p['valid'])
-        print('param_stats_2p.threshold_chisq', param_stats_2p['threshold_chisq'], '1/x', 1/param_stats_2p['threshold_chisq'])
-        print('param_stats_2p.xrange', param_stats_2p['xrange']) # L68
-        print('param_stats_2p.yrange', param_stats_2p['yrange']) # H68
-        print('param_stats_2p.global_min_chisq', param_stats_2p['global_min_chisq'], '1/x', 1/param_stats_2p['global_min_chisq'])
-        print('param_stats_2p.global_best', param_stats_2p['global_best'])
-        print('param_stats_2p.in_range_min_chisq', param_stats_2p['in_range_min_chisq'])
-        print('param_stats_2p.in_range_best', param_stats_2p['in_range_best'])
-        print('param_stats_2p.in_range_min', param_stats_2p['in_range_min'])
-        print('param_stats_2p.in_range_max', param_stats_2p['in_range_max'])
-        print('param_stats_2p.min', param_stats_2p['min'])
-        print('param_stats_2p.max', param_stats_2p['max'])
-        print('param_stats_2p.median', param_stats_2p['median'])
-        print('param_stats_2p.best', param_stats_2p['best'])
-        print('param_stats_2p.sigma', param_stats_2p['sigma'])
-        print('param_stats_2p.L68', param_stats_2p['L68'])
-        print('param_stats_2p.H68', param_stats_2p['H68'])
+        if verbose>=2:
+            print('param_stats.min', param_stats['min'])
+            print('param_stats.max', param_stats['max'])
+            print('param_stats.xrange', param_stats['xrange'])
+            print('param_stats.yrange', param_stats['yrange'], [1/param_stats['yrange'][1],1/param_stats['yrange'][0]])
+            print('plotting xrange', xrange)
+            print('plotting yrange', yrange)
+            print('param_stats_2p.valid', param_stats_2p['valid'])
+            print('param_stats_2p.threshold_chisq', param_stats_2p['threshold_chisq'], '1/x', 1/param_stats_2p['threshold_chisq'])
+            print('param_stats_2p.xrange', param_stats_2p['xrange']) # L68
+            print('param_stats_2p.yrange', param_stats_2p['yrange']) # H68
+            print('param_stats_2p.global_min_chisq', param_stats_2p['global_min_chisq'], '1/x', 1/param_stats_2p['global_min_chisq'])
+            print('param_stats_2p.global_best', param_stats_2p['global_best'])
+            print('param_stats_2p.in_range_min_chisq', param_stats_2p['in_range_min_chisq'])
+            print('param_stats_2p.in_range_best', param_stats_2p['in_range_best'])
+            print('param_stats_2p.in_range_min', param_stats_2p['in_range_min'])
+            print('param_stats_2p.in_range_max', param_stats_2p['in_range_max'])
+            print('param_stats_2p.min', param_stats_2p['min'])
+            print('param_stats_2p.max', param_stats_2p['max'])
+            print('param_stats_2p.median', param_stats_2p['median'])
+            print('param_stats_2p.best', param_stats_2p['best'])
+            print('param_stats_2p.sigma', param_stats_2p['sigma'])
+            print('param_stats_2p.L68', param_stats_2p['L68'])
+            print('param_stats_2p.H68', param_stats_2p['H68'])
         #--
         #--TODO--20180123-10h44m-- when param_log is True, param_min can be zero!
         #--
@@ -203,8 +204,9 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None):
         if param_stats_2p['xrange'][1] - param_stats_2p['xrange'][0] < numpy.abs(xrange[1]-xrange[0])/20.0:
             param_stats_2p['xrange'][0] = param_stats_2p['median'] - numpy.abs(xrange[1]-xrange[0])/20.0
             param_stats_2p['xrange'][1] = param_stats_2p['median'] + numpy.abs(xrange[1]-xrange[0])/20.0
-            print('param_stats_2p.xrange', param_stats_2p['xrange']) # optimized xrange for L68-H68
-            print('param_stats_2p.yrange', param_stats_2p['yrange']) # optimized xrange for L68-H68
+            if verbose>=2:
+                print('param_stats_2p.xrange', param_stats_2p['xrange']) # optimized xrange for L68-H68
+                print('param_stats_2p.yrange', param_stats_2p['yrange']) # optimized xrange for L68-H68
         # 
         # Initialize a plot
         if Plot_engine is None:
@@ -860,7 +862,6 @@ else:
     Plot_engine.savepdf(Output_name+'.pdf')
     #Plot_engine.show()
     Plot_engine.close()
-    print('')
     print('Output to "%s"!'%(Output_name+'.pdf'))
     # 
     # 

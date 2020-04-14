@@ -65,6 +65,7 @@ NoRadio=0
 FreeRadio=0
 FreezeRadio=0 # Added on 2019-10-24, so that even when not fitting any radio, we can still output a freezed radio component
 FreeDust=0
+qIR=2.4
 LibStellar="BC03.200Myr"
 ChosenLibStellar=1 # the index in AcceptableLibStellar
 AcceptableLibStellar=("BC03" "BC03.200Myr" "BC03.400Myr" "BC03.MultiAge" "FSPS.CSP.tau.1Gyr")
@@ -146,6 +147,12 @@ if [[ $# -ge 2 ]]; then
                 i=$((i+1))
                 ObjName="${!i}"
                 echo ObjName="${!i}"
+            fi
+        elif [[ "$Strcmd" == "-qir" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                qIR="${!i}"
+                echo qIR="${!i}"
             fi
         elif [[ "$Strcmd" == "-lib-stellar" ]] || [[ "$Strcmd" == "-stellar" ]]; then
             if [[ $i -lt $# ]]; then
@@ -295,7 +302,7 @@ fi
 # 
 if [[ ! -f "$FitName.in" ]] || [[ $Overwrite -ge 2 ]]; then
     if [[ -f "$Flux" ]]; then
-        echo ""
+        #echo ""
         echo ""
         echo "Warning! \"$FitName.in\" was not found! But found \"$Flux\"! Will run: "
         if [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 1 ]] && [[ $NoStellar -eq 1 ]]; then
@@ -341,14 +348,14 @@ if [[ ! -f "$FitName.in" ]] || [[ $Overwrite -ge 2 ]]; then
             michi2_filter_flux_2sigma_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
             # 
         fi
-        echo ""
-        echo ""
+        #echo ""
+        #echo ""
     fi
 fi
 if [[ ! -f "$FitName.in" ]]; then
-    echo 
+    echo ""
     echo "Error! \"$FitName.in\" was not found! Please prepare that photometry file which contains 3 columns: wavelengths in um, flux densities in mJy and the errors in flux density in mJy."
-    exit
+    exit 255
 fi
 
 
@@ -378,7 +385,7 @@ if [[ $FreeDust -eq 0 ]]; then
         i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN) + 1; }")
         j=$(awk "BEGIN { print ($i+1); }")
         constrain_warm_cold_dust=(-constraint "LIB${i}_INDEX = LIB${j}_INDEX")
-        echo "constrain_warm_cold_dust = ${constrain_warm_cold_dust[@]}"
+        echo "constrain_warm_cold_dust = \"${constrain_warm_cold_dust[@]}\""
     fi
 fi
 
@@ -392,9 +399,9 @@ if [[ $FreeRadio -eq 0 ]]; then
         i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN) + 1; }")
         j=$(awk "BEGIN { print ($i+1); }")
         k=$(awk "BEGIN { print ($j+1); }")
-        qIR=2.4
+        #qIR=2.4
         constrain_radio_IR=(-constraint "LIB${k}_NORM = ((LIB${i}_NORM*(10^LIB${i}_PAR3))+(LIB${j}_NORM*(10^LIB${j}_PAR3)))*40.31970/3750/10^${qIR}")
-        echo "constrain_radio_IR = ${constrain_radio_IR[@]}  (qIR=${qIR})"
+        echo "constrain_radio_IR = \"${constrain_radio_IR[@]}\"  (qIR=${qIR})"
     fi
 fi
 
@@ -458,6 +465,8 @@ if [[ $NoRadio -eq 0 ]] || [[ $FreezeRadio -eq 1 ]]; then
     loop_lib_files+=(${CorrespondingLibRadio[ChosenLibRadio]})
     deploy_params+=(${AcceptableLibRadio[ChosenLibRadio]})
 fi
+echo ""
+echo "Checking libraries:"
 for loop_lib_file in ${loop_lib_files[@]}; do
     if [[ ! -f "$loop_lib_file" ]] && [[ ! -L "$loop_lib_file" ]]; then
         echo "Checked \"$loop_lib_file\" not found."
@@ -465,8 +474,10 @@ for loop_lib_file in ${loop_lib_files[@]}; do
     fi
 done
 if [[ $check_lib_files -eq 0 ]] || [[ $Overwrite -ge 3 ]]; then
-    echo ""
+    echo "Running michi2-deploy-files ${deploy_params[@]}"
     michi2-deploy-files ${deploy_params[@]}
+else
+    echo "All libraries found."
 fi
 
 
@@ -483,13 +494,25 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
     echo "           -out $FitName.out \\"
     echo "           -parallel $Parallel \\"
     echo "           -sampling $Sampling \\"
+    if [[ ${#constrain_stellar_index[@]} -gt 0 ]]; then
     echo "           ${constrain_stellar_index[@]} \\"
+    fi
+    if [[ ${#constrain_stellar_EBV[@]} -gt 0 ]]; then
     echo "           ${constrain_stellar_EBV[@]} \\"
+    fi
+    if [[ ${#constrain_dust_Umin[@]} -gt 0 ]]; then
     echo "           ${constrain_dust_Umin[@]} \\"
+    fi
+    if [[ ${#constrain_warm_cold_dust[@]} -gt 0 ]]; then
     echo "           ${constrain_warm_cold_dust[@]} \\"
+    fi
+    if [[ ${#constrain_radio_IR[@]} -gt 0 ]]; then
     echo "           ${constrain_radio_IR[@]} \\"
+    fi
     echo "           -filter filter.list \\"
+    if [[ ${#Debug[@]} -gt 0 ]]; then
     echo "           ${Debug[@]}\\"
+    fi
     echo "           "
 
     # 
@@ -536,6 +559,9 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
         echo "Backing up \"results_${FitName}/\" as \"results_${FitName}_${BackupDate}/\""
         mv "results_${FitName}/" "results_${FitName}_${BackupDate}/"
     fi
+else
+    echo ""
+    echo "Found $FitName.out. Skip fitting."
 fi
 if [[ ! -f "$FitName.out" ]]; then
     echo "Error! Failed to run michi2 and produce \"$FitName.out\"!"
@@ -556,6 +582,9 @@ if [[ ! -f "results_${FitName}/${FitName}.pdf" ]] || [[ $Overwrite -ge 1 ]]; the
         -out "results_${FitName}/${FitName}.pdf" \
         -flux "$Flux" \
         -source "$ObjName"
+else
+    echo ""
+    echo "Found results_${FitName}/${FitName}.pdf. Skip plotting."
 fi
 # 
 if [[ ! -f "results_${FitName}/${FitName}.best.pdf" ]] || [[ $Overwrite -ge 1 ]]; then
@@ -564,6 +593,9 @@ if [[ ! -f "results_${FitName}/${FitName}.best.pdf" ]] || [[ $Overwrite -ge 1 ]]
         -flux "$Flux" \
         -source "$ObjName" \
         -only-best
+else
+    echo ""
+    echo "Found results_${FitName}/${FitName}.best.pdf. Skip plotting."
 fi
 
 

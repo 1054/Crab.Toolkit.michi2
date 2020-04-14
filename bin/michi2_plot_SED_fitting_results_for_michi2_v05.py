@@ -215,7 +215,7 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
             param_array[param_array_mask2] = numpy.nan
         # 
         # verbose
-        if verbose >= 1 or True:
+        if verbose >= 2:
             #pprint(numpy.column_stack((param_bin_x, param_bin_y, 1/param_bin_y)))
             #print('------ xrange', plot_xrange)
             #print('------ yrange', plot_yrange, [1/plot_yrange[1],1/plot_yrange[0]])
@@ -255,7 +255,7 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         if param_stats_2p['xrange'][1] - param_stats_2p['xrange'][0] < numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0:
             param_stats_2p['xrange'][0] = param_stats_2p['median'] - numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0
             param_stats_2p['xrange'][1] = param_stats_2p['median'] + numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0
-            if verbose >= 1:
+            if verbose >= 2:
                 print('param_stats_2p.xrange', param_stats_2p['xrange']) # optimized xrange for L68-H68
                 print('param_stats_2p.yrange', param_stats_2p['yrange']) # optimized xrange for L68-H68
         # 
@@ -750,7 +750,7 @@ else:
     # 
     Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_array_size)) #<TODO># tune line width
     Plot_SED_linewidth = 1.0
-    print('')
+    #print('')
     print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_array_size, Delta_chisq_of_interest))
     # 
     if not SetOnlyPlotBestSED:
@@ -791,7 +791,7 @@ else:
     # 
     # Get SED (dump to subdirectories and files)
     #Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_indices_sorted, Cut_chi2_array_size, Plot_chi2_index_dict)
-    print('')
+    #print('')
     print('Dumping library SEDs')
     dump_LIB_SEDs_to_files(chisq_file = DataFile, chisq_array = All_chi2_array, 
                             lib_dict = InfoDict, 
@@ -814,7 +814,7 @@ else:
     # 
     # 
     # Then plot SEDs
-    print('')
+    #print('')
     for i in Plot_chi2_indices:
         # 
         # alpha by chi2
@@ -987,7 +987,6 @@ else:
     Plot_engine.savepdf(Output_dir+Output_name+'.pdf')
     #Plot_engine.show()
     Plot_engine.close()
-    print('')
     print('Output to "%s"!'%(Output_dir+Output_name+'.pdf'))
     # 
     # 

@@ -23,7 +23,26 @@ deploy_current_dir=$(pwd)
 deploy_script_dir=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
 deploy_upper_dir=$(readlink -f $(dirname "${deploy_script_dir}"))
 
-echo "Welcome"
+#echo "Welcome"
+
+
+# 
+# Check user input
+# 
+if [[ $# -le 0 ]]; then
+    echo "Usage for SED fitting: "
+    echo "    michi2-deploy-files SED"
+    echo "    michi2-deploy-files SED # will deploy BC03 ConstSFH MultiAge stellar, Mullaney AGN, DL07 dust and radio SED libraries"
+    echo "    michi2-deploy-files SED BC03.200Myr DL07UPD2010 # will deploy only the BC03 ConstSFH MultiAge stellar SED library"
+    echo "    michi2-deploy-files SED BC03 no AGN no dust no radio # will deploy only the BC03 ConstSFH MultiAge stellar SED library"
+    echo "    michi2-deploy-files SED FSPS no AGN no dust no radio # will deploy only the FSPS tau=1Gyr SFH MultiAge stellar SED library"
+    echo ""
+    echo "Usage for LVG fitting: "
+    echo "    michi2-deploy-files LVG # TBD"
+    echo ""
+fi
+
+
 echo "Deploying michi2 into ${deploy_current_dir} ..."
 #sleep 0.25
 
@@ -66,6 +85,34 @@ function check_input_contains() {
     return 255
 }
 
+function check_and_unzip() {
+    if [[ $# -ge 2 ]]; then
+        unzip_type="$1"
+        unzip_name=$(basename "$2" | perl -p -e 's/\.zip$//g')
+        unzip_log="${unzip_name}.unzip.$(date +%s).log"
+        unzip_file="${deploy_upper_dir}/data/lib_SED/$2"
+        if [[ ! -f "$unzip_file" ]]; then
+            echo "Error! File not found: \"$unzip_file\". Please make sure you have downloaded this code completely."
+            exit 255
+        fi
+        # remove existing lines?
+        #if grep -q "^$unzip_type : " libs.list; then
+        #    cat libs.list | grep -v "^$unzip_type : " > libs.list.2
+        #    cat libs.list.2 > libs.list
+        #    if [[ -f libs.list.2 ]]; then
+        #        rm libs.list.2
+        #    fi
+        #fi
+        echo "Extracting library file $unzip_file"
+        unzip -o "$unzip_file" > "${unzip_log}"
+        list_names=($(cat "${unzip_log}" | grep "inflating:" | perl -p -e "s/ *inflating: *//g"))
+        echo "$unzip_type : ${unzip_name}.zip : ${list_names[@]}" >> libs.list
+        if [[ -f "${unzip_log}" ]]; then
+            rm "${unzip_log}"
+        fi
+    fi
+}
+
 #if (check_input_contains "400Myr" "$*") || (check_input_contains "Age400Myr" "$*"); then
 #    echo "yes"
 #else
@@ -73,6 +120,13 @@ function check_input_contains() {
 #fi
 #exit
 
+
+# 
+# Deleting all libraries
+# 
+if [[ -f libs.list ]]; then
+    mv libs.list libs.list.backup
+fi
 
 # 
 # Copy files
@@ -97,19 +151,19 @@ if echo "$deploy_type" | grep -q -i "SED"; then
             # 
             if check_input_contains "MultiAge" "$*"; then
                 # 
-                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.MultiAge.EBV.SED.zip"
+                check_and_unzip Stellar "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.MultiAge.EBV.SED.zip"
                 # 
             elif (check_input_contains "400Myr" "$*") || (check_input_contains "Age400Myr" "$*"); then
                 # 
-                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age400Myr.EBV.SED.zip"
+                check_and_unzip Stellar "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age400Myr.EBV.SED.zip"
                 # 
             elif (check_input_contains "200Myr" "$*") || (check_input_contains "Age200Myr" "$*"); then
                 # 
-                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED.zip"
+                check_and_unzip Stellar "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED.zip"
                 # 
             else
                 # 
-                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip" # BC03 default is BC03 constant SFH single age 200Myr
+                check_and_unzip Stellar "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.MultiAge.EBV.SED.zip" # BC03 default is BC03 constant SFH single age 200Myr
                 # 
             fi
         # 
@@ -117,17 +171,17 @@ if echo "$deploy_type" | grep -q -i "SED"; then
             # 
             if check_input_contains "SSP" "$*"; then
                 # 
-                unzip -o "${deploy_upper_dir}/data/lib_SED/FSPS.Padova.BaSeL.Z0.0190.EBV.lib.zip"
+                check_and_unzip Stellar "lib.FSPS.SSP.Padova.BaSeL.Z0.0190.EBV.SED.zip"
                 # 
             else
                 # 
-                unzip -o "${deploy_upper_dir}/data/lib_SED/lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip" # FSPS default is composite SFH tau-declining at 1Gyr
+                check_and_unzip Stellar "lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip" # FSPS default is composite SFH tau-declining at 1Gyr
                 # 
             fi
         # 
         else
             # 
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip" # default is BC03 constant SFH single age 200Myr
+            check_and_unzip Stellar "lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip" # default is BC03 constant SFH single age 200Myr
             # 
         fi
     fi
@@ -141,17 +195,25 @@ if echo "$deploy_type" | grep -q -i "SED"; then
             # 
             cp "${deploy_upper_dir}/data/make_lib_SED/02_Make_Lib_SED/ModifiedBlackbody/lib.MBB.SED" .
             # 
+        elif check_input_contains "DL07UPD2010FIR40122" "$*"; then
+            # 
+            check_and_unzip Dust "lib.DL07UPD2010FIR40122.DuoCom.SED.zip"
+            # 
         elif check_input_contains "DL07UPD2010" "$*"; then
             # 
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.DL07UPD2010.DuoCom.SED.zip"
+            check_and_unzip Dust "lib.DL07UPD2010.DuoCom.SED.zip"
             # 
         elif (check_input_contains "SINGLEPAH" "$*") || (check_input_contains "SINGLE PAH" "$*") || (check_input_contains "SINGLE QPAH" "$*"); then
             # 
-            unzip -o "${deploy_upper_dir}/data/lib_SED/DL07.DuoCom.SinglePAH.lib.zip"
+            check_and_unzip Dust "lib.DL07.DuoCom.SinglePAH.lib.zip"
+            # 
+        elif check_input_contains "DL07 " "$*"; then
+            # 
+            check_and_unzip Dust "lib.DL07.DuoCom.SED.zip"
             # 
         else
             # 
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.DL07.DuoCom.SED.zip" # default
+            check_and_unzip Dust "lib.DL07UPD2010.DuoCom.SED.zip" # default
             # 
         fi
     fi
@@ -163,32 +225,32 @@ if echo "$deploy_type" | grep -q -i "SED"; then
         # 
         if check_input_contains "siebenmorgen" "$*"; then
             # 
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.SiebenmorgenAGN.Extrapolated.SED.zip"
+            check_and_unzip AGN "lib.SiebenmorgenAGN.Extrapolated.SED.zip"
             # 
         elif (check_input_contains "mullaney" "$*") || (check_input_contains "mullaneyagn" "$*") || (check_input_contains "mullaney2010" "$*"); then
             # 
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.MullaneyAGN.SED.zip"
+            check_and_unzip AGN "lib.MullaneyAGN.SED.zip"
             # 
         else
             # 
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.MullaneyAGN.SED.zip" # default
+            check_and_unzip AGN "lib.MullaneyAGN.SED.zip" # default
             # 
         fi
     fi
     # 
     if [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(no radio)\b.*/\1/g') != "no radio" ]]; then
         if [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(radio[\._ ]?varied[\._ ]?slope)\b.*/radiovariedslope/g') == "radiovariedslope" ]]; then
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.RadioPowerlaw.Varied.Slope.SED.zip"
+            check_and_unzip Radio "lib.RadioPowerlaw.Varied.Slope.SED.zip"
         elif [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(radio)\b.*/\1/g') == "radio" ]]; then
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.RadioPowerlaw.Single.SED.zip"
+            check_and_unzip Radio "lib.RadioPowerlaw.Single.SED.zip"
         else
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.RadioPowerlaw.Single.SED.zip" # default
+            check_and_unzip Radio "lib.RadioPowerlaw.Single.SED.zip" # default
         fi
     fi
     # 
     if [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(no co)\b.*/\1/g') != "no co" ]]; then
         if [[ $(echo "$@" | tr -s ' ' | tr '[:upper:]' '[:lower:]' | perl -p -e 's/.*\b(co)\b.*/\1/g') == "co" ]]; then
-            unzip -o "${deploy_upper_dir}/data/lib_SED/lib.Radio.mm.FIR.lines.SED.zip"
+            check_and_unzip Radio "lib.Radio.mm.FIR.lines.SED.zip"
         fi
     fi
     # 
