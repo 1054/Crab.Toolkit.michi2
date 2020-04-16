@@ -190,7 +190,7 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
             param_array[param_array_mask2] = numpy.nan
         # 
         # verbose
-        if verbose >= 1:
+        if verbose >= 2:
             #pprint(numpy.column_stack((param_bin_x, param_bin_y, 1/param_bin_y)))
             #print('------ xrange', plot_xrange)
             #print('------ yrange', plot_yrange, [1/plot_yrange[1],1/plot_yrange[0]])
@@ -230,7 +230,7 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         if param_stats_2p['xrange'][1] - param_stats_2p['xrange'][0] < numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0:
             param_stats_2p['xrange'][0] = param_stats_2p['median'] - numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0
             param_stats_2p['xrange'][1] = param_stats_2p['median'] + numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0
-            if verbose >= 1:
+            if verbose >= 2:
                 print('param_stats_2p.xrange', param_stats_2p['xrange']) # optimized xrange for L68-H68
                 print('param_stats_2p.yrange', param_stats_2p['yrange']) # optimized xrange for L68-H68
         # 

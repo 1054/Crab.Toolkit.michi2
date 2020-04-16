@@ -52,9 +52,10 @@ def lib_file_get_header(Lib_file):
                 if data_line.strip() != '#':
                     for header_key in ['NVAR1', 'NVAR2', \
                                        'NPAR', \
-                                       'NPAR1', 'NPAR2', 'NPAR3', 'NPAR4', 'NPAR5', 'NPAR6', 'NPAR7', 'NPAR8', \
-                                       'CPAR1', 'CPAR2', 'CPAR3', 'CPAR4', 'CPAR5', 'CPAR6', 'CPAR7', 'CPAR8', \
-                                       'TPAR1', 'TPAR2', 'TPAR3', 'TPAR4', 'TPAR5', 'TPAR6', 'TPAR7', 'TPAR8', ]:
+                                       'NPAR1', 'NPAR2', 'NPAR3', 'NPAR4', 'NPAR5', 'NPAR6', 'NPAR7', 'NPAR8', 'NPAR9', 'NPAR10', 'NPAR11', 'NPAR12', 'NPAR13', 'NPAR14', 'NPAR15', 'NPAR16', 'NPAR17', 'NPAR18', 'NPAR19', 'NPAR20', \
+                                       'CPAR1', 'CPAR2', 'CPAR3', 'CPAR4', 'CPAR5', 'CPAR6', 'CPAR7', 'CPAR8', 'CPAR9', 'CPAR10', 'CPAR11', 'CPAR12', 'CPAR13', 'CPAR14', 'CPAR15', 'CPAR16', 'CPAR17', 'CPAR18', 'CPAR19', 'CPAR20', \
+                                       'TPAR1', 'TPAR2', 'TPAR3', 'TPAR4', 'TPAR5', 'TPAR6', 'TPAR7', 'TPAR8', 'TPAR9', 'TPAR10', 'TPAR11', 'TPAR12', 'TPAR13', 'TPAR14', 'TPAR15', 'TPAR16', 'TPAR17', 'TPAR18', 'TPAR19', 'TPAR20', ]:
+                        #<TODO># max 20 pars allowed.
                         #if data_line.startswith('# %s'%(header_key)):
                         if re.match(r'^#\s*%s\s*=.*'%(header_key), data_line):
                             data_line_split = data_line.split('=')
@@ -107,8 +108,39 @@ def lib_file_get_data_block(Lib_file, starting_data_line_index, Lib_header = [],
     if Lib_header == []: Lib_header = lib_file_get_header(Lib_file)
     Lib_begin = Lib_header['NLINE'] + starting_data_line_index                         # the line number index (starting from 0) in the Lib_file, which defines the data block of one LVG template.
     Lib_end   = Lib_header['NLINE'] + starting_data_line_index + Lib_header['NVAR1']-1 # the line number index (starting from 0) in the Lib_file, which defines the data block of one LVG template.
-    if verbose: print('numpy.genfromtxt(Lib_file, skip_header=%d, max_rows=%d)'%(Lib_begin, Lib_header['NVAR1']))
-    Lib_arr = numpy.genfromtxt(Lib_file, skip_header=Lib_begin, max_rows=Lib_header['NVAR1'])
+    if verbose:
+        print('Lib_begin %s'%(Lib_begin+1))
+        print('Lib_end %s'%(Lib_end+1))
+    # 
+    #if verbose: print('numpy.genfromtxt(Lib_file, skip_header=%d, max_rows=%d)'%(Lib_begin, Lib_header['NVAR1']))
+    #Lib_arr = numpy.genfromtxt(Lib_file, skip_header=Lib_begin, max_rows=Lib_header['NVAR1']) #<20200416># text will be lost as default dtype is float
+    # 
+    Lib_content = []
+    with open(Lib_file, 'r') as fp:
+        lines_to_skip = Lib_begin
+        while lines_to_skip > 0:
+            fp.readline()
+            lines_to_skip -= 1
+        lines_to_read = Lib_header['NVAR1']
+        while lines_to_read > 0:
+            Lib_content.append(tuple(fp.readline().strip().split()))
+            lines_to_read -= 1
+    # 
+    Lib_arr = numpy.array(Lib_content)
+    arr_dtypes = [('X','f8'), ('Y','f8')]
+    for k in range(Lib_header['NPAR']):
+        try:
+            Lib_arr[0,k+2].astype(float)
+            arr_dtypes.append(('PAR%d'%(k+1), 'f8'))
+        except:
+            max_len = numpy.max([len(t) for t in Lib_arr[:,k+2]])
+            #arr_dtypes.append(('PAR%d'%(k+1), 'U%d'%(max_len+1)))
+            arr_dtypes.append(('PAR%d'%(k+1), 'object'))
+    # 
+    Lib_arr = numpy.array(Lib_content, dtype=arr_dtypes)
+    #print(Lib_arr.shape)
+    #print(Lib_arr.dtype)
+    # 
     return Lib_arr
 
 
@@ -424,14 +456,29 @@ if __name__ == "__main__":
         # 
         # read lib data block from line file, starting from the data line index 'Lib_i[line_number-1]'
         Lib_arr = lib_file_get_data_block(Lib_file, Lib_i[line_number-1], Lib_header=Lib_header)
-        Lib_x = Lib_arr[:,0]
-        Lib_y = Lib_arr[:,1] * Lib_a[line_number-1]
+        Lib_x = Lib_arr['X']
+        Lib_y = Lib_arr['Y'] * Lib_a[line_number-1]
         Out_file = output_dir+os.sep+'LVG_LIB%d'%(iLib+1)
         asciitable.write(numpy.column_stack((Lib_x,Lib_y)), 
-                            Out_file, 
-                            Writer=asciitable.FixedWidthTwoLine, 
-                            names=['X', 'Y'], 
-                            overwrite=True)
+                         Out_file, 
+                         Writer=asciitable.FixedWidthTwoLine, 
+                         names=['X', 'Y'], 
+                         overwrite=True)
+        os.system('sed -i.bak -e "1s/^/#/" "%s"'%(Out_file))
+        os.system('sed -i.bak -e "2s/^[ -]*/#/" "%s"'%(Out_file))
+        print('Output to "%s"'%(Out_file))
+        # 
+        # dump all lib columns
+        Out_file = output_dir+os.sep+'LVG_LIB%d.par'%(iLib+1)
+        Out_colnames = ['X', 'Y']
+        for k in range(Lib_header['NPAR']):
+            Out_colnames.append(Lib_header['TPAR%d'%(k+1)].replace('{','').replace('}','').replace('/','_'))
+        asciitable.write(Lib_arr, 
+                         Out_file, 
+                         Writer=asciitable.FixedWidthTwoLine, 
+                         names=Out_colnames, 
+                         delimiter='  ', 
+                         overwrite=True)
         os.system('sed -i.bak -e "1s/^/#/" "%s"'%(Out_file))
         os.system('sed -i.bak -e "2s/^[ -]*/#/" "%s"'%(Out_file))
         print('Output to "%s"'%(Out_file))
