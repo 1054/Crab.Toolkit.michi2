@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # 
+# 20200417: added the output of "chi-square_param_*.txt"
+# 
 
 import os
 import sys
@@ -155,6 +157,9 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
             if os.path.isfile(Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt'):
                 os.system('mv %s %s.backup'%(Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt', 
                                              Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt'))
+            if os.path.isfile(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt'):
+                os.system('mv %s %s.backup'%(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 
+                                             Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt'))
             if param_stats_2p['valid'] is True:
                 param_median = param_stats_2p['median']
                 param_best = param_stats_2p['best']
@@ -176,7 +181,16 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
                                     Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt', Writer=asciitable.Ipac, 
                                             names=['param_median', 'param_best', 'param_sigma', 'param_L68', 'param_H68'], 
                                             formats={'param_median': '%20.10g', 'param_best': '%20.10g', 'param_sigma': '%20.10g', 'param_L68': '%20.10g', 'param_H68': '%20.10g'}, 
-                                             overwrite = True)
+                                            overwrite = True)
+            asciitable.write(numpy.column_stack((chisq_array, param_array)), 
+                                    Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 
+                                            Writer=asciitable.FixedWidth, 
+                                            bookend=True, delimiter=' ',
+                                            names=['chisq_array', 'param_array'], 
+                                            overwrite = True)
+            with open(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 'r+') as fp:
+                fp.seek(0)
+                fp.write('#')
         # 
         # crab_bin_compute_param_chisq_histogram for plotting
         param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)

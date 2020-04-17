@@ -452,18 +452,26 @@ deploy_params=(SED)
 if [[ $NoStellar -eq 0 ]]; then
     loop_lib_files+=(${CorrespondingLibStellar[ChosenLibStellar]})
     deploy_params+=(${AcceptableLibStellar[ChosenLibStellar]})
+else
+    deploy_params+=(no stellar)
 fi
 if [[ $NoAGN -eq 0 ]]; then
     loop_lib_files+=(${CorrespondingLibAGN[ChosenLibAGN]})
     deploy_params+=(${AcceptableLibAGN[ChosenLibAGN]})
+else
+    deploy_params+=(no AGN)
 fi
 if [[ $NoDust -eq 0 ]]; then
     loop_lib_files+=(${CorrespondingLibDust[ChosenLibDust]})
     deploy_params+=(${AcceptableLibDust[ChosenLibDust]})
+else
+    deploy_params+=(no dust)
 fi
 if [[ $NoRadio -eq 0 ]] || [[ $FreezeRadio -eq 1 ]]; then
     loop_lib_files+=(${CorrespondingLibRadio[ChosenLibRadio]})
     deploy_params+=(${AcceptableLibRadio[ChosenLibRadio]})
+else
+    deploy_params+=(no radio)
 fi
 echo ""
 echo "Checking libraries:"

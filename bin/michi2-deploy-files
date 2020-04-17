@@ -181,7 +181,7 @@ if echo "$deploy_type" | grep -q -i "SED"; then
         # 
         else
             # 
-            check_and_unzip Stellar "lib.BC03.Padova1994.BaSeL.Z0.0190.EBV.SED.zip" # default is BC03 constant SFH single age 200Myr
+            check_and_unzip Stellar "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.MultiAge.EBV.SED.zip" # default is BC03 constant SFH multi-age
             # 
         fi
     fi
