@@ -1066,15 +1066,15 @@ else:
         for j in range(Lib_number):
             if len(MH2_dict_list[j]) > 0:
                 if len(Sum_MH2_dict) == 0:
-                    print("Sum_MH2_dict['value'] = MH2_dict_list[%d]['value']"%(j))
-                    print(MH2_dict_list[j]['value'])
+                    #print("Sum_MH2_dict['value'] = MH2_dict_list[%d]['value']"%(j))
+                    #print(MH2_dict_list[j]['value'])
                     Sum_MH2_dict = deepcopy(MH2_dict_list[j])
                     Sum_MH2_dict['Lib_file'] = [Sum_MH2_dict['Lib_file']]
                     Sum_MH2_dict['Lib_name'] = [Sum_MH2_dict['Lib_name']]
                     Sum_MH2_dict['Col_numb'] = [Sum_MH2_dict['Col_numb']]
                 else:
-                    print("Sum_MH2_dict['value'] += MH2_dict_list[%d]['value']"%(j))
-                    print(MH2_dict_list[j]['value'])
+                    #print("Sum_MH2_dict['value'] += MH2_dict_list[%d]['value']"%(j))
+                    #print(MH2_dict_list[j]['value'])
                     Sum_MH2_dict['value'] += MH2_dict_list[j]['value']
                     Sum_MH2_dict['Lib_file'].append(MH2_dict_list[j]['Lib_file'])
                     Sum_MH2_dict['Lib_name'].append(MH2_dict_list[j]['Lib_name'])
