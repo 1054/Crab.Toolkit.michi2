@@ -29,7 +29,7 @@ from astropy.io import fits
 import astropy.io.ascii as asciitable
 import re
 import json
-from copy import copy
+from copy import copy, deepcopy
 
 #from astropy.cosmology import WMAP9 as cosmo
 from astropy.cosmology import FlatLambdaCDM
@@ -97,14 +97,14 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         #print('Taking column %s as the param_array'%(param_dict['Col_numb']))
         # 
         # check arrays
-        param_array = copy(param_dict['value'])
-        chisq_array = copy(param_dict['chisq'])
+        param_array = deepcopy(param_dict['value'])
+        chisq_array = deepcopy(param_dict['chisq'])
         #if 'Degree_of_freedom' in param_dict:
         #    chisq_array = chisq_array / param_dict['Degree_of_freedom'] # make it reduced-chi-square <20191120>
         chisq_min = numpy.nanmin(chisq_array)
         # 
         # copy
-        #param_array_nonan = copy(param_array)
+        #param_array_nonan = deepcopy(param_array)
         #param_array_nonan[numpy.isnan(param_array_nonan)] = -99
         # 
         # apply range -- no, do not cut the array, but just adjust the plotting range.
@@ -1468,7 +1468,7 @@ else:
     # 
     # Total LIR
     if 'value' in LTIR_warm_dust_dict and 'value' in LTIR_cold_dust_dict:
-        LTIR_total_dust_dict = copy(LTIR_warm_dust_dict)
+        LTIR_total_dust_dict = deepcopy(LTIR_warm_dust_dict)
         LTIR_total_dust_dict['value'] = LTIR_warm_dust_dict['value'] + LTIR_cold_dust_dict['value']
         LTIR_total_dust_dict['Lib_file'] = [LTIR_warm_dust_dict['Lib_file'], LTIR_cold_dust_dict['Lib_file']]
         LTIR_total_dust_dict['Lib_name'] = [LTIR_warm_dust_dict['Lib_name'], LTIR_cold_dust_dict['Lib_name']]
@@ -1478,7 +1478,7 @@ else:
     # 
     # Total LIR 40-400um
     if 'value' in LFIR_warm_dust_dict and 'value' in LFIR_cold_dust_dict:
-        LFIR_total_dust_dict = copy(LFIR_warm_dust_dict)
+        LFIR_total_dust_dict = deepcopy(LFIR_warm_dust_dict)
         LFIR_total_dust_dict['value'] = LFIR_warm_dust_dict['value'] + LFIR_cold_dust_dict['value']
         LFIR_total_dust_dict['Lib_file'] = [LFIR_warm_dust_dict['Lib_file'], LFIR_cold_dust_dict['Lib_file']]
         LFIR_total_dust_dict['Lib_name'] = [LFIR_warm_dust_dict['Lib_name'], LFIR_cold_dust_dict['Lib_name']]
@@ -1488,7 +1488,7 @@ else:
     # 
     # Total LIR 40-122um
     if 'value' in LFIR122_warm_dust_dict and 'value' in LFIR122_cold_dust_dict:
-        LFIR122_total_dust_dict = copy(LFIR122_warm_dust_dict)
+        LFIR122_total_dust_dict = deepcopy(LFIR122_warm_dust_dict)
         LFIR122_total_dust_dict['value'] = LFIR122_warm_dust_dict['value'] + LFIR122_cold_dust_dict['value']
         LFIR122_total_dust_dict['Lib_file'] = [LFIR122_warm_dust_dict['Lib_file'], LFIR122_cold_dust_dict['Lib_file']]
         LFIR122_total_dust_dict['Lib_name'] = [LFIR122_warm_dust_dict['Lib_name'], LFIR122_cold_dust_dict['Lib_name']]
@@ -1498,7 +1498,7 @@ else:
     # 
     # Total Mdust
     if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
-        Mass_total_dust_dict = copy(Mass_warm_dust_dict)
+        Mass_total_dust_dict = deepcopy(Mass_warm_dust_dict)
         Mass_total_dust_dict['value'] = Mass_warm_dust_dict['value'] + Mass_cold_dust_dict['value']
         Mass_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
         Mass_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
@@ -1520,7 +1520,7 @@ else:
     #       e.g. Aniano et al. 2012
     # 
     if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
-        fPDR_total_dust_dict = copy(Umin_warm_dust_dict)
+        fPDR_total_dust_dict = deepcopy(Umin_warm_dust_dict)
         fPDR_total_dust_dict['value'] = Mass_warm_dust_dict['value'] / (Mass_warm_dust_dict['value'] + Mass_cold_dust_dict['value'])
         fPDR_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
         fPDR_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
@@ -1535,7 +1535,7 @@ else:
         # Note that this is not exactly 'gamma'
     # 
     if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
-        Umean_total_dust_dict = copy(Umin_warm_dust_dict)
+        Umean_total_dust_dict = deepcopy(Umin_warm_dust_dict)
         Umean_total_dust_dict['value'] = (1-fPDR_total_dust_dict['value']) * Umin_cold_dust_dict['value'] + fPDR_total_dust_dict['value'] * Umin_warm_dust_dict['value'] * (numpy.log(1e6/Umin_warm_dust_dict['value'])/(1-Umin_warm_dust_dict['value']/1e6))
         Umean_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
         Umean_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]

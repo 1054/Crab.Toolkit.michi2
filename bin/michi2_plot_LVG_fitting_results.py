@@ -28,7 +28,7 @@ import astropy.io.ascii as asciitable
 from astropy.table import Table
 import re
 import json
-from copy import copy
+from copy import copy, deepcopy
 
 #from astropy.cosmology import WMAP9 as cosmo
 from astropy.cosmology import FlatLambdaCDM
@@ -97,12 +97,12 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         #print('Taking column %s as the param_array'%(param_dict['Col_numb']))
         # 
         # check arrays
-        param_array = copy(param_dict['value'])
-        chisq_array = copy(param_dict['chisq'])
+        param_array = deepcopy(param_dict['value'])
+        chisq_array = deepcopy(param_dict['chisq'])
         chisq_min = numpy.nanmin(chisq_array)
         # 
         # copy
-        #param_array_nonan = copy(param_array)
+        #param_array_nonan = deepcopy(param_array)
         #param_array_nonan[numpy.isnan(param_array_nonan)] = -99
         # 
         # apply range -- no, do not cut the array, but just adjust the plotting range.
@@ -135,6 +135,9 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
             if os.path.isfile(Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt'):
                 os.system('mv %s %s.backup'%(Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt', 
                                              Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt'))
+            if os.path.isfile(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt'):
+                os.system('mv %s %s.backup'%(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 
+                                             Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt'))
             if param_stats_2p['valid'] is True:
                 param_median = param_stats_2p['median']
                 param_best = param_stats_2p['best']
@@ -151,7 +154,16 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
                                     Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt', Writer=asciitable.Ipac, 
                                             names=['param_median', 'param_best', 'param_sigma', 'param_L68', 'param_H68'], 
                                             formats={'param_median': '%20.10g', 'param_best': '%20.10g', 'param_sigma': '%20.10g', 'param_L68': '%20.10g', 'param_H68': '%20.10g'}, 
-                                                delimiter='    ', overwrite = True)
+                                            delimiter='    ', overwrite = True)
+            asciitable.write(numpy.column_stack((chisq_array, param_array)), 
+                                    Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 
+                                            Writer=asciitable.FixedWidth, 
+                                            bookend=True, delimiter=' ',
+                                            names=['chisq_array', 'param_array'], 
+                                            overwrite = True)
+            with open(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 'r+') as fp:
+                fp.seek(0)
+                fp.write('#')
         # 
         # crab_bin_compute_param_chisq_histogram for plotting
         param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)
@@ -1054,11 +1066,15 @@ else:
         for j in range(Lib_number):
             if len(MH2_dict_list[j]) > 0:
                 if len(Sum_MH2_dict) == 0:
-                    Sum_MH2_dict = copy(MH2_dict_list[j])
+                    print("Sum_MH2_dict['value'] = MH2_dict_list[%d]['value']"%(j))
+                    print(MH2_dict_list[j]['value'])
+                    Sum_MH2_dict = deepcopy(MH2_dict_list[j])
                     Sum_MH2_dict['Lib_file'] = [Sum_MH2_dict['Lib_file']]
                     Sum_MH2_dict['Lib_name'] = [Sum_MH2_dict['Lib_name']]
                     Sum_MH2_dict['Col_numb'] = [Sum_MH2_dict['Col_numb']]
                 else:
+                    print("Sum_MH2_dict['value'] += MH2_dict_list[%d]['value']"%(j))
+                    print(MH2_dict_list[j]['value'])
                     Sum_MH2_dict['value'] += MH2_dict_list[j]['value']
                     Sum_MH2_dict['Lib_file'].append(MH2_dict_list[j]['Lib_file'])
                     Sum_MH2_dict['Lib_name'].append(MH2_dict_list[j]['Lib_name'])
