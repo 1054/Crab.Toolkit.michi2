@@ -67,7 +67,7 @@ Delta_chisq_of_interest = 5.89 # for 5 interested parameters, 68.3% confidence (
 #               Functions               #
 #########################################
 
-def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Output_dir = ''):
+def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Output_dir = ''):
     # Plot_engine must be the CrabPlot class
     if 'Lib_file' in param_dict and \
         'Lib_name' in param_dict and \
@@ -75,7 +75,8 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         'Par_name' in param_dict and \
         'Col_numb' in param_dict and \
         'value' in param_dict and \
-        'chisq' in param_dict :
+        'chisq' in param_dict and \
+        'Degree_of_freedom' in param_dict :
         # 
         if verbose >= 1:
             print('Analyzing the chi-square distribution for parameter "%s" in library %s from file "%s"'%(param_dict['Par_name'], param_dict['Lib_name'], param_dict['Lib_file']))
@@ -99,6 +100,7 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         # check arrays
         param_array = deepcopy(param_dict['value'])
         chisq_array = deepcopy(param_dict['chisq'])
+        #reduced_chisq_array = chisq_array / param_dict['Degree_of_freedom']
         #if 'Degree_of_freedom' in param_dict:
         #    chisq_array = chisq_array / param_dict['Degree_of_freedom'] # make it reduced-chi-square <20191120>
         chisq_min = numpy.nanmin(chisq_array)
@@ -130,10 +132,20 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
             if param_dict['Log_calc'] == True:
                 param_log = True
         # 
+        param_bin_step = None
+        if 'step' in param_dict:
+            param_bin_step = param_dict['step']
+        # 
         # crab_bin_compute_param_chisq_histogram for delta_chisq = 2.3 (2p)
         #verbose = 1
-        param_stats_2p = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, 
-                            delta_chisq = 2.3, log = param_log, verbose = verbose)
+        param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
+                            delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)
+        # 
+        #param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, \
+        #                    delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)
+        # 
+        #param_stats_2p = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, 
+        #                    delta_chisq = 2.3, step = param_bin_step, log = param_log, verbose = verbose)
         #print('param_stats_2p.valid', param_stats_2p['valid'])
         #print('param_stats_2p.threshold_chisq', param_stats_2p['threshold_chisq'], '1/x', 1/param_stats_2p['threshold_chisq'])
         #print('param_stats_2p.xrange', param_stats_2p['xrange']) # L68
@@ -152,6 +164,8 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         #print('param_stats_2p.L68', param_stats_2p['L68'])
         #print('param_stats_2p.H68', param_stats_2p['H68'])
         #sys.exit()
+        # 
+        # write to disk
         if 'Par_file' in param_dict:
             # remove previous file
             if os.path.isfile(Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt'):
@@ -160,12 +174,12 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
             if os.path.isfile(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt'):
                 os.system('mv %s %s.backup'%(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 
                                              Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt'))
-            if param_stats_2p['valid'] is True:
-                param_median = param_stats_2p['median']
-                param_best = param_stats_2p['best']
-                param_sigma = param_stats_2p['sigma']
-                param_L68 = param_stats_2p['L68']
-                param_H68 = param_stats_2p['H68']
+            if param_stats['valid'] is True:
+                param_median = param_stats['median']
+                param_best = param_stats['best']
+                param_sigma = param_stats['sigma']
+                param_L68 = param_stats['L68']
+                param_H68 = param_stats['H68']
             else:
                 param_median = 0.0
                 param_best = 0.0
@@ -192,27 +206,29 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
                 fp.seek(0)
                 fp.write('#')
         # 
+        # 
         # crab_bin_compute_param_chisq_histogram for plotting
-        param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)
+        #param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, \
+        #                    delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)
         # 
-        param_bin_x = param_stats['hist_x']
-        param_bin_y = param_stats['hist_y']
-        param_bin_step = param_stats['bin_step']
+        #param_bin_x = param_stats['hist_x']
+        #param_bin_y = param_stats['hist_y']
+        #param_bin_step = param_stats['bin_step']
         # 
-        plot_xrange = param_stats['xrange'] # xrange is the param range where chi-sq < min-chi-sq + 2.3
-        plot_yrange = param_stats['yrange']
-        #plot_xrange = [plot_xrange[0]-(plot_xrange[1]-plot_xrange[0])*0.50, plot_xrange[1]+(plot_xrange[1]-plot_xrange[0])*0.50] # extend the range for plotting.
-        if param_stats['valid']:
-            # zoomed in plot_xrange (right panel)
-            plot_xrange = [ param_stats['L68'] - 10*param_stats['bin_step'], 
-                            param_stats['H68'] + 10*param_stats['bin_step'] ]
-        ##if plot_xrange[0] < param_stats['min']: plot_xrange[0] = param_stats['min']
-        ##if plot_xrange[1] > param_stats['max']: plot_xrange[1] = param_stats['max']
-        # invert y
-        plot_yrange = [1.0/plot_yrange[1], 1.0/plot_yrange[0]]
-        plot_yrange = numpy.log10(plot_yrange)
-        plot_yrange = [plot_yrange[0]-(plot_yrange[1]-plot_yrange[0])*0.50, plot_yrange[1]+(plot_yrange[1]-plot_yrange[0])*0.05] # extend the range for plotting.
-        plot_yrange = numpy.power(10,plot_yrange)
+        #plot_xrange = param_stats['xrange'] # xrange is the param range where chi-sq < min-chi-sq + 2.3
+        #plot_yrange = param_stats['yrange']
+        ##plot_xrange = [plot_xrange[0]-(plot_xrange[1]-plot_xrange[0])*0.50, plot_xrange[1]+(plot_xrange[1]-plot_xrange[0])*0.50] # extend the range for plotting.
+        #if param_stats['valid']:
+        #    # zoomed in plot_xrange (right panel)
+        #    plot_xrange = [ param_stats['L68'] - 10*param_stats['bin_step'], 
+        #                    param_stats['H68'] + 10*param_stats['bin_step'] ]
+        ###if plot_xrange[0] < param_stats['min']: plot_xrange[0] = param_stats['min']
+        ###if plot_xrange[1] > param_stats['max']: plot_xrange[1] = param_stats['max']
+        ## invert y
+        #plot_yrange = [1.0/plot_yrange[1], 1.0/plot_yrange[0]]
+        #plot_yrange = numpy.log10(plot_yrange)
+        #plot_yrange = [plot_yrange[0]-(plot_yrange[1]-plot_yrange[0])*0.50, plot_yrange[1]+(plot_yrange[1]-plot_yrange[0])*0.05] # extend the range for plotting.
+        #plot_yrange = numpy.power(10,plot_yrange)
         # 
         xlog = None
         #if 'Log_plot' in param_dict:
@@ -220,13 +236,6 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
         #        xlog = 1 # not working for matplotlib bar plot (i.e., CrabPlot plot_hist)!
         # 
         ylog = None
-        # 
-        # log
-        if param_log is True:
-            param_array_mask = (param_array>0)
-            param_array_mask2 = (param_array<=0)
-            param_array[param_array_mask] = numpy.log10(param_array[param_array_mask])
-            param_array[param_array_mask2] = numpy.nan
         # 
         # verbose
         if verbose >= 2:
@@ -242,36 +251,53 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
             print('param_stats.max', param_stats['max'])
             print('param_stats.xrange', param_stats['xrange'])
             print('param_stats.yrange', param_stats['yrange'], '(1/chisq ',1/param_stats['yrange'][1],' ',1/param_stats['yrange'][0],')')
-            print('plotting xrange', plot_xrange)
-            print('plotting yrange', plot_yrange)
-            print('param_stats_2p.valid', param_stats_2p['valid'])
-            print('param_stats_2p.threshold_chisq', param_stats_2p['threshold_chisq'], '1/x', 1/param_stats_2p['threshold_chisq'])
-            print('param_stats_2p.xrange', param_stats_2p['xrange']) # L68
-            print('param_stats_2p.yrange', param_stats_2p['yrange']) # H68
-            print('param_stats_2p.global_min_chisq', param_stats_2p['global_min_chisq'], '1/x', 1/param_stats_2p['global_min_chisq'])
-            print('param_stats_2p.global_best', param_stats_2p['global_best'])
-            print('param_stats_2p.in_range_min_chisq', param_stats_2p['in_range_min_chisq'])
-            print('param_stats_2p.in_range_best', param_stats_2p['in_range_best'])
-            print('param_stats_2p.in_range_min', param_stats_2p['in_range_min'])
-            print('param_stats_2p.in_range_max', param_stats_2p['in_range_max'])
-            print('param_stats_2p.min', param_stats_2p['min'])
-            print('param_stats_2p.max', param_stats_2p['max'])
-            print('param_stats_2p.median', param_stats_2p['median'])
-            print('param_stats_2p.best', param_stats_2p['best'])
-            print('param_stats_2p.sigma', param_stats_2p['sigma'])
-            print('param_stats_2p.L68', param_stats_2p['L68'])
-            print('param_stats_2p.H68', param_stats_2p['H68'])
+            #print('plotting xrange', plot_xrange)
+            #print('plotting yrange', plot_yrange)
+            #print('param_stats_2p.valid', param_stats_2p['valid'])
+            #print('param_stats_2p.threshold_chisq', param_stats_2p['threshold_chisq'], '1/x', 1/param_stats_2p['threshold_chisq'])
+            #print('param_stats_2p.xrange', param_stats_2p['xrange']) # L68
+            #print('param_stats_2p.yrange', param_stats_2p['yrange']) # H68
+            #print('param_stats_2p.global_min_chisq', param_stats_2p['global_min_chisq'], '1/x', 1/param_stats_2p['global_min_chisq'])
+            #print('param_stats_2p.global_best', param_stats_2p['global_best'])
+            #print('param_stats_2p.in_range_min_chisq', param_stats_2p['in_range_min_chisq'])
+            #print('param_stats_2p.in_range_best', param_stats_2p['in_range_best'])
+            #print('param_stats_2p.in_range_min', param_stats_2p['in_range_min'])
+            #print('param_stats_2p.in_range_max', param_stats_2p['in_range_max'])
+            #print('param_stats_2p.min', param_stats_2p['min'])
+            #print('param_stats_2p.max', param_stats_2p['max'])
+            #print('param_stats_2p.median', param_stats_2p['median'])
+            #print('param_stats_2p.best', param_stats_2p['best'])
+            #print('param_stats_2p.sigma', param_stats_2p['sigma'])
+            #print('param_stats_2p.L68', param_stats_2p['L68'])
+            #print('param_stats_2p.H68', param_stats_2p['H68'])
         #--
         #--TODO--20180123-10h44m-- when param_log is True, param_min can be zero!
         #--
         # 
         # 20180319: prevent param_stats_2p['xrange'] from being too small (1/20.0 of the plotting xrange in right panel) <TODO>
-        if param_stats_2p['xrange'][1] - param_stats_2p['xrange'][0] < numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0:
-            param_stats_2p['xrange'][0] = param_stats_2p['median'] - numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0
-            param_stats_2p['xrange'][1] = param_stats_2p['median'] + numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0
-            if verbose >= 2:
-                print('param_stats_2p.xrange', param_stats_2p['xrange']) # optimized xrange for L68-H68
-                print('param_stats_2p.yrange', param_stats_2p['yrange']) # optimized xrange for L68-H68
+        #if param_stats_2p['xrange'][1] - param_stats_2p['xrange'][0] < numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0:
+        #    param_stats_2p['xrange'][0] = param_stats_2p['median'] - numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0
+        #    param_stats_2p['xrange'][1] = param_stats_2p['median'] + numpy.abs(plot_xrange[1]-plot_xrange[0])/20.0
+        #    if verbose >= 2:
+        #        print('param_stats_2p.xrange', param_stats_2p['xrange']) # optimized xrange for L68-H68
+        #        print('param_stats_2p.yrange', param_stats_2p['yrange']) # optimized xrange for L68-H68
+        # 
+        # log for plotting
+        if param_log is True:
+            with numpy.errstate(invalid='ignore'):
+                param_array_mask = (param_array>0)
+                param_array_mask2 = (param_array<=0)
+            param_array[param_array_mask] = numpy.log10(param_array[param_array_mask])
+            param_array[param_array_mask2] = numpy.nan
+        # 
+        # range for plotting
+        plot_xrange = [0.0, 0.0]
+        plot_yrange = [0.0, 0.0]
+        plot_xrange[0] = max(param_stats['min'], param_stats['L68'] - 15.0*param_stats['sigma'])
+        plot_xrange[1] = min(param_stats['max'], param_stats['H68'] + 15.0*param_stats['sigma'])
+        plot_yrange[0] = 0.0
+        plot_yrange[1] = 1.0/param_stats['min_chisq'] * 1.1 # y-axis is 1/chisq rather than chisq
+        # 
         # 
         # Initialize a plot
         if Plot_engine is None:
@@ -279,44 +305,77 @@ def analyze_chisq_distribution(param_dict, verbose = 0, Plot_engine = None, Outp
             Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04)
         # 
         # Plot xy (left panel)
-        Plot_engine.plot_xy(param_array, 1/numpy.array(chisq_array), overplot = False, 
-                                xtitle = param_dict['Par_name'], ytitle = r'$1/\chi^2$', useTex = True, 
-                                size = 2.2, color='#1873cc', symbol = 'o')
+        #Plot_engine.plot_xy(param_array, 1/numpy.array(chisq_array), overplot = False, 
+        #                        xtitle = param_dict['Par_name'], ytitle = r'$1/\chi^2$', useTex = True, 
+        #                        size = 2.2, color='#1873cc', symbol = 'o')
         # 
         # Plot Cut_chi2 horizontal line
-        Plot_engine.plot_line(param_stats['xrange'][0], 1/(param_stats['threshold_chisq']), 
-                                param_stats['xrange'][1], 1/(param_stats['threshold_chisq']), 
-                                overplot = True, color='gold', linestyle = 'dashed', linewidth = 4.0, alpha = 0.8, zorder=9)
+        #Plot_engine.plot_line(param_stats['xrange'][0], 1/(param_stats['threshold_chisq']), 
+        #                        param_stats['xrange'][1], 1/(param_stats['threshold_chisq']), 
+        #                        overplot = True, color='gold', linestyle = 'dashed', linewidth = 4.0, alpha = 0.8, zorder=9)
         # 
         # Plot Cut_chi2 horizontal line (2p = 2.3)
-        if param_stats_2p['valid']:
-            Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(param_stats_2p['threshold_chisq']), 
-                                    param_stats_2p['xrange'][1], 1/(param_stats_2p['threshold_chisq']), 
-                                    overplot = True, color='orangered', linestyle = '--', dashes=(1.25,0.75), linewidth = 8.0, alpha = 0.5, zorder=9) # dashes=(0.5,0.1) means length of 0.5, space of 0.25
-                                    # color: http://www.color-hex.com/color/1e90ff
-                                    # https://stackoverflow.com/questions/35099130/change-spacing-of-dashes-in-dashed-line-in-matplotlib
+        #if param_stats_2p['valid']:
+        #    Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(param_stats_2p['threshold_chisq']), 
+        #                            param_stats_2p['xrange'][1], 1/(param_stats_2p['threshold_chisq']), 
+        #                            overplot = True, color='orangered', linestyle = '--', dashes=(1.25,0.75), linewidth = 8.0, alpha = 0.5, zorder=9) # dashes=(0.5,0.1) means length of 0.5, space of 0.25
+        #                            # color: http://www.color-hex.com/color/1e90ff
+        #                            # https://stackoverflow.com/questions/35099130/change-spacing-of-dashes-in-dashed-line-in-matplotlib
+        # 
+        # Plot xy (left panel)
+        Plot_engine.plot_hist(param_stats['hist_x'], 
+                              1./param_stats['hist_y'], 
+                              width=param_stats['hist_dx']*0.9, 
+                              overplot = False, 
+                              alpha=0.80, color='C0', 
+                              xtitle = param_dict['Par_name'], ytitle = r'$1/\chi^2$', useTex = True, 
+                              #xrange = plot_xrange, yrange = plot_yrange, 
+                              xlog = None, ylog = None)
+        # 
+        Plot_engine.plot_hist(param_stats['smooth_x'], 
+                              1./param_stats['smooth_y'], 
+                              alpha=0.25, color='C0', 
+                              overplot = True)
+        # 
+        #Plot_engine.plot_hist(param_stats['smooth_x'], 
+        #                      1./param_stats['smooth_y'], 
+        #                      overplot = False, 
+        #                      alpha=0.85, color='C0', 
+        #                      xtitle = param_dict['Par_name'], ytitle = r'$1/\chi^2$', useTex = True, 
+        #                      #xrange = plot_xrange, yrange = plot_yrange, 
+        #                      xlog = None, ylog = None)
+        # 
+        # Plot Cut_chi2 horizontal line (2p = 2.3)
+        if param_stats['valid']:
+            Plot_engine.fill_between(param_stats['xrange'], 
+                                     #numpy.array([0.0,0.0])+1./(param_stats['yrange'][1]), 
+                                     numpy.array([0.0,0.0]), 
+                                     numpy.array([0.0,0.0])+1./(param_stats['yrange'][0]), 
+                                     overplot = True, color='gold', linestyle = 'solid', capstyle = 'butt', alpha = 0.5, zorder=9)
+                                     # color: http://www.color-hex.com/color/1e90ff
+                                     # https://stackoverflow.com/questions/35099130/change-spacing-of-dashes-in-dashed-line-in-matplotlib
         # 
         # Plot histogram (right panel)
-        if False:
-            if param_stats_2p['valid']:
-                Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step*1.5, align = 'edge', overplot = False, 
-                                        xtitle = param_dict['Par_name'], ytitle = r'$1/\chi^2$', useTex = True, 
-                                        xrange = plot_xrange, yrange = plot_yrange, xlog = xlog, ylog = ylog)
-                Plot_engine.set_xcharsize(8.0)
-                # 
-                # Plot Cut_chi2 line
-                Plot_engine.plot_line(plot_xrange[0], 1/(param_stats['threshold_chisq']), plot_xrange[1], 1/(param_stats['threshold_chisq']), overplot = True, linestyle = 'dashed')
-                Plot_engine.plot_text(plot_xrange[1], plot_yrange[1]-0.02*(plot_yrange[1]-plot_yrange[0]), ' (zoomed) ', NormalizedCoordinate=False, overplot=True, horizontalalignment='right', verticalalignment='top')
-                # 
-                # Plot Cut_chi2 line (2p = 2.3)
-                Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(param_stats_2p['threshold_chisq']), 
-                                        param_stats_2p['xrange'][1], 1/(param_stats_2p['threshold_chisq']), 
-                                        overplot = True, color='#1e90ff', linestyle = '--', dashes=(0.5,0.25), linewidth = 4.0, alpha = 0.8) # dashes=(0.5,0.1) means length of 0.5, space of 0.25
-                                        # color: http://www.color-hex.com/color/1e90ff
-                                        # https://stackoverflow.com/questions/35099130/change-spacing-of-dashes-in-dashed-line-in-matplotlib
-            else:
-                Plot_engine.plot_text(1.0-0.02, 1.00-0.02, ' (zoomed) ', NormalizedCoordinate=True, overplot=False, horizontalalignment='right', verticalalignment='top')
-                Plot_engine.plot_text(0.5, 0.5, ' (No valid data) ', NormalizedCoordinate=True, overplot=True, horizontalalignment='center', verticalalignment='center')
+        #if False:
+        #    if param_stats_2p['valid']:
+        #        Plot_engine.plot_hist(param_bin_x, 1/numpy.array(param_bin_y), width = param_bin_step*1.5, align = 'edge', overplot = False, 
+        #                                xtitle = param_dict['Par_name'], ytitle = r'$1/\chi^2$', useTex = True, 
+        #                                xrange = plot_xrange, yrange = plot_yrange, xlog = xlog, ylog = ylog)
+        #        Plot_engine.set_xcharsize(8.0)
+        #        # 
+        #        # Plot Cut_chi2 line
+        #        Plot_engine.plot_line(plot_xrange[0], 1/(param_stats['threshold_chisq']), plot_xrange[1], 1/(param_stats['threshold_chisq']), overplot = True, linestyle = 'dashed')
+        #        Plot_engine.plot_text(plot_xrange[1], plot_yrange[1]-0.02*(plot_yrange[1]-plot_yrange[0]), ' (zoomed) ', NormalizedCoordinate=False, overplot=True, horizontalalignment='right', verticalalignment='top')
+        #        # 
+        #        # Plot Cut_chi2 line (2p = 2.3)
+        #        Plot_engine.plot_line(param_stats_2p['xrange'][0], 1/(param_stats_2p['threshold_chisq']), 
+        #                                param_stats_2p['xrange'][1], 1/(param_stats_2p['threshold_chisq']), 
+        #                                overplot = True, color='#1e90ff', linestyle = '--', dashes=(0.5,0.25), linewidth = 4.0, alpha = 0.8) # dashes=(0.5,0.1) means length of 0.5, space of 0.25
+        #                                # color: http://www.color-hex.com/color/1e90ff
+        #                                # https://stackoverflow.com/questions/35099130/change-spacing-of-dashes-in-dashed-line-in-matplotlib
+        #    else:
+        #        Plot_engine.plot_text(1.0-0.02, 1.00-0.02, ' (zoomed) ', NormalizedCoordinate=True, overplot=False, horizontalalignment='right', verticalalignment='top')
+        #        Plot_engine.plot_text(0.5, 0.5, ' (No valid data) ', NormalizedCoordinate=True, overplot=True, horizontalalignment='center', verticalalignment='center')
         # 
     else:
         print('Error! analyze_chisq_distribution() got unaccepted inputs!')
@@ -738,11 +797,11 @@ else:
     # 
     # Constrain DataArray by upper limits <20180202>
     # <20190104> Oops, I forgot what it is.
-    if ConstrainByUpperLimits:
-        #DataArray['chi2'] = constrain_by_upper_limits(DataFile, DataArray['chi2'], InfoDict)
-        constrained = (DataArray['a2']>3.2)
-        where_to_constrain = numpy.argwhere(constrained)
-        DataArray['chi2'][where_to_constrain] = 1e99
+    #if ConstrainByUpperLimits:
+    #    #DataArray['chi2'] = constrain_by_upper_limits(DataFile, DataArray['chi2'], InfoDict)
+    #    constrained = (DataArray['a2']>3.2)
+    #    where_to_constrain = numpy.argwhere(constrained)
+    #    DataArray['chi2'][where_to_constrain] = 1e99
     # 
     # 
     # 
@@ -1543,6 +1602,7 @@ else:
         Umean_total_dust_dict['Par_name'] = r'$\left<U\right>$ (total)'
         Umean_total_dust_dict['Par_file'] = 'Umean_total'
         Umean_total_dust_dict['range'] = [0.08,50.0]
+        Umean_total_dust_dict['step'] = 2.5
         if InfoDict[Mass_warm_dust_dict['Lib_name']].find('DL07.2010.03.18') > 0: Umean_total_dust_dict['range'][1] = 90.0 #<20180319>#
         # 
         # Note: calc_Umean

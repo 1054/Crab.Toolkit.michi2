@@ -1248,6 +1248,95 @@ class CrabPlot(object):
                 plot_panel_ax.set_ylim(yrange)
                 if current>0: self.Plot_panels[current-1]['yrange'] = yrange
     # 
+    def fill_between(self, x, y1, y2, xlog = None, ylog = None, xrange = [], yrange = [], 
+                    ax = None, NormalizedCoordinate = False, overplot = True, current = 0, 
+                    position = None, label = None, 
+                    dataname = '', 
+                    xtitle = None, ytitle = None, 
+                    xtitlefontsize = 14, ytitlefontsize = 14, 
+                    linestyle = 'solid', 
+                    margin = None, 
+                    thick = 0, linewidth = 0, 
+                    **kwargs):
+        # get panel ax
+        plot_panel_ax, current, overplot = self.get_panel_ax(ax, current, overplot)
+        # set linewidth and thick
+        if thick > 0:
+            if linewidth <= 0:
+                linewidth = thick
+        if linewidth <= 0:
+            linewidth = 1.0 # default linewidth
+        # check x y1 y2, they muse be arrays
+        x = self.check_array(x)
+        y1 = self.check_array(y1)
+        y2 = self.check_array(y2)
+        if x.shape != y1.shape:
+            print('Error! fill_between x0 y1 do not have the same dimension!')
+            return
+        if x.shape != y2.shape:
+            print('Error! fill_between x0 y2 do not have the same dimension!')
+            return
+        # check non-positive values if ylog
+        if ylog is not None:
+            ylog = int(ylog)
+            if ylog > 0:
+                if numpy.count_nonzero(y1<=0.0):
+                    y1[y1<=0.0] = numpy.nan
+                if numpy.count_nonzero(y2<=0.0):
+                    y2[y2<=0.0] = numpy.nan
+        # store x y
+        if dataname != '':
+            self.Plot_data[dataname] = numpy.column_stack((x0,y0))
+            #print('CrabPlot::plot_line() Stored the input x and y into self.Plot_data[%s]!'%(dataname))
+        # sort
+        x_sorted_index = x.argsort()
+        x = x[x_sorted_index]
+        y1 = y1[x_sorted_index]
+        y2 = y2[x_sorted_index]
+        # plot line
+        if plot_panel_ax:
+            if NormalizedCoordinate is True:
+                #xrange_for_plot = plot_panel_ax.get_xlim()
+                #yrange_for_plot = plot_panel_ax.get_ylim()
+                #x0_for_plot = x0 * (xrange_for_plot[1]-xrange_for_plot[0]) + xrange_for_plot[0]
+                #y0_for_plot = y0 * (yrange_for_plot[1]-yrange_for_plot[0]) + yrange_for_plot[0]
+                plot_one_line = plot_panel_ax.fill_between(x, y1, y2, linestyle=linestyle, linewidth=linewidth, transform=plot_panel_ax.transAxes, label=label, **kwargs)
+            else:
+                plot_one_line = plot_panel_ax.fill_between(x, y1, y2, linestyle=linestyle, linewidth=linewidth, label=label, **kwargs)
+            # 
+        # 
+        # set log, title, range, etc.
+        if xlog is not None:
+            xlog = int(xlog)
+            if xlog > 0:
+                plot_panel_ax.set_xscale('log')
+                plot_panel_ax.xaxis.set_major_formatter(ticker.FuncFormatter(self.major_formatter_function_for_logarithmic_axis))
+                if current>0: self.Plot_panels[current-1]['xlog'] = xlog
+        if ylog is not None:
+            ylog = int(ylog)
+            if ylog > 0:
+                plot_panel_ax.set_yscale('log')
+                plot_panel_ax.yaxis.set_major_formatter(ticker.FuncFormatter(self.major_formatter_function_for_logarithmic_axis))
+                if current>0: self.Plot_panels[current-1]['ylog'] = ylog
+        if xtitle is not None:
+            if xtitle != '':
+                #plot_panel_ax.set_xlabel(xtitle, fontsize=xtitlefontsize)
+                self.set_xtitle(xtitle, ax=plot_panel_ax)
+                if current>0: self.Plot_panels[current-1]['xtitle'] = xtitle
+        if ytitle is not None:
+            if ytitle != '':
+                #plot_panel_ax.set_ylabel(ytitle, fontsize=ytitlefontsize)
+                self.set_ytitle(ytitle, ax=plot_panel_ax)
+                if current>0: self.Plot_panels[current-1]['ytitle'] = ytitle
+        if xrange is not None:
+            if len(xrange) >= 2:
+                plot_panel_ax.set_xlim(xrange)
+                if current>0: self.Plot_panels[current-1]['xrange'] = xrange
+        if yrange is not None:
+            if len(yrange) >= 2:
+                plot_panel_ax.set_ylim(yrange)
+                if current>0: self.Plot_panels[current-1]['yrange'] = yrange
+    # 
     def plot_text(self, x0, y0, text_input, ax = None, current = None, overplot = None, NormalizedCoordinate = False, **kwargs):
         # check x y type
         x0 = self.check_scalar(x0)
@@ -1295,7 +1384,7 @@ class CrabPlot(object):
         ax, current, overplot = self.get_panel_ax(ax, current, overplot)
         self.plot_text(x0, y0, text_input, ax = ax, NormalizedCoordinate = NormalizedCoordinate, **kwargs)
     # 
-    def plot_hist(self, x, y, ax = None, current = None, overplot = True, xtitle = None, ytitle = None, xlog = None, ylog = None, useTex = None, 
+    def plot_hist(self, x, y, width = None, align = None, ax = None, current = None, overplot = True, xtitle = None, ytitle = None, xlog = None, ylog = None, useTex = None, 
                     margin = None, xrange = None, yrange = None, 
                     **kwargs):
         # get panel ax
@@ -1329,8 +1418,15 @@ class CrabPlot(object):
                 plot_panel_ax.ticklabel_format(style='plain',axis='x',useOffset=False) # 20180122
         else:
             plot_panel_ax.ticklabel_format(style='plain',axis='x',useOffset=False) # 20180122
+        # determine width
+        if width is None:
+            width = numpy.diff(x).tolist()
+            width.append(x[len(x)-1]-x[len(x)-2])
+            width = numpy.array(width) * 0.9
+        if align is None:
+            align = 'edge'
         # plot histogram using the matplotlib bar() function
-        plot_panel_ax.bar(x, y, log=log, **kwargs)
+        plot_panel_ax.bar(x, y, log=log, width=width, align=align, **kwargs)
         # set titles
         if xtitle is not None:
             if xtitle != '':
