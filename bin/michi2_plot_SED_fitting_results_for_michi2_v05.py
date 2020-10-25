@@ -754,6 +754,9 @@ else:
         Detection_mask = (Flux_obs>=2.0*FluxErr_obs)
         UpperLimits_mask = (Flux_obs<2.0*FluxErr_obs)
         #print(Wavelength_obs)
+        #for kk in range(len(Flux_obs)):
+        #    if Wavelength_obs[kk] > 1.0 and Wavelength_obs[kk] < 100.0:
+        #        print('DEBUG', Wavelength_obs[kk], Flux_obs[kk], FluxErr_obs[kk])
     except Exception as err:
         print(err)
     # 
@@ -1595,7 +1598,10 @@ else:
     # 
     if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
         Umean_total_dust_dict = deepcopy(Umin_warm_dust_dict)
-        Umean_total_dust_dict['value'] = (1-fPDR_total_dust_dict['value']) * Umin_cold_dust_dict['value'] + fPDR_total_dust_dict['value'] * Umin_warm_dust_dict['value'] * (numpy.log(1e6/Umin_warm_dust_dict['value'])/(1-Umin_warm_dust_dict['value']/1e6))
+        Umax = 1e6
+        if Mass_warm_dust_dict['Lib_file'].find('DL07.2010.03.18') >=0 :
+            Umax = 1e7
+        Umean_total_dust_dict['value'] = (1-fPDR_total_dust_dict['value']) * Umin_cold_dust_dict['value'] + fPDR_total_dust_dict['value'] * Umin_warm_dust_dict['value'] * (numpy.log(Umax/Umin_warm_dust_dict['value'])/(1-Umin_warm_dust_dict['value']/Umax))
         Umean_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
         Umean_total_dust_dict['Lib_name'] = [Mass_warm_dust_dict['Lib_name'], Mass_cold_dust_dict['Lib_name']]
         Umean_total_dust_dict['Col_numb'] = [Mass_warm_dust_dict['Col_numb'], Mass_cold_dust_dict['Col_numb']]

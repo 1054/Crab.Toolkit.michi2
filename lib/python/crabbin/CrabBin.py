@@ -8,6 +8,7 @@
 #   Last update: 
 #            20180122, initialized
 #            20200519, dynamical binning, optimized for the range of interest
+#            20200710, fixed param_global_best = numpy.log10(param_global_best)
 # 
 #####################################
 
@@ -175,6 +176,8 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
     param_global_best = param_array[mask_global_min_chisq]
     if len(param_global_best)>1:
         param_global_best = numpy.mean(param_global_best)
+    if log:
+        param_global_best = numpy.log10(param_global_best) # fixed 20200710
     # 
     # compute param min max
     param_min = numpy.nanmin(param_array_copy)
@@ -340,12 +343,12 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
     # spline the histogram to a finer grid
     #spline_x = numpy.arange(param_min, param_max+0.5*param_bin_step, param_bin_step)
     #spline_y = spline(param_bin_x, param_bin_y, spline_x) # here we do not need xlog ylog because param_bin_x and param_bin_y have already been converted to log
-    smooth_x = None
-    smooth_y = None
-    smooth_dx = None
+    smooth_x = copy(param_bin_x)
+    smooth_y = copy(param_bin_y)
+    smooth_dx = copy(param_bin_dx)
     # 
     # and get smooth xrange yrange
-    if valid:
+    if valid and len(param_bin_x)>1:
         #xclip_min = numpy.nanmin(param_array_copy[chisq_array_nonan <= chisq_min+2.0*delta_chisq]) # expand 2 times delta_chisq
         #xclip_max = numpy.nanmax(param_array_copy[chisq_array_nonan <= chisq_min+2.0*delta_chisq]) # expand 2 times delta_chisq
         #smooth_x = []

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # 
+# Last update:
+#     2020-06-23
+#     2020-08-04
+# 
 
 import os
 import sys
@@ -281,32 +285,42 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict = {}
     Filter_Dict['FUV'] = 'GALEX FUV' # 
     Filter_Dict['NUV'] = 'GALEX NUV' # Laigle+2016 Table 1
-    Filter_Dict['IA427'] = 'Subaru Suprime Cam IA427' # Laigle+2016 Table 1
-    Filter_Dict['IA464'] = 'Subaru Suprime Cam IA464' # Laigle+2016 Table 1
-    Filter_Dict['IA484'] = 'Subaru Suprime Cam IA484' # Laigle+2016 Table 1
-    Filter_Dict['IA505'] = 'Subaru Suprime Cam IA505' # Laigle+2016 Table 1
-    Filter_Dict['IA527'] = 'Subaru Suprime Cam IA527' # Laigle+2016 Table 1
-    Filter_Dict['IA574'] = 'Subaru Suprime Cam IA574' # Laigle+2016 Table 1
-    Filter_Dict['IA624'] = 'Subaru Suprime Cam IA624' # Laigle+2016 Table 1
-    Filter_Dict['IA679'] = 'Subaru Suprime Cam IA679' # Laigle+2016 Table 1
-    Filter_Dict['IA709'] = 'Subaru Suprime Cam IA709' # Laigle+2016 Table 1
-    Filter_Dict['IA738'] = 'Subaru Suprime Cam IA738' # Laigle+2016 Table 1
-    Filter_Dict['IA767'] = 'Subaru Suprime Cam IA767' # Laigle+2016 Table 1
-    Filter_Dict['IA827'] = 'Subaru Suprime Cam IA827' # Laigle+2016 Table 1
-    Filter_Dict['IB427'] = 'Subaru Suprime Cam IB427' # Laigle+2016 Table 1
-    Filter_Dict['IB464'] = 'Subaru Suprime Cam IB464' # Laigle+2016 Table 1
-    Filter_Dict['IB484'] = 'Subaru Suprime Cam IB484' # Laigle+2016 Table 1
-    Filter_Dict['IB505'] = 'Subaru Suprime Cam IB505' # Laigle+2016 Table 1
-    Filter_Dict['IB527'] = 'Subaru Suprime Cam IB527' # Laigle+2016 Table 1
-    Filter_Dict['IB574'] = 'Subaru Suprime Cam IB574' # Laigle+2016 Table 1
-    Filter_Dict['IB624'] = 'Subaru Suprime Cam IB624' # Laigle+2016 Table 1
-    Filter_Dict['IB679'] = 'Subaru Suprime Cam IB679' # Laigle+2016 Table 1
-    Filter_Dict['IB709'] = 'Subaru Suprime Cam IB709' # Laigle+2016 Table 1
-    Filter_Dict['IB738'] = 'Subaru Suprime Cam IB738' # Laigle+2016 Table 1
-    Filter_Dict['IB767'] = 'Subaru Suprime Cam IB767' # Laigle+2016 Table 1
-    Filter_Dict['IB827'] = 'Subaru Suprime Cam IB827' # Laigle+2016 Table 1
-    Filter_Dict['NB711'] = 'Subaru Suprime Cam NB711' # Laigle+2016 Table 1
-    Filter_Dict['NB816'] = 'Subaru Suprime Cam NB816' # Laigle+2016 Table 1
+    Filter_Dict['IA427'] = 'Subaru SuprimeCam IA427' # Laigle+2016 Table 1
+    Filter_Dict['IA464'] = 'Subaru SuprimeCam IA464' # Laigle+2016 Table 1
+    Filter_Dict['IA484'] = 'Subaru SuprimeCam IA484' # Laigle+2016 Table 1
+    Filter_Dict['IA505'] = 'Subaru SuprimeCam IA505' # Laigle+2016 Table 1
+    Filter_Dict['IA527'] = 'Subaru SuprimeCam IA527' # Laigle+2016 Table 1
+    Filter_Dict['IA574'] = 'Subaru SuprimeCam IA574' # Laigle+2016 Table 1
+    Filter_Dict['IA624'] = 'Subaru SuprimeCam IA624' # Laigle+2016 Table 1
+    Filter_Dict['IA679'] = 'Subaru SuprimeCam IA679' # Laigle+2016 Table 1
+    Filter_Dict['IA709'] = 'Subaru SuprimeCam IA709' # Laigle+2016 Table 1
+    Filter_Dict['IA738'] = 'Subaru SuprimeCam IA738' # Laigle+2016 Table 1
+    Filter_Dict['IA767'] = 'Subaru SuprimeCam IA767' # Laigle+2016 Table 1
+    Filter_Dict['IA827'] = 'Subaru SuprimeCam IA827' # Laigle+2016 Table 1
+    Filter_Dict['IB427'] = 'Subaru SuprimeCam IB427' # Laigle+2016 Table 1
+    Filter_Dict['IB464'] = 'Subaru SuprimeCam IB464' # Laigle+2016 Table 1
+    Filter_Dict['IB484'] = 'Subaru SuprimeCam IB484' # Laigle+2016 Table 1
+    Filter_Dict['IB505'] = 'Subaru SuprimeCam IB505' # Laigle+2016 Table 1
+    Filter_Dict['IB527'] = 'Subaru SuprimeCam IB527' # Laigle+2016 Table 1
+    Filter_Dict['IB574'] = 'Subaru SuprimeCam IB574' # Laigle+2016 Table 1
+    Filter_Dict['IB624'] = 'Subaru SuprimeCam IB624' # Laigle+2016 Table 1
+    Filter_Dict['IB679'] = 'Subaru SuprimeCam IB679' # Laigle+2016 Table 1
+    Filter_Dict['IB709'] = 'Subaru SuprimeCam IB709' # Laigle+2016 Table 1
+    Filter_Dict['IB738'] = 'Subaru SuprimeCam IB738' # Laigle+2016 Table 1
+    Filter_Dict['IB767'] = 'Subaru SuprimeCam IB767' # Laigle+2016 Table 1
+    Filter_Dict['IB827'] = 'Subaru SuprimeCam IB827' # Laigle+2016 Table 1
+    Filter_Dict['NB711'] = 'Subaru SuprimeCam NB711' # Laigle+2016 Table 1
+    Filter_Dict['NB816'] = 'Subaru SuprimeCam NB816' # Laigle+2016 Table 1
+    Filter_Dict['F435W'] = 'HST ACS F435W'
+    Filter_Dict['F606W'] = 'HST ACS F606W'
+    Filter_Dict['F775W'] = 'HST ACS F775W'
+    Filter_Dict['F850LP'] = 'HST ACS F850LP'
+    Filter_Dict['F814W'] = 'HST ACS F814W'
+    Filter_Dict['F098M'] = 'HST WFC3 F098M'
+    Filter_Dict['F105W'] = 'HST WFC3 F105W'
+    Filter_Dict['F125W'] = 'HST WFC3 F125W'
+    Filter_Dict['F140W'] = 'HST WFC3 F140W'
+    Filter_Dict['F160W'] = 'HST WFC3 F160W'
     Filter_Dict['SPLASH_1'] = 'Spitzer IRAC ch1' # Laigle+2016 Table 1
     Filter_Dict['SPLASH_2'] = 'Spitzer IRAC ch2' # Laigle+2016 Table 1
     Filter_Dict['SPLASH_3'] = 'Spitzer IRAC ch3' # Laigle+2016 Table 1
@@ -327,15 +341,33 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict['IRAC_ch2'] = 'Spitzer IRAC ch2' # 
     Filter_Dict['IRAC_ch3'] = 'Spitzer IRAC ch3' # 
     Filter_Dict['IRAC_ch4'] = 'Spitzer IRAC ch4' # 
+    Filter_Dict['24']  = 'Spitzer MIPS 24' # dzliu
+    Filter_Dict['70']  = 'Herschel PACS 70' # dzliu
+    Filter_Dict['100'] = 'Herschel PACS 100' # dzliu
+    Filter_Dict['160'] = 'Herschel PACS 160' # dzliu
+    Filter_Dict['250'] = 'Herschel SPIRE 250' # dzliu
+    Filter_Dict['350'] = 'Herschel SPIRE 350' # dzliu
+    Filter_Dict['500'] = 'Herschel SPIRE 500' # dzliu
+    Filter_Dict['850'] = 'JCMT SCUBA2 850' # dzliu
+    Filter_Dict['24um']  = 'Spitzer MIPS 24' # dzliu
+    Filter_Dict['70um']  = 'Herschel PACS 70' # dzliu
+    Filter_Dict['100um'] = 'Herschel PACS 100' # dzliu
+    Filter_Dict['160um'] = 'Herschel PACS 160' # dzliu
+    Filter_Dict['250um'] = 'Herschel SPIRE 250' # dzliu
+    Filter_Dict['350um'] = 'Herschel SPIRE 350' # dzliu
+    Filter_Dict['500um'] = 'Herschel SPIRE 500' # dzliu
+    Filter_Dict['850um'] = 'JCMT SCUBA2 850' # dzliu
+    Filter_Dict['1.4GHz'] = 'VLA 1.4GHz' # dzliu
+    Filter_Dict['20cm'] = 'VLA 20cm' # dzliu
     if type(catalog_name) is str:
         if catalog_name.find('Laigle')>=0:
             Filter_Dict['u'] = 'CFHT MegaCam u' # Laigle+2016 Table 1
-            Filter_Dict['B'] = 'Subaru Suprime Cam B' # Laigle+2016 Table 1
-            Filter_Dict['V'] = 'Subaru Suprime Cam V' # Laigle+2016 Table 1
-            Filter_Dict['r'] = 'Subaru Suprime Cam r' # Laigle+2016 Table 1
-            Filter_Dict['ip'] ='Subaru Suprime Cam i' # Laigle+2016 Table 1
-            Filter_Dict['zp'] = 'Subaru Suprime Cam z' # Laigle+2016 Table 1
-            Filter_Dict['zpp'] = 'Subaru Suprime Cam z' # Laigle+2016 Table 1
+            Filter_Dict['B'] = 'Subaru SuprimeCam B' # Laigle+2016 Table 1
+            Filter_Dict['V'] = 'Subaru SuprimeCam V' # Laigle+2016 Table 1
+            Filter_Dict['r'] = 'Subaru SuprimeCam r' # Laigle+2016 Table 1
+            Filter_Dict['ip'] ='Subaru SuprimeCam i' # Laigle+2016 Table 1
+            Filter_Dict['zp'] = 'Subaru SuprimeCam z' # Laigle+2016 Table 1
+            Filter_Dict['zpp'] = 'Subaru SuprimeCam z' # Laigle+2016 Table 1
             Filter_Dict['yHSC'] = 'Subaru HSC Y' # Laigle+2016 Table 1
             Filter_Dict['Y'] = 'VISTA VIRCAM Y' # Laigle+2016 Table 1
             Filter_Dict['J'] = 'VISTA VIRCAM J' # Laigle+2016 Table 1
@@ -343,7 +375,8 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['Hw'] = 'CFHT WIRCam H' # Laigle+2016 Table 1
             Filter_Dict['Ks'] = 'VISTA VIRCAM K' # Laigle+2016 Table 1
             Filter_Dict['Ksw'] = 'CFHT WIRCam K' # Laigle+2016 Table 1
-        if catalog_name.find('Jin')>=0 or catalog_name.find('Liu')>=0:
+            
+        if catalog_name.find('Jin2018')>=0 or catalog_name.find('Liu2018')>=0:
             Filter_Dict['K'] = 'CFHT WIRCam or VISTA VIRCAM' # Jin+2018 used McCraken+2010 catalog, or Muzzin+2013 catalog.
             Filter_Dict['3ghz'] = 'VLA 3GHz'
             Filter_Dict['1.4ghz'] = 'VLA 1.4GHz'
@@ -362,19 +395,27 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['1160'] = 'Penner2011 AzTEC+MAMBO 1.16mm' # 
             Filter_Dict['1200'] = 'IRAM30m MAMBO 1.2mm' # 
             Filter_Dict['2000'] = 'IRAM30m GISMO 2mm' # 
-        if catalog_name.find('Skelton')>=0 or catalog_name.find('3DHST')>=0:
+            
+        if catalog_name.find('Skelton2014')>=0 or catalog_name.find('3DHST')>=0:
+            Filter_Dict['U38'] = 'ESO MPGWFI U' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['u'] = 'KPNO u' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['G'] = 'Keck LRIS G' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['R'] = 'Keck LRIS R' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['Rc'] = 'ESO MPGWFI R' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['Rs'] = 'Keck LRIS Rs' # Skelton 2014ApJS..214...24S Table 6
-            Filter_Dict['B'] = 'Subaru Suprime Cam B' # Skelton 2014ApJS..214...24S Table 6
-            Filter_Dict['V'] = 'Subaru Suprime Cam V' # Skelton 2014ApJS..214...24S Table 6
-            Filter_Dict['R'] = 'Subaru Suprime Cam R' # Skelton 2014ApJS..214...24S Table 6
-            Filter_Dict['i'] = 'Subaru Suprime Cam i' # Skelton 2014ApJS..214...24S Table 6
-            Filter_Dict['z'] = 'Subaru Suprime Cam z' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['B'] = 'Subaru SuprimeCam B' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['V'] = 'Subaru SuprimeCam V' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['R'] = 'Subaru SuprimeCam R' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['i'] = 'Subaru SuprimeCam i' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['z'] = 'Subaru SuprimeCam z' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['J'] ='Subaru MOIRCS J' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['H'] = 'Subaru MOIRCS H' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['Ks'] = 'Subaru MOIRCS Ks' # Skelton 2014ApJS..214...24S Table 6
+            Filter_Dict['TENISJ']  = 'CFHT WIRCAM J' # CFHST/WIRCAM/K from TENIS (seeing=0 9) (Hsieh et al. 2012)
+            Filter_Dict['TENISK']  = 'CFHT WIRCAM K' # CFHST/WIRCAM/K from TENIS (seeing=0 9) (Hsieh et al. 2012)
+            Filter_Dict['F606Wcand']  = 'HST ACS F606W' # 
+            Filter_Dict['F814Wcand']  = 'HST ACS F814W' # 
+            Filter_Dict['F850LPcand']  = 'HST ACS F850LP' # 
             Filter_Dict['f435w'] = 'HST ACS F435W' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['f606w'] = 'HST ACS F606W' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['f775w'] = 'HST ACS F775W' # Skelton 2014ApJS..214...24S Table 6
@@ -383,6 +424,32 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['f140w'] = 'HST WFC3 F140W' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['f160w'] = 'HST WFC3 F160W' # Skelton 2014ApJS..214...24S Table 6
             # flux column must be: <BAND>_FLUX_<REF>, e.g., u_
+	    
+        if catalog_name.find('Straatman2016')>=0:
+            Filter_Dict['U']  = 'VLT VIMOS U' # Straatman+2016 Sect. 2.4
+            Filter_Dict['R']  = 'VLT VIMOS R' # Straatman+2016 Sect. 2.4
+            Filter_Dict['B']  = 'HST ACS F435W' # Straatman+2016 Sect. 2.4
+            Filter_Dict['V']  = 'HST ACS F606W' # Straatman+2016 Sect. 2.4
+            Filter_Dict['I']  = 'HST ACS F775W' # Straatman+2016 Sect. 2.4
+            Filter_Dict['Z']  = 'HST ACS F850LP' # Straatman+2016 Sect. 2.4
+            Filter_Dict['U38']  = 'ESO MPGWFI U' # Straatman+2016 Sect. 2.4
+            Filter_Dict['VWFI']  = 'ESO MPGWFI V' # Straatman+2016 Sect. 2.4
+            Filter_Dict['RcWFI']  = 'ESO MPGWFI R' # Straatman+2016 Sect. 2.4, Rc-imaging (Erben et al. 2005; Hildebrandt et al. 2006)
+            Filter_Dict['Ks']  = 'VLT ISAAC K' # Straatman+2016 Sect. 2.3
+            Filter_Dict['KsHI']  = 'VLT HAWKI K' # Straatman+2016 Sect. 2.3, (VLT)/HAWK-I/K from HUGS (with natural seeing between 0 3 and 0 5) (Fontana et al. 2014)
+            Filter_Dict['TENISK']  = 'CFHT WIRCAM K' # Straatman+2016 Sect. 2.3
+            Filter_Dict['Hs'] = 'Magellan FourStar Hs'
+            Filter_Dict['Hl'] = 'Magellan FourStar Hl'
+            Filter_Dict['J1'] = 'Magellan FourStar J1'
+            Filter_Dict['J2'] = 'Magellan FourStar J2'
+            Filter_Dict['J3'] = 'Magellan FourStar J3'
+            
+        if catalog_name.find('Guo2013')>=0:
+            Filter_Dict['U']  = 'VLT VIMOS U' # Guo+2013 Table 1
+            Filter_Dict['Ks']  = 'VLT ISAAC K' # Guo+2013 Table 1
+            Filter_Dict['KsHawkI']  = 'VLT HAWKI K' # Guo+2013 Table 1
+            Filter_Dict['UCTIO']  = 'CTIO MOSAICII U' # Guo+2013 Table 1 # Blanco/MOSAIC-II
+            
         if catalog_name.find('Clark2018')>=0:
             Filter_Dict['u'] = 'SDSS u' # Clark+2018 Table 1
             Filter_Dict['g'] = 'SDSS g' # Clark+2018 Table 1
@@ -409,6 +476,7 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['250'] = 'Herschel SPIRE 250' # Clark+2018 Table 1
             Filter_Dict['350'] = 'Herschel SPIRE 350' # Clark+2018 Table 1
             Filter_Dict['500'] = 'Herschel SPIRE 500' # Clark+2018 Table 1
+            
     if type(input_str) is str:
         if input_str in Filter_Dict:
             return Filter_Dict[input_str]
@@ -464,6 +532,16 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict['IB827'] = 8244.5e-4 # Laigle+2016 Table 1
     Filter_Dict['NB711'] = 7119.9e-4 # Laigle+2016 Table 1
     Filter_Dict['NB816'] = 8149.4e-4 # Laigle+2016 Table 1
+    Filter_Dict['F435W'] = 0.4318 # Skelton+2014 Table 7
+    Filter_Dict['F606W'] = 0.5919 # Skelton+2014 Table 7
+    Filter_Dict['F775W'] = 0.7693 # Skelton+2014 Table 7
+    Filter_Dict['F814W'] = 0.8057 # Skelton+2014 Table 7
+    Filter_Dict['F850LP'] = 0.9036 # Skelton+2014 Table 7
+    Filter_Dict['F098M'] = 0.9867 # Straatman+2016 Table 2
+    Filter_Dict['F105W'] = 1.0545 # Straatman+2016 Table 2
+    Filter_Dict['F125W'] = 1.2471 # Straatman+2016 Table 2
+    Filter_Dict['F140W'] = 1.3924 # Straatman+2016 Table 2
+    Filter_Dict['F160W'] = 1.5396 # Straatman+2016 Table 2
     Filter_Dict['SPLASH_1'] = 35634.3e-4 # Laigle+2016 Table 1
     Filter_Dict['SPLASH_2'] = 45110.1e-4 # Laigle+2016 Table 1
     Filter_Dict['SPLASH_3'] = 57593.4e-4 # Laigle+2016 Table 1
@@ -484,12 +562,67 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict['IRAC_ch2'] = 45110.1e-4 # Laigle+2016 Table 1
     Filter_Dict['IRAC_ch3'] = 57593.4e-4 # Laigle+2016 Table 1
     Filter_Dict['IRAC_ch4'] = 79594.9e-4 # Laigle+2016 Table 1
+    Filter_Dict['24']  = 24.0 # dzliu
+    Filter_Dict['70']  = 71.8 # dzliu
+    Filter_Dict['100'] = 103.0 # dzliu
+    Filter_Dict['160'] = 167.0 # dzliu
+    Filter_Dict['250'] = 252.0 # dzliu
+    Filter_Dict['350'] = 353.0 # dzliu
+    Filter_Dict['500'] = 511.0 # dzliu
+    Filter_Dict['850'] = 850.0 # dzliu
+    Filter_Dict['24um']  = 24.0 # dzliu
+    Filter_Dict['70um']  = 71.8 # dzliu
+    Filter_Dict['100um'] = 103.0 # dzliu
+    Filter_Dict['160um'] = 167.0 # dzliu
+    Filter_Dict['250um'] = 252.0 # dzliu
+    Filter_Dict['350um'] = 353.0 # dzliu
+    Filter_Dict['500um'] = 511.0 # dzliu
+    Filter_Dict['850um'] = 850.0 # dzliu
     Filter_Dict['10cm'] = 1e5
     Filter_Dict['20cm'] = 2e5
     Filter_Dict['3GHz'] = 1e5
     Filter_Dict['1.4GHz'] = 2e5
     
     if type(catalog_name) is str:
+        if catalog_name.find('Skelton2014')>=0 or catalog_name.find('3DHST')>=0:
+            Filter_Dict['U38'] = 0.3637 # Skelton+2014 Table 7
+            Filter_Dict['B'] = 0.4563 # Skelton+2014 Table 7
+            Filter_Dict['V'] = 0.5396 # Skelton+2014 Table 7
+            Filter_Dict['Rc'] = 0.6517 # Skelton+2014 Table 7
+            Filter_Dict['I'] = 0.7838 # Skelton+2014 Table 7
+            Filter_Dict['U'] = 0.3750 # Skelton+2014 Table 7
+            Filter_Dict['R'] = 0.6443 # Skelton+2014 Table 7
+            Filter_Dict['TENISJ'] = 1.2530 # Skelton+2014 Table 7
+            Filter_Dict['TENISK'] = 2.1574 # Skelton+2014 Table 7
+            Filter_Dict['F606Wcand'] = 0.5921 # Skelton+2014 Table 7
+            Filter_Dict['F814Wcand'] = 0.8058 # ??<TODO>??
+            Filter_Dict['F850LPcand'] = 0.9033 # Skelton+2014 Table 7
+            
+        if catalog_name.find('Straatman2016')>=0:
+            Filter_Dict['B'] = 0.4318 # Straatman+2016 Table 2
+            Filter_Dict['I'] = 0.7693 # Straatman+2016 Table 2
+            Filter_Dict['R'] = 0.6443 # Straatman+2016 Table 2
+            Filter_Dict['U'] = 0.3749 # Straatman+2016 Table 2
+            Filter_Dict['V'] = 0.5919 # Straatman+2016 Table 2
+            Filter_Dict['Z'] = 0.9036 # Straatman+2016 Table 2
+            Filter_Dict['Hs'] = 1.5544 # Straatman+2016 Table 2
+            Filter_Dict['Hl'] = 1.7020 # Straatman+2016 Table 2
+            Filter_Dict['J1'] = 1.0540 # Straatman+2016 Table 2
+            Filter_Dict['J2'] = 1.1448 # Straatman+2016 Table 2
+            Filter_Dict['J3'] = 1.2802 # Straatman+2016 Table 2
+            Filter_Dict['Ks'] = 2.1538 # Straatman+2016 Table 2
+            Filter_Dict['VWFI'] = 0.5376 # Straatman+2016 Table 2
+            Filter_Dict['RcWFI'] = 0.6494 # Straatman+2016 Table 2
+            Filter_Dict['U38'] = 0.3686 # Straatman+2016 Table 2
+            Filter_Dict['TENISK']  = 2.1574 # Straatman+2016 Table 2
+            Filter_Dict['KsHI']  = 2.1748 # Straatman+2016 Table 2
+            
+        if catalog_name.find('Guo2013')>=0:
+            Filter_Dict['U'] = 0.3722 # Guo+2013 Table 1
+            Filter_Dict['Ks'] = 2.1605 # Guo+2013 Table 1
+            Filter_Dict['KsHawkI'] = 2.1463 # Guo+2013 Table 1
+            Filter_Dict['UCTIO'] = 0.3734 # Guo+2013 Table 1
+            
         if catalog_name.find('Clark2018')>=0:
             Filter_Dict['u'] = 0.353 # Clark+2018 Table 1
             Filter_Dict['g'] = 0.475 # Clark+2018 Table 1
@@ -1071,10 +1204,10 @@ if DataFile != '':
     # special treatment
     
     if 1 == 1:
-        print('# Col_Source = %s'%Col_Source)
-        print('# Col_ID = %s'%Col_ID)
-        print('# Col_FLUX = %s'%Col_FLUX)
-        print('# Col_FLUXERR = %s'%Col_FLUXERR)
+        print('# Col_Source = %s (%d)'%(Col_Source, len(Col_Source)))
+        print('# Col_ID = %s (%d)'%(Col_ID, len(Col_ID)))
+        print('# Col_FLUX = %s (%d)'%(Col_FLUX, len(Col_FLUX)))
+        print('# Col_FLUXERR = %s (%d)'%(Col_FLUXERR, len(Col_FLUXERR)))
     
     if Col_Source:
         if Col_ID:
@@ -1129,12 +1262,15 @@ if DataFile != '':
             for icol in Col_Source:
                 if icol in SourceID_Dict:
                     SourceID_Where = numpy.argwhere(DataTable.getColumn(icol).astype(str) == str(SourceID_Dict[icol])).T # do a transpose to numpy.argwhere(), see http://stackoverflow.com/questions/33747908/output-of-numpy-wherecondition-is-not-an-array-but-a-tuple-of-arrays-why
+                    SourceID_Match_One = []
                     if len(SourceID_Where) > 0:
                         SourceID_Where = SourceID_Where[0]
                         if len(SourceID_Match) > 0:
-                            SourceID_Match = numpy.intersect1d(SourceID_Match, SourceID_Where) # solve multiplicity <TODO>
+                            SourceID_Match_One = numpy.intersect1d(SourceID_Match, SourceID_Where) # solve multiplicity <TODO>
                         else:
-                            SourceID_Match = SourceID_Where
+                            SourceID_Match_One = SourceID_Where
+                    if len(SourceID_Match_One) > 0:
+                        SourceID_Match.extend(SourceID_Match_One)
                     #print SourceID_Where
                     #print SourceID_Match
             # 
@@ -1184,7 +1320,7 @@ if DataFile != '':
         # loop SED Data Array and convert flux
         for k in range(len(Col_FLUX)):
             FilterHead = Col_FLUX[k]
-            #print('Debug', 'recognize_Filter', Col_FLUX[k], 'special_file_name='+DataFile)
+            #print('Debug', 'recognize_Filter', Col_FLUX[k], 'special_file_name=%r'%(DataFile))
             FilterName, FilterWave = recognize_Filter(Col_FLUX[k], special_file_name=DataFile)
             FilterFlux = DataTable.getColumn(Col_FLUX[k])[SourceID_Matchs[j]['row']]
             FilterFluxErr = DataTable.getColumn(Col_FLUXERR[k])[SourceID_Matchs[j]['row']]
