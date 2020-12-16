@@ -1665,8 +1665,12 @@ else:
         analyze_chisq_distribution(dust_temperature_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in dust_temperature_dict:
         analyze_chisq_distribution(dust_temperature_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    Plot_engine.set_xcharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
-    Plot_engine.set_ycharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
+    #Plot_engine.set_xcharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
+    #Plot_engine.set_ycharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
+    Plot_engine.set_xcharsize(panel=0, charsize=15, axislabelcharsize=21, axislabelpad=-2) # adjust tick and axis label font sizes for all panels -- 20201215 -- for publication figure
+    Plot_engine.set_ycharsize(panel=0, charsize=15, axislabelcharsize=21, axislabelpad=-2) # adjust tick and axis label font sizes for all panels -- 20201215 -- for publication figure
+    #Plot_engine.set_grid_hspace(0.60) # adjust tick and axis label font sizes for all panels -- 20201215 -- for publication figure
+    #Plot_engine.set_grid_wspace(0.50) # adjust tick and axis label font sizes for all panels -- 20201215 -- for publication figure
     Plot_engine.savepdf(Output_dir+Output_name+'.chisq.pdf')
     #Plot_engine.show()
     Plot_engine.close()
