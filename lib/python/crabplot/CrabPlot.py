@@ -14,6 +14,7 @@
 #                2018-01-02 plot_line, plot_text
 #                2018-05-25 plot_xy errorbarlinestyle
 #                2018-10-04 set_xcharsize set_ycharsize
+#                2020-12-15 axislabelpad
 # 
 #   Notes:
 #     -- to use TeX, we need to install 'texlive-latex-extra' and 'texlive-fonts-recommended'
@@ -68,9 +69,12 @@ except ImportError:
 import platform
 if sys.version_info < (3, 0):
     if platform.system() == 'Darwin':
-        matplotlib.use('Qt5Agg') # sudo port install py27-pyqt5
+        matplotlib.use('Qt5Agg') # sudo port install py27-pyqt5 # conda install pyqt
     else:
         matplotlib.use('TkAgg')
+
+#matplotlib.use('Qt5Agg')
+#from matplotlib import pyplot
 
 try: 
     from matplotlib import pyplot
@@ -113,6 +117,16 @@ mpl.rcParams['ytick.right'] = True
 mpl.rcParams['grid.linestyle'] = '--'
 mpl.rcParams['grid.linewidth'] = 0.25
 mpl.rcParams['grid.alpha'] = 0.8
+mpl.rcParams['font.family'] = ['NGC','Helvetica','sans-serif']
+
+# to use customize font, 
+#   import matplotlib
+#   import os
+#   print(matplotlib.matplotlib_fname())   # matplotlib配置文件目录
+#   print(os.path.join(os.path.dirname(matplotlib.matplotlib_fname()), 'fonts', 'ttf'))
+#   os.system('cp XXX.ttf XXX/')
+#   import matplotlib.font_manager
+#   matplotlib.font_manager._rebuild()
 
 
 
@@ -734,7 +748,7 @@ class CrabPlot(object):
             ax.tick_params(axis='y', which='minor', direction=minordirection, length=minorsize, width=minorwidth)
     # 
     # def set_xcharsize
-    def set_xcharsize(self, ax=None, panel=None, charsize=None, minortickscharsize=None, axislabelcharsize=None):
+    def set_xcharsize(self, ax=None, panel=None, charsize=None, minortickscharsize=None, axislabelcharsize=None, axislabelpad=None):
         # charsize is major ticks char size
         # minortickscharsize is minor ticks char size
         # axislabelcharsize is axis label (i.e. title) char size
@@ -761,10 +775,13 @@ class CrabPlot(object):
                 ax.tick_params(axis='x', which='minor', labelsize=minortickscharsize)
             if axislabelcharsize is not None:
                 if ax.get_xlabel() is not None:
-                    ax.set_xlabel(ax.get_xlabel(), fontsize=axislabelcharsize)
+                    if axislabelpad is not None:
+                        ax.set_xlabel(ax.get_xlabel(), fontsize=axislabelcharsize, labelpad=axislabelpad)
+                    else:
+                        ax.set_xlabel(ax.get_xlabel(), fontsize=axislabelcharsize)
     # 
     # def set_ycharsize
-    def set_ycharsize(self, ax=None, panel=None, charsize=None, minortickscharsize=None, axislabelcharsize=None):
+    def set_ycharsize(self, ax=None, panel=None, charsize=None, minortickscharsize=None, axislabelcharsize=None, axislabelpad=None):
         if len(self.Plot_panels)>0:
             if ax is None:
                 if panel is None:
@@ -788,17 +805,28 @@ class CrabPlot(object):
                 ax.tick_params(axis='y', which='minor', labelsize=minortickscharsize)
             if axislabelcharsize is not None:
                 if ax.get_ylabel() is not None:
-                    ax.set_ylabel(ax.get_ylabel(), fontsize=axislabelcharsize)
+                    if axislabelpad is not None:
+                        ax.set_ylabel(ax.get_ylabel(), fontsize=axislabelcharsize, labelpad=axislabelpad)
+                    else:
+                        ax.set_ylabel(ax.get_ylabel(), fontsize=axislabelcharsize)
     # 
     # def set_grid_hspace
     def set_grid_hspace(self, hspace = 0.05):
         if len(self.Plot_panels)>0:
-            self.Plot_grids.update(hspace=hspace)
+            subplot_params = self.Plot_grids.get_subplot_params(self.Plot_device)
+            subplot_params.hspace = hspace
+            self.Plot_grids.update(**{k: getattr(subplot_params, k) for k in self.Plot_grids._AllowedKeys})
+            # see -- https://matplotlib.org/3.1.1/_modules/matplotlib/gridspec.html#GridSpec.get_subplot_params
+            # not working properly. TODO 20201215.
     # 
     # def set_grid_vspace
     def set_grid_wspace(self, wspace = 0.05):
         if len(self.Plot_panels)>0:
-            self.Plot_grids.update(wspace=wspace)
+            subplot_params = self.Plot_grids.get_subplot_params(self.Plot_device)
+            subplot_params.wspace = wspace
+            self.Plot_grids.update(**{k: getattr(subplot_params, k) for k in self.Plot_grids._AllowedKeys})
+            # see -- https://matplotlib.org/3.1.1/_modules/matplotlib/gridspec.html#GridSpec.get_subplot_params
+            # not working properly. TODO 20201215.
     # 
     # def set_figure_margin
     def set_figure_margin(self, left=None, bottom=None, right=None, top=None):
@@ -1385,7 +1413,7 @@ class CrabPlot(object):
         self.plot_text(x0, y0, text_input, ax = ax, NormalizedCoordinate = NormalizedCoordinate, **kwargs)
     # 
     def plot_hist(self, x, y, width = None, align = None, ax = None, current = None, overplot = True, xtitle = None, ytitle = None, xlog = None, ylog = None, useTex = None, 
-                    margin = None, xrange = None, yrange = None, 
+                    margin = None, xrange = None, yrange = None, xtitlefontsize = None, ytitlefontsize = None, 
                     **kwargs):
         # get panel ax
         plot_panel_ax, current, overplot = self.get_panel_ax(ax, current, overplot)
@@ -1431,12 +1459,12 @@ class CrabPlot(object):
         if xtitle is not None:
             if xtitle != '':
                 #plot_panel_ax.set_xlabel(xtitle, fontsize=xtitlefontsize)
-                self.set_xtitle(xtitle, ax=plot_panel_ax)
+                self.set_xtitle(xtitle, ax=plot_panel_ax, fontsize=xtitlefontsize)
                 if current>0: self.Plot_panels[current-1]['xtitle'] = xtitle
         if ytitle is not None:
             if ytitle != '':
                 #plot_panel_ax.set_ylabel(ytitle, fontsize=ytitlefontsize)
-                self.set_ytitle(ytitle, ax=plot_panel_ax)
+                self.set_ytitle(ytitle, ax=plot_panel_ax, fontsize=ytitlefontsize)
                 if current>0: self.Plot_panels[current-1]['ytitle'] = ytitle
         # set ranges
         if xrange is not None:
