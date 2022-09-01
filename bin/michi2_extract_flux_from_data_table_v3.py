@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # 
 # 20190125 
+# 20220826 v3
 # 
 
 import os
@@ -8,7 +9,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
 
-from CrabTable import *
+from CrabTable import CrabTable
 
 import glob
 import math
@@ -147,46 +148,46 @@ def get_all_filter_dict(catalog_name = ''):
     Filter_Dict['10cm']     = Filter_Dict['3GHz']
     Filter_Dict['20cm']     = Filter_Dict['1.4GHz']
     # 
-    # Clark+2018
-    Filter_Dict['sdss.up'] = 0.353 # Clark+2018 Table 1
-    Filter_Dict['sdss.gp'] = 0.475 # Clark+2018 Table 1
-    Filter_Dict['sdss.rp'] = 0.622 # Clark+2018 Table 1
-    Filter_Dict['sdss.ip'] = 0.763 # Clark+2018 Table 1
-    Filter_Dict['sdss.zp'] = 0.905 # Clark+2018 Table 1
-    Filter_Dict['ukidss.z']  = 0.8817 # dzliu: http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=UKIRT&gname2=UKIDSS&asttype=
-    Filter_Dict['ukidss.y']  = 1.0305 # dzliu
-    Filter_Dict['ukidss.j'] = 1.2483 # dzliu
-    Filter_Dict['ukidss.h'] = 1.6313 # dzliu
-    Filter_Dict['ukidss.k'] = 2.2010# dzliu
-    Filter_Dict['WISE1'] = 3.4 # Clark+2018 Table 1
-    Filter_Dict['WISE2'] = 4.6 # Clark+2018 Table 1
-    Filter_Dict['WISE3']  = 12 # Clark+2018 Table 1
-    Filter_Dict['WISE4']  = 22 # Clark+2018 Table 1
-    Filter_Dict['IRAC1'] = 3.6 # Clark+2018 Table 1
-    Filter_Dict['IRAC2'] = 4.5 # Clark+2018 Table 1
-    Filter_Dict['IRAC3'] = 5.8 # Clark+2018 Table 1
-    Filter_Dict['IRAC4'] = 8.0 # Clark+2018 Table 1
-    Filter_Dict['MIPS24']  = 24 # Clark+2018 Table 1
-    Filter_Dict['MIPS70']  = 70 # Clark+2018 Table 1
-    Filter_Dict['MIPS160'] = 160 # Clark+2018 Table 1
-    Filter_Dict['PACS70']  = 71.8 # dzliu
-    Filter_Dict['PACS100'] = 103.0 # dzliu
-    Filter_Dict['PACS160'] = 167.0 # dzliu
-    Filter_Dict['SPIRE250'] = 252.0 # dzliu
-    Filter_Dict['SPIRE350'] = 353.0 # dzliu
-    Filter_Dict['SPIRE500'] = 511.0 # dzliu
+    # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=SLOAN&asttype=
+    Filter_Dict['sdss.up'] = {'telescope_name': 'SDSS', 'filter_name':'SDSS.u+', 'wavelength_um': 0.350102} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=SLOAN&asttype=
+    Filter_Dict['sdss.gp'] = {'telescope_name': 'SDSS', 'filter_name':'SDSS.g+', 'wavelength_um': 0.476311} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=SLOAN&asttype=
+    Filter_Dict['sdss.rp'] = {'telescope_name': 'SDSS', 'filter_name':'SDSS.r+', 'wavelength_um': 0.624698} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=SLOAN&asttype=
+    Filter_Dict['sdss.ip'] = {'telescope_name': 'SDSS', 'filter_name':'SDSS.i+', 'wavelength_um': 0.771828} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=SLOAN&asttype=
+    Filter_Dict['sdss.zp'] = {'telescope_name': 'SDSS', 'filter_name':'SDSS.z+', 'wavelength_um': 1.082983} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=SLOAN&asttype=
+    Filter_Dict['ukidss.z'] = {'telescope_name': 'UKIRT', 'filter_name':'UKIDSS.Z', 'wavelength_um': 0.8817} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=UKIRT&gname2=UKIDSS&asttype=
+    Filter_Dict['ukidss.y'] = {'telescope_name': 'UKIRT', 'filter_name':'UKIDSS.Y', 'wavelength_um': 1.0305} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=UKIRT&gname2=UKIDSS&asttype=
+    Filter_Dict['ukidss.j'] = {'telescope_name': 'UKIRT', 'filter_name':'UKIDSS.J', 'wavelength_um': 1.2483} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=UKIRT&gname2=UKIDSS&asttype=
+    Filter_Dict['ukidss.h'] = {'telescope_name': 'UKIRT', 'filter_name':'UKIDSS.H', 'wavelength_um': 1.6313} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=UKIRT&gname2=UKIDSS&asttype=
+    Filter_Dict['ukidss.k'] = {'telescope_name': 'UKIRT', 'filter_name':'UKIDSS.K', 'wavelength_um': 2.2010} # http://svo2.cab.inta-csic.es/theory/fps3/index.php?mode=browse&gname=UKIRT&gname2=UKIDSS&asttype=
+    Filter_Dict['WISE1'] = {'telescope_name': 'WISE', 'filter_name': 'WISE1', 'wavelength_um': 3.3526} # 
+    Filter_Dict['WISE2'] = {'telescope_name': 'WISE', 'filter_name': 'WISE2', 'wavelength_um': 4.6028} # 
+    Filter_Dict['WISE3'] = {'telescope_name': 'WISE', 'filter_name': 'WISE3', 'wavelength_um': 11.5608} # 
+    Filter_Dict['WISE4'] = {'telescope_name': 'WISE', 'filter_name': 'WISE4', 'wavelength_um': 22.0883} # 
+    Filter_Dict['IRAC1'] = {'telescope_name': 'Spitzer', 'filter_name': 'IRAC1', 'wavelength_um': 3.6} # 
+    Filter_Dict['IRAC2'] = {'telescope_name': 'Spitzer', 'filter_name': 'IRAC1', 'wavelength_um': 4.5} # 
+    Filter_Dict['IRAC3'] = {'telescope_name': 'Spitzer', 'filter_name': 'IRAC1', 'wavelength_um': 5.8} # 
+    Filter_Dict['IRAC4'] = {'telescope_name': 'Spitzer', 'filter_name': 'IRAC1', 'wavelength_um': 8.0} # 
+    Filter_Dict['MIPS24']  = {'telescope_name': 'Spitzer', 'filter_name': 'MIPS24', 'wavelength_um': 24.} # 
+    Filter_Dict['MIPS70']  = {'telescope_name': 'Spitzer', 'filter_name': 'MIPS70', 'wavelength_um': 70.} # 
+    Filter_Dict['MIPS160'] = {'telescope_name': 'Spitzer', 'filter_name': 'MIPS160', 'wavelength_um': 160.} # 
+    Filter_Dict['PACS70']  = {'telescope_name': 'Herschel', 'filter_name': 'PACS70', 'wavelength_um': 71.8} # dzliu
+    Filter_Dict['PACS100'] = {'telescope_name': 'Herschel', 'filter_name': 'PACS100', 'wavelength_um': 103.0} # dzliu
+    Filter_Dict['PACS160'] = {'telescope_name': 'Herschel', 'filter_name': 'PACS160', 'wavelength_um': 167.0} # dzliu
+    Filter_Dict['SPIRE250'] = {'telescope_name': 'Herschel', 'filter_name': 'SPIRE250', 'wavelength_um': 252.0} # dzliu
+    Filter_Dict['SPIRE350'] = {'telescope_name': 'Herschel', 'filter_name': 'SPIRE350', 'wavelength_um': 353.0} # dzliu
+    Filter_Dict['SPIRE500'] = {'telescope_name': 'Herschel', 'filter_name': 'SPIRE500', 'wavelength_um': 511.0} # dzliu
     # 
     return Filter_Dict
 
 
-def find_matched_filter(band_name, suffix='', special_file_name=''):
+def find_matched_filter(matched_band, matched_suffix='', special_file_name=''):
     all_filter_dict = get_all_filter_dict()
     matched_filter_dict = None
     # if the extracted band name matches one of the filter_dict
-    if matched_band in filter_dict:
+    if matched_band in all_filter_dict:
         matched_filter_dict = copy.copy(all_filter_dict[matched_band])
         if matched_suffix != '': 
-            matched_filter_dict['filter_name'] += matched_suffix # '(%s)'%(re.sub(r'^_+',r'',matched_suffix))
+            matched_filter_dict['filter_name'] += matched_suffix
     # elif the extracted band name is a frequency value with GHz unit
     elif re.match(r'^([0-9.]+)GHz$', matched_band):
         temp_frequency_value = float(re.sub(r'^([0-9.]+)GHz$', r'\1', matched_band))
@@ -200,7 +201,7 @@ def find_matched_filter(band_name, suffix='', special_file_name=''):
         matched_filter_dict = get_template_filter_dict()
         matched_filter_dict['wavelength_um'] = temp_wavelength_value * dict(mm=1e3, um=1., micron=1.)[temp_wavelength_unit]
         matched_filter_dict['filter_name'] = re.sub(r'^_+',r'',matched_suffix) # '(%s)'%(re.sub(r'^_+',r'',matched_suffix))
-        recognized_list.append(input_str)
+    return matched_filter_dict
 
 
 def recognize_Col_Source(input_list, special_file_name=''):
@@ -291,6 +292,7 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
         # 
         matched_ok = True
         if matched_band != '':
+            # find filter by band name
             matched_filter_dict = find_matched_filter(matched_band, matched_suffix, special_file_name)
             # then store into lists
             if matched_filter_dict is not None:
@@ -348,39 +350,20 @@ def recognize_Col_FLUXERR(input_list, special_file_name=''):
         # 
         matched_ok = True
         if matched_band != '':
-            # if the extracted band name matches one of the filter_dict
-            print('# matched_band: {}'.format(matched_band))
-            if matched_band in filter_dict:
+            # find filter by band name
+            matched_filter_dict = find_matched_filter(matched_band, matched_suffix, special_file_name)
+            # then store into lists
+            if matched_filter_dict is not None:
                 recognized_list.append(input_str)
-                temp_filter_dict = copy.copy(filter_dict[matched_band])
-                if matched_suffix != '': temp_filter_dict['filter_name'] += '(%s)'%(matched_suffix)
-                filter_list.append(copy.copy(temp_filter_dict))
-                print('# Recognized column "%s" as filter %s'%(input_str, filter_dict[matched_band]))
-            # elif the extracted band name is a frequency value with GHz unit
-            elif re.match(r'^([0-9.]+)GHz$', matched_band):
-                temp_frequency_value = float(re.sub(r'^([0-9.]+)GHz$', r'\1', matched_band))
-                temp_filter_dict = get_template_filter_dict()
-                temp_filter_dict['wavelength_um'] = 2.99792458e5 / temp_frequency_value
-                temp_filter_dict['filter_name'] = '(%s)'%(matched_suffix)
-                recognized_list.append(input_str)
-                filter_list.append(copy.copy(temp_filter_dict))
-                print('# Recognized column "%s" as filter %s'%(input_str, temp_filter_dict))
-            # elif the extracted band name is a wavelength value with (mm,um) unit
-            elif re.match(r'^([0-9.]+)(mm|um|micron)$', matched_band):
-                temp_wavelength_value = float(re.sub(r'^([0-9.]+)(mm|um|micron)$', r'\1', matched_band))
-                temp_wavelength_unit = re.sub(r'^([0-9.]+)(mm|um|micron)$', r'\2', matched_band)
-                temp_filter_dict = get_template_filter_dict()
-                temp_filter_dict['wavelength_um'] = temp_wavelength_value * dict(mm=1e3, um=1., micron=1.)[temp_wavelength_unit]
-                temp_filter_dict['filter_name'] = '(%s)'%(matched_suffix)
-                recognized_list.append(input_str)
-                filter_list.append(copy.copy(temp_filter_dict))
-                print('# Recognized column "%s" as filter %s'%(input_str, temp_filter_dict))
-            # else
+                filter_list.append(copy.copy(matched_filter_dict))
+                print('# Recognized column "%s" as filter %s'%(input_str, matched_filter_dict))
             else:
+                # if no match, then check if these are known situations
                 if special_file_name.find('3DHST') >= 0 or input_str.find('3DHST') >= 0:
-                    if input_str.startswith('faper_') or input_str.startswith('w_') or input_str.startswith('nexp'):
+                    if input_str.startswith('faper_') or input_str.startswith('eaper_') or input_str.startswith('e_') or input_str.startswith('w_') or input_str.startswith('nexp_') or input_str.startswith('flux_radius') or input_str.find('_flag') >= 0:
                         continue
-                print('# Error! Failed to recognize column "%s"'%(input_str), matched_prefix, ',', matched_type, ',', matched_band, ',', matched_suffix)
+                # if not known situations, then report error
+                print('# Error! Failed to recognize column {!r} as prefix {!r}, type {!r}, band {!r} and suffix {!r}'.format(input_str, matched_prefix, matched_type, matched_band, matched_suffix))
                 matched_ok = False
         # check
         if matched_ok == False:
@@ -412,32 +395,41 @@ if len(sys.argv) <= 1:
 # Read input args
 DataFile = ''
 SourceID_Inputs = []
-MaxSNR = numpy.nan
-CatID = numpy.nan
-i = 0
-while i <= (len(sys.argv)-1):
-    if i >= 1:
-        if not sys.argv[i].startswith('-'):
-            if DataFile == '':
-                DataFile = sys.argv[i]
-            else:
-                SourceID_Inputs.append(sys.argv[i])
-        elif sys.argv[i].upper() == '-MAXSNR':
-            i = i + 1
-            if i <= (len(sys.argv)-1) and numpy.isnan(MaxSNR):
-                MaxSNR = float(sys.argv[i])
+MaxSNR = None
+CatID = None # a string as a suffix '_from_cat_%s'%(CatID)
+iarg = 1
+while iarg <= (len(sys.argv)-1):
+    reg_match = re.match(r'^[-]+(.*)$', sys.argv[iarg])
+    is_option = (reg_match is not None)
+    arg_str = sys.argv[iarg]
+    if is_option:
+        arg_str = reg_match.group(1).upper()
+        if arg_str == 'MAXSNR':
+            iarg += 1
+            if iarg <= (len(sys.argv)-1):
+                MaxSNR = float(sys.argv[iarg])
                 print('# Setting max SNR limit to %s'%(MaxSNR))
-        elif sys.argv[i].upper() == '-CATID':
-            i = i + 1
-            if i <= (len(sys.argv)-1) and numpy.isnan(CatID):
-                CatID = int(sys.argv[i])
+        elif arg_str == 'CATID':
+            iarg += 1
+            if iarg <= (len(sys.argv)-1):
+                CatID = sys.argv[iarg]
                 print('# Setting catalog ID to %s'%(CatID)) # if set, then we will append "_from_cat_%d" to the output file name.
-    i = i + 1
+        elif arg_str == 'ID':
+            iarg += 1
+            if iarg <= (len(sys.argv)-1):
+                SourceID_Inputs.append(sys.argv[iarg])
+                print('# Selecting source ID %s'%(sys.argv[iarg])) # if set, then we will only select source ID matching this string.
+    else:
+        if DataFile == '':
+            DataFile = sys.argv[iarg]
+        else:
+            SourceID_Inputs.append(sys.argv[iarg])
+    # 
+    iarg += 1
 
 
 # Read data file
 if DataFile != '':
-    DataFile = sys.argv[1]
     print('# Reading "%s"'%(DataFile))
     DataTable = CrabTable(DataFile, verbose=0)
     
@@ -625,8 +617,8 @@ if DataFile != '':
         # loop SED (sorted) and output to file
         out_name = 'extracted_flux'
         out_name_for_obj = 'extracted_flux_for_obj_%s'%(re.sub(r'\W+', ' ', SourceID_Matches[j]['source id input']).strip().replace(' ','_'))
-        if not numpy.isnan(CatID):
-            out_name_for_obj = out_name_for_obj + '_from_cat_%d'%(CatID)
+        if CatID is not None:
+            out_name_for_obj = out_name_for_obj + '_from_cat_%s'%(CatID)
         fout = out_name+'.txt'
         fout_obj = out_name_for_obj+'.txt'
         fout_info = out_name+'.info'
@@ -646,7 +638,7 @@ if DataFile != '':
                 FilterFErr = float(SED[k]['FluxErr'])
                 FilterFluxUnit = str(SED[k]['FluxUnit'])
                 # MaxSNR (20180111)
-                if MaxSNR > 0:
+                if MaxSNR is not None:
                     if (FilterFErr>0) and (FilterFlux>MaxSNR*FilterFErr):
                         FilterFErr = FilterFlux/MaxSNR
                 # 3DHST AB MAG ZERO POINT IS 25, WE NEED TO DO FLUX CONVERSION #<TODO><20180128># 
@@ -658,7 +650,9 @@ if DataFile != '':
                     print("# %-20s %-18s %-18s %-12s %-s"%('Wave', 'Flux', 'FluxErr', 'FluxUnit', 'FilterName'))
                     fp.write("# %-20s %-18s %-18s %-12s %-s\n"%('Wave', 'Flux', 'FluxErr', 'FluxUnit', 'FilterName'))
                 #<20180110># if FilterWave > 0 and FilterFlux > 0 and FilterFErr > 0
-                if FilterFlux > 0 and FilterFErr > 0:
+                if numpy.isfinite(FilterFlux) and FilterFErr > 0:
+                    if FilterFlux < 0.0:
+                        FilterFlux = 0.0 # 20220829, if negative flux then set to zero.
                     #print("                 %-20s Wave %-15.6e Flux %-15.6e FluxError %-15.6e FluxUnit %s"%(FilterName, FilterWave, FilterFlux, FilterFErr, FilterFluxUnit))
                     print("  %-20.8g %-18.8g %-18.8g %-12s %-s"%(FilterWave, FilterFlux, FilterFErr, FilterFluxUnit, FilterName.replace(' ','_')))
                     fp.write("  %-20.8g %-18.8g %-18.8g %-12s %-s\n"%(FilterWave, FilterFlux, FilterFErr, FilterFluxUnit, FilterName.replace(' ','_')))

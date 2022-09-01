@@ -8,7 +8,8 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
+#sys.path.append(os.path.dirname(os.path.dirname(sys.argv[0])) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
+sys.path.append(os.path.dirname(os.path.dirname(__file__)) + os.path.sep + 'lib' + os.path.sep + 'python' + os.path.sep + 'crabtable')
 
 from CrabTable import *
 
@@ -486,6 +487,14 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['250'] = 'Herschel SPIRE 250' # Clark+2018 Table 1
             Filter_Dict['350'] = 'Herschel SPIRE 350' # Clark+2018 Table 1
             Filter_Dict['500'] = 'Herschel SPIRE 500' # Clark+2018 Table 1
+        
+        if catalog_name.find('Erb2006')>=0:
+            Filter_Dict['U']  = 'WHT U' # Steidel et al. 2003ApJ...592..728S, Erb et al. 2006ApJ...646..107E
+            Filter_Dict['G']  = 'WHT G' # Steidel et al. 2003ApJ...592..728S, Erb et al. 2006ApJ...646..107E
+            Filter_Dict['R']  = 'WHT R' # Steidel et al. 2003ApJ...592..728S, Erb et al. 2006ApJ...646..107E
+            Filter_Dict['J']  = 'Palomar WIRC J' # Steidel et al. 2003ApJ...592..728S, Erb et al. 2006ApJ...646..107E
+            Filter_Dict['Ks']  = 'Palomar WIRC Ks' # Steidel et al. 2003ApJ...592..728S, Erb et al. 2006ApJ...646..107E
+            
             
     if type(input_str) is str:
         if input_str in Filter_Dict:
@@ -669,6 +678,13 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['250'] = 252.0 # dzliu
             Filter_Dict['350'] = 353.0 # dzliu
             Filter_Dict['500'] = 511.0 # dzliu
+        
+        if catalog_name.find('Erb2006')>=0:
+            Filter_Dict['U']  = 0.3550 # Steidel et al. 2003ApJ...592..728S Fig. 1
+            Filter_Dict['G']  = 0.4780 # Steidel et al. 2003ApJ...592..728S Fig. 1
+            Filter_Dict['R']  = 0.6830 # Steidel et al. 2003ApJ...592..728S Fig. 1
+            Filter_Dict['J']  = 1.25 # https://sites.astro.caltech.edu/palomar/observer/200inchResources/P200filters.html, WIRC
+            Filter_Dict['Ks']  = 2.15 # https://sites.astro.caltech.edu/palomar/observer/200inchResources/P200filters.html, WIRC
     
     if type(input_str) is str:
         # 
@@ -1189,30 +1205,40 @@ DataFile = ''
 SourceID_Inputs = []
 MaxSNR = numpy.nan
 CatID = numpy.nan
-i = 0
-while i <= (len(sys.argv)-1):
-    if i >= 1:
-        if not sys.argv[i].startswith('-'):
-            if DataFile == '':
-                DataFile = sys.argv[i]
-            else:
-                SourceID_Inputs.append(sys.argv[i])
-        elif sys.argv[i].upper() == '-MAXSNR':
-            i = i + 1
-            if i <= (len(sys.argv)-1) and numpy.isnan(MaxSNR):
-                MaxSNR = float(sys.argv[i])
+iarg = 1
+while iarg <= (len(sys.argv)-1):
+    reg_match = re.match(r'^[-]+(.*)$', sys.argv[iarg])
+    is_option = (reg_match is not None)
+    arg_str = sys.argv[iarg]
+    if is_option:
+        arg_str = reg_match.group(1).upper()
+        if arg_str == 'MAXSNR':
+            iarg += 1
+            if iarg <= (len(sys.argv)-1):
+                MaxSNR = float(sys.argv[iarg])
                 print('# Setting max SNR limit to %s'%(MaxSNR))
-        elif sys.argv[i].upper() == '-CATID':
-            i = i + 1
-            if i <= (len(sys.argv)-1) and numpy.isnan(CatID):
-                CatID = int(sys.argv[i])
+        elif arg_str == 'CATID':
+            iarg += 1
+            if iarg <= (len(sys.argv)-1):
+                CatID = sys.argv[iarg]
                 print('# Setting catalog ID to %s'%(CatID)) # if set, then we will append "_from_cat_%d" to the output file name.
-    i = i + 1
+        elif arg_str == 'ID':
+            iarg += 1
+            if iarg <= (len(sys.argv)-1):
+                SourceID_Inputs.append(sys.argv[iarg])
+                print('# Selecting source ID %s'%(sys.argv[iarg])) # if set, then we will only select source ID matching this string.
+    else:
+        if DataFile == '':
+            DataFile = sys.argv[iarg]
+        else:
+            SourceID_Inputs.append(sys.argv[iarg])
+    # 
+    iarg += 1
 
 
 # Read data file
 if DataFile != '':
-    DataFile = sys.argv[1]
+    #DataFile = sys.argv[1]
     print('# Reading "%s"'%(DataFile))
     DataTable = CrabTable(DataFile, verbose=0)
     

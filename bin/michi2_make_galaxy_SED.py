@@ -391,13 +391,16 @@ def michi2_make_galaxy_SED(\
             w_stellar, f_stellar, p_stellar = find_SED_lib_by_given_parameters(Lib_stellar, {'EBV':EBV}, verbose = False)
         # 
         # if Age is given, we use BC03 constant SFH multi-age snapshot library
-        elif numpy.isnan(tau):
+        elif numpy.isnan(tau) or numpy.isclose(tau, 0.0):
             Lib_stellar = os.path.join(Lib_dir, 'lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.MultiAge.EBV.SED')
             w_stellar, f_stellar, p_stellar = find_SED_lib_by_given_parameters(Lib_stellar, {'EBV':EBV, 'Age':Age/1e9}, verbose = False)
         # 
         # if both Age is given, we use FSPS tau-decline SFH library (<TODO>: we only have tau=1Gyr model...)
         else:
-            Lib_stellar = os.path.join(Lib_dir, 'lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED')
+            if numpy.isclose(tau, 0.1):
+                Lib_stellar = os.path.join(Lib_dir, 'lib.FSPS.CSP.tau.0p1Gyr.Padova.BaSeL.Z0.0190.EBV.SED')
+            else:
+                Lib_stellar = os.path.join(Lib_dir, 'lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED')
             w_stellar, f_stellar, p_stellar = find_SED_lib_by_given_parameters(Lib_stellar, {'EBV':EBV, 'Age':Age/1e9}, verbose = False)
         # 
         # if Age is given, we use Philipp's BC03 tau-decline SFH library

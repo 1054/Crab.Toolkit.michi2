@@ -138,6 +138,11 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
         # 
         # crab_bin_compute_param_chisq_histogram for delta_chisq = 2.3 (2p)
         #verbose = 1
+        #param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
+        #                    delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)
+        # 20210906
+        if numpy.all(numpy.isclose(numpy.diff(param_array), 0.0, atol=1e-10*numpy.nanmin(param_array))):
+            return
         param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
                             delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)
         # 
@@ -610,7 +615,19 @@ def dump_LIB_SEDs_to_files(chisq_file = '', chisq_array = [], lib_dict = {},
 
 if len(sys.argv) <= 1:
     
-    print('Usage: michi2_plot_SED_fitting_results.py fit_5.out')
+    print('Usage: ')
+    print('    michi2_plot_SED_fitting_results.py fit_5.out')
+    print('Options: ')
+    print('    -only-best')
+    print('    -source-name XXX')
+    print('    -yrange XXX XXX')
+    print('    -max-sed-number XXX')
+    print('    -flux XXX')
+    print('    -output XXX')
+    print('    -text XXX')
+    print('    -verbose')
+    print('Example: ')
+    print('    michi2_plot_SED_fitting_results.py fit_5.out -output results_fit_5/fit_5')
     sys.exit()
 
 else:
@@ -701,7 +718,7 @@ else:
            Output_name.endswith('.eps') or Output_name.endswith('.EPS'):
             Output_name, Output_extension = os.path.splitext(Output_name)
         else:
-            Output_name = UserOutputName
+            Output_name = os.path.basename(UserOutputName) # UserOutputName
             Output_extension = 'pdf'
     # 
     # Read chi2 table
@@ -1671,6 +1688,7 @@ else:
     Plot_engine.set_ycharsize(panel=0, charsize=15, axislabelcharsize=21, axislabelpad=-2) # adjust tick and axis label font sizes for all panels -- 20201215 -- for publication figure
     #Plot_engine.set_grid_hspace(0.60) # adjust tick and axis label font sizes for all panels -- 20201215 -- for publication figure
     #Plot_engine.set_grid_wspace(0.50) # adjust tick and axis label font sizes for all panels -- 20201215 -- for publication figure
+    Plot_engine.Plot_device.tight_layout() # 20210906
     Plot_engine.savepdf(Output_dir+Output_name+'.chisq.pdf')
     #Plot_engine.show()
     Plot_engine.close()

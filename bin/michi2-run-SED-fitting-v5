@@ -412,7 +412,7 @@ fi
 constrain_dust_Umin=()
 if [[ x"$Umin" != x ]]; then
     if [[ $NoDust -eq 0 ]]; then
-        i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN); }")
+        i=$(awk "BEGIN { print (1-$NoStellar)+(1-$NoAGN)+1; }")
         j=$(awk "BEGIN { print ($i+1); }")
         constrain_dust_Umin=(-constraint "LIB${i}_PAR1 >= $Umin")
         # 

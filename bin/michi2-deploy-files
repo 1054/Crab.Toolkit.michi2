@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# 20220829: now not overwriting filter.list
+# 
 
 # 
 # readlink for Mac (because Mac readlink does not accept "-f" option)
@@ -140,7 +142,7 @@ if echo "$deploy_type" | grep -q -i "SED"; then
     #cp "${deploy_upper_dir}/data/deploy_SED"/rUmean.sm .
     #cp "${deploy_upper_dir}/data/deploy_SED"/rChisq.sm .
     cp -r "${deploy_upper_dir}/data/deploy_SED"/filters .
-    cp -r "${deploy_upper_dir}/data/deploy_SED"/filter.list .
+    [ ! -f filter.list ] && cp "${deploy_upper_dir}/data/deploy_SED"/filter.list .
     # 
     if (check_input_contains "no star" "$*") || (check_input_contains "no stellar" "$*"); then
         # 
