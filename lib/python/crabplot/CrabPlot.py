@@ -15,6 +15,7 @@
 #                2018-05-25 plot_xy errorbarlinestyle
 #                2018-10-04 set_xcharsize set_ycharsize
 #                2020-12-15 axislabelpad
+#                2022-11-03 expand_yrange
 # 
 #   Notes:
 #     -- to use TeX, we need to install 'texlive-latex-extra' and 'texlive-fonts-recommended'
@@ -563,6 +564,34 @@ class CrabPlot(object):
                 elif panel > 0 and panel <= len(self.Plot_panels):
                     # set_yrange for the specified panel
                     ax = self.Plot_panels[panel-1]['panel']
+                    self.Plot_panels[panel-1]['yrange'] = yrange
+                else:
+                    return
+            if ax is not None:
+                ax.set_ylim(yrange)
+    # 
+    # def expand_yrange
+    def expand_yrange(self, percent, ax=None, panel=None):
+        if len(self.Plot_panels)>0:
+            if percent > 1.0:
+                percent /= 100.
+            if ax is None:
+                if panel is None:
+                    # set_yrange for the last panel
+                    panel = len(self.Plot_panels)
+                    ax = self.Plot_panels[panel-1]['panel']
+                    yrange = self.Plot_panels[panel-1]['yrange']
+                    if len(yrange) == 0:
+                        yrange = ax.get_ylim()
+                    yrange = [yrange[0]-percent*(yrange[1]-yrange[0]), yrange[1]+percent*(yrange[1]-yrange[0])]
+                    self.Plot_panels[panel-1]['yrange'] = yrange
+                elif panel > 0 and panel <= len(self.Plot_panels):
+                    # set_yrange for the specified panel
+                    ax = self.Plot_panels[panel-1]['panel']
+                    yrange = self.Plot_panels[panel-1]['yrange']
+                    if len(yrange) == 0:
+                        yrange = ax.get_ylim()
+                    yrange = [yrange[0]-percent*(yrange[1]-yrange[0]), yrange[1]+percent*(yrange[1]-yrange[0])]
                     self.Plot_panels[panel-1]['yrange'] = yrange
                 else:
                     return
@@ -1401,6 +1430,10 @@ class CrabPlot(object):
         ax, current, overplot = self.get_panel_ax(ax, current, overplot)
         # plot line
         if ax:
+            #print('kwargs', kwargs)
+            if 'useTex' in kwargs:
+                kwargs['usetex'] = kwargs['useTex']
+                del kwargs['useTex']
             if NormalizedCoordinate is True:
                 ax.text(x0, y0, text_input, transform=ax.transAxes, **kwargs) # verticalalignment='center', horizontalalignment='left'
             else:

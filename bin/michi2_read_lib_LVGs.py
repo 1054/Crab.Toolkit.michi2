@@ -96,7 +96,7 @@ def lib_file_get_header(Lib_file):
                 Lib_header['coltypes'].append(numpy.float64)
                 #Lib_header['coltypes'].append( (Lib_header['colnames'][i], float) )
             else:
-                Lib_header['coltypes'].append(numpy.str)
+                Lib_header['coltypes'].append(str) # numpy.str is a deprecated alias for the builtin `str`.
                 #Lib_header['coltypes'].append( (Lib_header['colnames'][i], str) )
     # 
     return Lib_header

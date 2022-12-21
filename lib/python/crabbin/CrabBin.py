@@ -273,20 +273,32 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
             xclip2_min = numpy.nanmin(param_array_copy[1./chisq_array_nonan >= 0.618*numpy.max(1./chisq_array_nonan)]) # expand 2 times delta_chisq
             xclip2_max = numpy.nanmax(param_array_copy[1./chisq_array_nonan >= 0.618*numpy.max(1./chisq_array_nonan)]) # expand 2 times delta_chisq
             param_bin_edge = []
-            if param_min < xclip3_min:
-                param_bin_edge.extend(numpy.arange(param_min, xclip3_min, param_bin_step).tolist()) # 
-            if xclip3_min < xclip2_min:
-                param_bin_edge.extend(numpy.arange(xclip3_min, xclip2_min, param_bin_step*0.8).tolist()) # 
-            if xclip2_min < xclip_min:
-                param_bin_edge.extend(numpy.arange(xclip2_min, xclip_min, param_bin_step*0.7).tolist()) # 
-            if xclip_min < xclip_max:
-                param_bin_edge.extend(numpy.arange(xclip_min, xclip_max, param_bin_step*0.6).tolist()) # 
-            if xclip_max < xclip2_max:
-                param_bin_edge.extend(numpy.arange(xclip_max, xclip2_max, param_bin_step*0.7).tolist()) # using finer grid for the range of interest
-            if xclip2_max < xclip3_max:
-                param_bin_edge.extend(numpy.arange(xclip2_max, xclip3_max, param_bin_step*0.8).tolist()) # 
-            if xclip3_max < param_max:
-                param_bin_edge.extend(numpy.arange(xclip3_max, param_max, param_bin_step).tolist()) # 
+            # print(
+            #     param_min, xclip3_min, xclip2_min, xclip_min, '\n', 
+            #     xclip_max, xclip2_max, xclip3_max, param_max, '\n',
+            #     ) # debugging 20221101
+            xcursor = param_min
+            if xcursor < xclip3_min:
+                param_bin_edge.extend(numpy.arange(xcursor, xclip3_min, param_bin_step).tolist()) # 
+                xcursor = xclip3_min
+            if xcursor < xclip2_min:
+                param_bin_edge.extend(numpy.arange(xcursor, xclip2_min, param_bin_step*0.8).tolist()) # 
+                xcursor = xclip2_min
+            if xcursor < xclip_min:
+                param_bin_edge.extend(numpy.arange(xcursor, xclip_min, param_bin_step*0.7).tolist()) # 
+                xcursor = xclip_min
+            if xcursor < xclip_max:
+                param_bin_edge.extend(numpy.arange(xcursor, xclip_max, param_bin_step*0.6).tolist()) # 
+                xcursor = xclip_max
+            if xcursor < xclip2_max:
+                param_bin_edge.extend(numpy.arange(xcursor, xclip2_max, param_bin_step*0.7).tolist()) # using finer grid for the range of interest
+                xcursor = xclip2_max
+            if xcursor < xclip3_max:
+                param_bin_edge.extend(numpy.arange(xcursor, xclip3_max, param_bin_step*0.8).tolist()) # 
+                xcursor = xclip3_max
+            if xcursor < param_max:
+                param_bin_edge.extend(numpy.arange(xcursor, param_max, param_bin_step).tolist()) # 
+                xcursor = param_max
             param_bin_edge = numpy.array(param_bin_edge)
             param_bin_numb = len(param_bin_edge)-1
             # 

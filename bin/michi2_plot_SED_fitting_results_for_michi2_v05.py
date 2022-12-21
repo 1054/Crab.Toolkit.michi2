@@ -287,7 +287,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
         #        print('param_stats_2p.xrange', param_stats_2p['xrange']) # optimized xrange for L68-H68
         #        print('param_stats_2p.yrange', param_stats_2p['yrange']) # optimized xrange for L68-H68
         # 
-        # log for plotting
+        # calc log for plotting
         if param_log is True:
             with numpy.errstate(invalid='ignore'):
                 param_array_mask = (param_array>0)
