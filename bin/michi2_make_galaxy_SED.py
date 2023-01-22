@@ -261,6 +261,7 @@ def michi2_make_galaxy_SED(\
     Umean:float = numpy.nan, 
     qPAH:float = numpy.nan, 
     qIR:float = numpy.nan, 
+    Wave_step:float = 0.01, # dex
     Output_file:str = '', 
     Silent = False, 
     ):
@@ -525,7 +526,7 @@ def michi2_make_galaxy_SED(\
     # 
     # Combine SEDs
     # 
-    log_w_SED = numpy.arange(-1.0, 5.5, 0.01)
+    log_w_SED = numpy.arange(-1.0, 5.5, Wave_step)
     w_SED = numpy.power(10,log_w_SED)
     f_SED = w_SED * 0.0
     if a_stellar > 0:
