@@ -680,6 +680,7 @@ if __name__ == '__main__':
         print('                              -Umean    NN.N \\')
         print('                              -qPAH     NN.N \\')
         print('                              -qIR      NN.N \\')
+        print('                              -wavestep NN.N \\')
         print('                              -Out      SSSS.txt')
         print('')
         sys.exit()
@@ -698,6 +699,7 @@ if __name__ == '__main__':
     Umean = numpy.nan
     qPAH = numpy.nan
     qIR = numpy.nan
+    Wave_step = 0.01 # dex
     Output_file = ''
     
     iarg = 1
@@ -791,6 +793,10 @@ if __name__ == '__main__':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
                 qIR = float(sys.argv[iarg])
+        elif sys.argv[iarg].lower() == '-wavestep':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                Wave_step = float(sys.argv[iarg])
         elif sys.argv[iarg].lower() == '-out':
             if iarg+1 < len(sys.argv):
                 iarg = iarg + 1
@@ -826,6 +832,7 @@ if __name__ == '__main__':
         Umean = Umean, 
         qPAH = qPAH, 
         qIR = qIR, 
+        Wave_step = Wave_step, 
         Output_file = Output_file, 
     )
         
