@@ -1120,6 +1120,9 @@ else:
     dust_temperature_warm_dust_dict = {}
     dust_temperature_cold_dust_dict = {}
     dust_temperature_dict = {}
+    dust_lambda_eff_warm_dust_dict = {}
+    dust_lambda_eff_cold_dust_dict = {}
+    dust_lambda_eff_dict = {}
     # 
     # define constants
     pi = numpy.pi
@@ -1271,7 +1274,7 @@ else:
                     Umin_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
                     Umin_warm_dust_dict['Lib_name'] = Lib_name
                     Umin_warm_dust_dict['Lib_numb'] = j+1
-                    Umin_warm_dust_dict['Par_name'] = '$U_{\mathrm{min}}$ (warm)' # Lib_dict[Key_TPAR]
+                    Umin_warm_dust_dict['Par_name'] = r'$U_{\mathrm{min}}$ (warm)' # Lib_dict[Key_TPAR]
                     Umin_warm_dust_dict['Par_file'] = 'Umin_warm'
                     Umin_warm_dust_dict['Col_numb'] = Col_number
                     Umin_warm_dust_dict['Log_plot'] = True # 'Log_plot', plot X axis in log scale
@@ -1401,7 +1404,7 @@ else:
             
             # 
             # check dust modified blackbody properties
-            elif InfoDict[Lib_name].find('.MBB.') >= 0:
+            elif InfoDict[Lib_name].find('.MBB.') >= 0 or InfoDict[Lib_name].find('.graybody.') >= 0:
                 # MBB dust
                 if 'BETA' == Lib_dict[Key_TPAR].upper():
                     has_two_same_lib = False
@@ -1447,7 +1450,7 @@ else:
                         dust_emissivity_beta_dict['chisq'] = DataArray['chi2']
                         dust_emissivity_beta_dict['Degree_of_freedom'] = DegreeOfFreedom
                     # 
-                if 'T_DUST' == Lib_dict[Key_TPAR].upper():
+                if 'T_DUST' == Lib_dict[Key_TPAR].upper() or 'TDUST' == Lib_dict[Key_TPAR].upper():
                     has_two_same_lib = False
                     if 'LIB%d'%(j+1+1) in InfoDict:
                         # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the first place
@@ -1490,8 +1493,13 @@ else:
                         dust_temperature_dict['chisq'] = DataArray['chi2']
                         dust_temperature_dict['Degree_of_freedom'] = DegreeOfFreedom
                     # 
-                if 'L_DUST' == Lib_dict[Key_TPAR].upper():
+                if 'L_DUST' == Lib_dict[Key_TPAR].upper() or 'lgLIR' == Lib_dict[Key_TPAR]:
                     has_two_same_lib = False
+                    par_value = DataTable.getColumn(Col_number)
+                    if Lib_dict[Key_TPAR].startswith('lg'):
+                        par_value = 10**par_value
+                    par_value = par_value  / 40.31970 # TODO: the template should have LIR in units of [u.mJy*u.GHz]! 
+                                                      # here I convert the units to [u.Lsun*u.Mpc**-2]
                     if 'LIB%d'%(j+1+1) in InfoDict:
                         # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the first place
                         if InfoDict['LIB%d'%(j+1+1)] == InfoDict[Lib_name]:
@@ -1504,7 +1512,7 @@ else:
                             LTIR_warm_dust_dict['Col_numb'] = Col_number
                             LTIR_warm_dust_dict['Log_calc'] = True
                             LTIR_warm_dust_dict['range'] = numpy.power(10,[6.0,14.5])
-                            LTIR_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * (DataTable.getColumn(Col_number)) * dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
+                            LTIR_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * par_value * 4*pi*dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
                             LTIR_warm_dust_dict['chisq'] = DataArray['chi2']
                             LTIR_warm_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
                             has_two_same_lib = True
@@ -1521,7 +1529,7 @@ else:
                             LTIR_cold_dust_dict['Col_numb'] = Col_number
                             LTIR_cold_dust_dict['Log_calc'] = True
                             LTIR_cold_dust_dict['range'] = numpy.power(10,[6.0,14.5])
-                            LTIR_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * (DataTable.getColumn(Col_number)) * dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
+                            LTIR_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * par_value * 4*pi*dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
                             LTIR_cold_dust_dict['chisq'] = DataArray['chi2']
                             LTIR_cold_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
                             has_two_same_lib = True
@@ -1535,9 +1543,101 @@ else:
                         LTIR_total_dust_dict['Col_numb'] = Col_number
                         LTIR_total_dust_dict['Log_calc'] = True
                         LTIR_total_dust_dict['range'] = numpy.power(10,[6.0,14.5])
-                        LTIR_total_dust_dict['value'] = DataArray['a%d'%(j+1)] * (DataTable.getColumn(Col_number)) * dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
+                        LTIR_total_dust_dict['value'] = DataArray['a%d'%(j+1)] * par_value * 4*pi*dL**2 / (1+Redshift) # Note: no 4*pi, see LIB.SED
                         LTIR_total_dust_dict['chisq'] = DataArray['chi2']
                         LTIR_total_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
+                    # 
+                if 'lambda_eff' == Lib_dict[Key_TPAR]:
+                    has_two_same_lib = False
+                    if 'LIB%d'%(j+1+1) in InfoDict:
+                        # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the first place
+                        if InfoDict['LIB%d'%(j+1+1)] == InfoDict[Lib_name]:
+                            dust_lambda_eff_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                            dust_lambda_eff_warm_dust_dict['Lib_name'] = Lib_name
+                            dust_lambda_eff_warm_dust_dict['Lib_numb'] = j+1
+                            dust_lambda_eff_warm_dust_dict['Par_name'] = r'$\lambda_{eff}$ (warm)'
+                            dust_lambda_eff_warm_dust_dict['Par_file'] = 'lambda_eff_warm'
+                            dust_lambda_eff_warm_dust_dict['Col_numb'] = Col_number
+                            dust_lambda_eff_warm_dust_dict['range'] = [50.0,200.0]
+                            dust_lambda_eff_warm_dust_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                            dust_lambda_eff_warm_dust_dict['chisq'] = DataArray['chi2']
+                            dust_lambda_eff_warm_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
+                            has_two_same_lib = True
+                    if 'LIB%d'%(j+1-1) in InfoDict:
+                        # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the second place
+                        if InfoDict['LIB%d'%(j+1-1)] == InfoDict[Lib_name]:
+                            dust_lambda_eff_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                            dust_lambda_eff_cold_dust_dict['Lib_name'] = Lib_name
+                            dust_lambda_eff_cold_dust_dict['Lib_numb'] = j+1
+                            dust_lambda_eff_cold_dust_dict['Par_name'] = r'$\lambda_{eff}$ (cold)'
+                            dust_lambda_eff_cold_dust_dict['Par_file'] = 'lambda_eff_cold'
+                            dust_lambda_eff_cold_dust_dict['Col_numb'] = Col_number
+                            dust_lambda_eff_cold_dust_dict['range'] = [50.0,200.0]
+                            dust_lambda_eff_cold_dust_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                            dust_lambda_eff_cold_dust_dict['chisq'] = DataArray['chi2']
+                            dust_lambda_eff_cold_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
+                            has_two_same_lib = True
+                    # 
+                    if has_two_same_lib == False:
+                        dust_lambda_eff_dict['Lib_file'] = InfoDict[Lib_name]
+                        dust_lambda_eff_dict['Lib_name'] = Lib_name
+                        dust_lambda_eff_dict['Lib_numb'] = j+1
+                        dust_lambda_eff_dict['Par_name'] = r'$\lambda_{eff}$'
+                        dust_lambda_eff_dict['Par_file'] = 'lambda_eff'
+                        dust_lambda_eff_dict['Col_numb'] = Col_number
+                        dust_lambda_eff_dict['range'] = [50.0,200.0]
+                        dust_lambda_eff_dict['value'] = numpy.array(DataTable.getColumn(Col_number)).astype(float) # 
+                        dust_lambda_eff_dict['chisq'] = DataArray['chi2']
+                        dust_lambda_eff_dict['Degree_of_freedom'] = DegreeOfFreedom
+                    # 
+                if 'M_dust'.upper() == Lib_dict[Key_TPAR].upper() \
+                    or 'Mdust'.upper() == Lib_dict[Key_TPAR].upper() \
+                    or 'lgMdust'.upper() == Lib_dict[Key_TPAR].upper():
+                    # all templates must be normalized to Mdust = 1 Msun and dL = 1 Mpc.
+                    has_two_same_lib = False
+                    if 'LIB%d'%(j+1+1) in InfoDict:
+                        # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the first place
+                        if InfoDict['LIB%d'%(j+1+1)] == InfoDict[Lib_name]:
+                            Mass_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                            Mass_warm_dust_dict['Lib_name'] = Lib_name
+                            Mass_warm_dust_dict['Lib_numb'] = j+1
+                            Mass_warm_dust_dict['Par_name'] = r'$\log_{10} \ M_{\mathrm{dust}}$ (warm) [$\mathrm{M}_{\odot}$]'
+                            Mass_warm_dust_dict['Par_file'] = 'M_dust_warm'
+                            Mass_warm_dust_dict['Col_numb'] = Col_number
+                            Mass_warm_dust_dict['Log_calc'] = True
+                            Mass_warm_dust_dict['range'] = numpy.power(10, [5.0,12.0])
+                            Mass_warm_dust_dict['value'] = DataArray['a%d'%(j+1)] * dL**2 / (1+Redshift) # Mdust # Mdust #NOTE# no need to multiply a '4*pi'!
+                            Mass_warm_dust_dict['chisq'] = DataArray['chi2']
+                            Mass_warm_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
+                            has_two_same_lib = True
+                    if 'LIB%d'%(j+1-1) in InfoDict:
+                        # check if there are contiguous two MBB LIBs, if yes, then check whether current one is in the second place
+                        if InfoDict['LIB%d'%(j+1-1)] == InfoDict[Lib_name]:
+                            Mass_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                            Mass_cold_dust_dict['Lib_name'] = Lib_name
+                            Mass_cold_dust_dict['Lib_numb'] = j+1
+                            Mass_cold_dust_dict['Par_name'] = r'$\log_{10} \ M_{\mathrm{dust}}$ (cold) [$\mathrm{M}_{\odot}$]'
+                            Mass_cold_dust_dict['Par_file'] = 'M_dust_cold'
+                            Mass_cold_dust_dict['Col_numb'] = Col_number
+                            Mass_cold_dust_dict['Log_calc'] = True
+                            Mass_cold_dust_dict['range'] = numpy.power(10, [5.0,12.0])
+                            Mass_cold_dust_dict['value'] = DataArray['a%d'%(j+1)] * dL**2 / (1+Redshift) # Mdust # Mdust #NOTE# no need to multiply a '4*pi'!
+                            Mass_cold_dust_dict['chisq'] = DataArray['chi2']
+                            Mass_cold_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
+                            has_two_same_lib = True
+                    # 
+                    if has_two_same_lib == False:
+                        Mass_total_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                        Mass_total_dust_dict['Lib_name'] = Lib_name
+                        Mass_total_dust_dict['Lib_numb'] = j+1
+                        Mass_total_dust_dict['Par_name'] = r'$\log_{10} \ M_{\mathrm{dust}}$ [$\mathrm{M}_{\odot}$]'
+                        Mass_total_dust_dict['Par_file'] = 'M_dust'
+                        Mass_total_dust_dict['Col_numb'] = Col_number
+                        Mass_total_dust_dict['Log_calc'] = True
+                        Mass_total_dust_dict['range'] = numpy.power(10, [5.0,12.0])
+                        Mass_total_dust_dict['value'] = DataArray['a%d'%(j+1)] * dL**2 / (1+Redshift) # Mdust # Mdust #NOTE# no need to multiply a '4*pi'!
+                        Mass_total_dust_dict['chisq'] = DataArray['chi2']
+                        Mass_total_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
                     # 
             # 
             # finished checking library properties
@@ -1682,6 +1782,12 @@ else:
         analyze_chisq_distribution(dust_temperature_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in dust_temperature_dict:
         analyze_chisq_distribution(dust_temperature_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in dust_lambda_eff_warm_dust_dict:
+        analyze_chisq_distribution(dust_lambda_eff_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in dust_lambda_eff_cold_dust_dict:
+        analyze_chisq_distribution(dust_lambda_eff_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in dust_lambda_eff_dict:
+        analyze_chisq_distribution(dust_lambda_eff_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     #Plot_engine.set_xcharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
     #Plot_engine.set_ycharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
     Plot_engine.set_xcharsize(panel=0, charsize=15, axislabelcharsize=21, axislabelpad=-2) # adjust tick and axis label font sizes for all panels -- 20201215 -- for publication figure

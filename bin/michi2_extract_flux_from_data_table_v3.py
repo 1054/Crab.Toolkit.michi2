@@ -43,21 +43,40 @@ def get_all_filter_dict(catalog_name = ''):
     Filter_Dict['f125w']    = {'telescope_name': 'HST',      'filter_name': 'WFC3 F125W',          'wavelength_um': 1.24710 } # Skelton 2014ApJS..214...24S Table 6
     Filter_Dict['f140w']    = {'telescope_name': 'HST',      'filter_name': 'WFC3 F140W',          'wavelength_um': 1.39240 } # Skelton 2014ApJS..214...24S Table 6
     Filter_Dict['f160w']    = {'telescope_name': 'HST',      'filter_name': 'WFC3 F160W',          'wavelength_um': 1.53960 } # Skelton 2014ApJS..214...24S Table 6
-    Filter_Dict['u']        = {'telescope_name': 'CFHT',     'filter_name': 'MegaCam u',           'wavelength_um':  3823.3e-4 } # Laigle+2016 Table 1
+    Filter_Dict['f115w']    = {'telescope_name': 'JWST',     'filter_name': 'NIRCam F115W',        'wavelength_um': 1.154 } # https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-instrumentation/nircam-filters
+    Filter_Dict['f150w']    = {'telescope_name': 'JWST',     'filter_name': 'NIRCam F150W',        'wavelength_um': 1.501 } # 
+    Filter_Dict['f277w']    = {'telescope_name': 'JWST',     'filter_name': 'NIRCam F277W',        'wavelength_um': 2.786 } # 
+    Filter_Dict['f444w']    = {'telescope_name': 'JWST',     'filter_name': 'NIRCam F444W',        'wavelength_um': 4.421 } # 
+    Filter_Dict['f770w']    = {'telescope_name': 'JWST',     'filter_name': 'MIRI F770W',          'wavelength_um': 7.7 } # https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument/miri-observing-modes/miri-imaging
+    Filter_Dict['HST-F814W'] = Filter_Dict['f814w']
+    Filter_Dict['CFHT-u']   = {'telescope_name': 'CFHT',     'filter_name': 'MegaCam u',           'wavelength_um':  3823.3e-4 } # Laigle+2016 Table 1
+    Filter_Dict['u']        = Filter_Dict['CFHT-u']
     Filter_Dict['B']        = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam B',       'wavelength_um':  4458.3e-4 } # Laigle+2016 Table 1
     Filter_Dict['V']        = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam V',       'wavelength_um':  5477.8e-4 } # Laigle+2016 Table 1
     Filter_Dict['r']        = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam r',       'wavelength_um':  6288.7e-4 } # Laigle+2016 Table 1
     Filter_Dict['ip']       = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam i',       'wavelength_um':  7683.9e-4 } # Laigle+2016 Table 1
     Filter_Dict['zp']       = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam z',       'wavelength_um':  9105.7e-4 } # Laigle+2016 Table 1
     Filter_Dict['zpp']      = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam z',       'wavelength_um':  9105.7e-4 } # Laigle+2016 Table 1
-    Filter_Dict['yHSC']     = {'telescope_name': 'Subaru',   'filter_name': 'HSC Y',               'wavelength_um': 10214.2e-4 } # Laigle+2016 Table 1
-    Filter_Dict['Y']        = {'telescope_name': 'VISTA',    'filter_name': 'VIRCAM Y',            'wavelength_um': 10214.2e-4 } # Laigle+2016 Table 1
-    Filter_Dict['J']        = {'telescope_name': 'VISTA',    'filter_name': 'VIRCAM J',            'wavelength_um': 12534.6e-4 } # Laigle+2016 Table 1
-    Filter_Dict['H']        = {'telescope_name': 'VISTA',    'filter_name': 'VIRCAM H',            'wavelength_um': 16453.4e-4 } # Laigle+2016 Table 1
-    Filter_Dict['Hw']       = {'telescope_name': 'CFHT',     'filter_name': 'WIRCam H',            'wavelength_um': 16453.4e-4 } # Laigle+2016 Table 1
-    Filter_Dict['K']        = {'telescope_name': 'VISTA',    'filter_name': 'VIRCAM K',            'wavelength_um': 21539.9e-4 } # Laigle+2016 Table 1
-    Filter_Dict['Ks']       = {'telescope_name': 'CFHT',     'filter_name': 'WIRCam K',            'wavelength_um': 21539.9e-4 } # Laigle+2016 Table 1
-    Filter_Dict['Ksw']      = {'telescope_name': 'CFHT',     'filter_name': 'WIRCam K',            'wavelength_um': 21539.9e-4 } # Laigle+2016 Table 1
+    Filter_Dict['HSC-g']    = {'telescope_name': 'Subaru',   'filter_name': 'HSC g',               'wavelength_um':  4847e-4 } # Weaver+2021 Table 1
+    Filter_Dict['HSC-r']    = {'telescope_name': 'Subaru',   'filter_name': 'HSC r',               'wavelength_um':  6219e-4 } # Weaver+2021 Table 1
+    Filter_Dict['HSC-i']    = {'telescope_name': 'Subaru',   'filter_name': 'HSC i',               'wavelength_um':  7699e-4 } # Weaver+2021 Table 1
+    Filter_Dict['HSC-z']    = {'telescope_name': 'Subaru',   'filter_name': 'HSC z',               'wavelength_um':  8894e-4 } # Weaver+2021 Table 1
+    Filter_Dict['HSC-y']    = {'telescope_name': 'Subaru',   'filter_name': 'HSC y',               'wavelength_um':  9761e-4 } # Weaver+2021 Table 1
+    Filter_Dict['yHSC']     = Filter_Dict['HSC-y']
+    Filter_Dict['UVISTA-Y']     = {'telescope_name': 'VISTA',  'filter_name': 'VIRCAM Y',          'wavelength_um': 10214.2e-4 } # Laigle+2016 Table 1
+    Filter_Dict['UVISTA-J']     = {'telescope_name': 'VISTA',  'filter_name': 'VIRCAM J',          'wavelength_um': 12534.6e-4 } # Laigle+2016 Table 1
+    Filter_Dict['UVISTA-H']     = {'telescope_name': 'VISTA',  'filter_name': 'VIRCAM H',          'wavelength_um': 16453.4e-4 } # Laigle+2016 Table 1
+    Filter_Dict['UVISTA-Ks']    = {'telescope_name': 'VISTA',  'filter_name': 'VIRCAM K',          'wavelength_um': 21539.9e-4 } # Laigle+2016 Table 1
+    Filter_Dict['UVISTA-NB118'] = {'telescope_name': 'VISTA',  'filter_name': 'VIRCAM NB118',      'wavelength_um': 11909e-4 } # Weaver+2021 Table 1
+    Filter_Dict['CFHT-H']       = {'telescope_name': 'CFHT',     'filter_name': 'WIRCam H',            'wavelength_um': 16453.4e-4 } # Laigle+2016 Table 1
+    Filter_Dict['CFHT-Ks']      = {'telescope_name': 'CFHT',     'filter_name': 'WIRCam K',            'wavelength_um': 21539.9e-4 } # Laigle+2016 Table 1
+    Filter_Dict['Y']            = Filter_Dict['UVISTA-Y']
+    Filter_Dict['J']            = Filter_Dict['UVISTA-J']
+    Filter_Dict['H']            = Filter_Dict['UVISTA-H']
+    Filter_Dict['Ks']           = Filter_Dict['UVISTA-Ks']
+    Filter_Dict['Hw']           = Filter_Dict['CFHT-H']
+    Filter_Dict['K']            = Filter_Dict['CFHT-Ks']
+    Filter_Dict['Ksw']          = Filter_Dict['CFHT-Ks']
     Filter_Dict['IA427']    = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam IA427',   'wavelength_um':  4263.4e-4 } # Laigle+2016 Table 1
     Filter_Dict['IA464']    = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam IA464',   'wavelength_um':  4635.1e-4 } # Laigle+2016 Table 1
     Filter_Dict['IA484']    = {'telescope_name': 'Subaru',   'filter_name': 'Suprime Cam IA484',   'wavelength_um':  4849.2e-4 } # Laigle+2016 Table 1
@@ -184,6 +203,10 @@ def find_matched_filter(matched_band, matched_suffix='', special_file_name=''):
     all_filter_dict = get_all_filter_dict()
     matched_filter_dict = None
     # if the extracted band name matches one of the filter_dict
+    if matched_band not in all_filter_dict and matched_band.lower() in all_filter_dict:
+        matched_band = matched_band.lower()
+    if matched_band not in all_filter_dict and matched_band.upper() in all_filter_dict:
+        matched_band = matched_band.upper()
     if matched_band in all_filter_dict:
         matched_filter_dict = copy.copy(all_filter_dict[matched_band])
         if matched_suffix != '': 
@@ -257,7 +280,7 @@ def recognize_Col_ID(input_list, special_file_name=''):
     return list(set(recognized_list))
 
 
-def recognize_Col_FLUX(input_list, special_file_name=''):
+def recognize_Col_FLUX(input_list, special_file_name='', skip_list=None):
     # output:
     # 1. recognized col name list and 
     # 2. filter_list
@@ -265,7 +288,10 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
     filter_list = []
     if type(input_list) is not list:
         input_list = [input_list]
-    for input_str in input_list:
+    for i, input_str in enumerate(input_list):
+        if skip_list is not None:
+            if input_str in skip_list:
+                continue
         if type(input_str) is not str:
             input_str = str(input_str)
         # 
@@ -275,13 +301,17 @@ def recognize_Col_FLUX(input_list, special_file_name=''):
         #   (ANYTEXT_)S(_)Ks(_ANYTEXT)
         #  
         matched_prefix, matched_type, matched_band, matched_suffix = ['', '', '', '']
-        matcher = re.match(r'^(.*_|)(FLUX|f|S)_([0-9a-zA-Z.]+?)(_.*|)$', input_str, re.IGNORECASE)
+        matcher = re.match(r'^(FLUX|f|S)_([0-9a-zA-Z.-]+?)(_.*|)$', input_str, re.IGNORECASE)
         if matcher is not None:
-            matched_prefix, matched_type, matched_band, matched_suffix = matcher.groups()
+            matched_type, matched_band, matched_suffix = matcher.groups()
         else:
-            matcher = re.match(r'^(.*_|)(FLUX|f|S)_?([0-9.]+[0-9a-zA-Z.]*?|K|Ks|ch1|ch2|ch3|ch4|irac1|irac2|irac3|irac4)(_.*|)$', input_str, re.IGNORECASE)
+            matcher = re.match(r'^(.*_|)(FLUX|f|S)_([0-9a-zA-Z.-]+?)(_.*|)$', input_str, re.IGNORECASE)
             if matcher is not None:
                 matched_prefix, matched_type, matched_band, matched_suffix = matcher.groups()
+            else:
+                matcher = re.match(r'^(.*_|)(FLUX|f|S)_?([0-9.]+[0-9a-zA-Z.]*?|K|Ks|ch1|ch2|ch3|ch4|irac1|irac2|irac3|irac4)(_.*|)$', input_str, re.IGNORECASE)
+                if matcher is not None:
+                    matched_prefix, matched_type, matched_band, matched_suffix = matcher.groups()
         # 
         if matched_prefix != '' and matched_type != '' and matched_band == '' and matched_suffix == '':
             # matched_prefix usually indicates catalog but some times also indicates band, 
@@ -333,13 +363,17 @@ def recognize_Col_FLUXERR(input_list, special_file_name=''):
         #   (ANYTEXT_)S(_)Ks(_ANYTEXT)
         #  
         matched_prefix, matched_type, matched_band, matched_suffix = ['', '', '', '']
-        matcher = re.match(r'^(.*_|)(FLUXERR|FLUX_ERR|E_FLUX|df|eS|e_S|e)_([0-9a-zA-Z.]+?)(_.*|)$', input_str, re.IGNORECASE)
+        matcher = re.match(r'^(FLUXERR|FLUX_ERR|E_FLUX|df|eS|e_S|e)_([0-9a-zA-Z.-]+?)(_.*|)$', input_str, re.IGNORECASE)
         if matcher is not None:
-            matched_prefix, matched_type, matched_band, matched_suffix = matcher.groups()
+            matched_type, matched_band, matched_suffix = matcher.groups()
         else:
-            matcher = re.match(r'^(.*_|)(FLUXERR|FLUX_ERR|E_FLUX|df|eS|e_S|e)_?([0-9.]+[0-9a-zA-Z.]*?|K|Ks|ch1|ch2|ch3|ch4|irac1|irac2|irac3|irac4)(_.*|)$', input_str, re.IGNORECASE)
+            matcher = re.match(r'^(.*_|)(FLUXERR|FLUX_ERR|E_FLUX|df|eS|e_S|e)_([0-9a-zA-Z.-]+?)(_.*|)$', input_str, re.IGNORECASE)
             if matcher is not None:
                 matched_prefix, matched_type, matched_band, matched_suffix = matcher.groups()
+            else:
+                matcher = re.match(r'^(.*_|)(FLUXERR|FLUX_ERR|E_FLUX|df|eS|e_S|e)_?([0-9.]+[0-9a-zA-Z.]*?|K|Ks|ch1|ch2|ch3|ch4|irac1|irac2|irac3|irac4)(_.*|)$', input_str, re.IGNORECASE)
+                if matcher is not None:
+                    matched_prefix, matched_type, matched_band, matched_suffix = matcher.groups()
         # 
         if matched_prefix != '' and matched_type != '' and matched_band == '' and matched_suffix == '':
             # matched_prefix usually indicates catalog but some times also indicates band, 
@@ -397,28 +431,35 @@ DataFile = ''
 SourceID_Inputs = []
 MaxSNR = None
 CatID = None # a string as a suffix '_from_cat_%s'%(CatID)
+FluxUnit_Input = None
 iarg = 1
 while iarg <= (len(sys.argv)-1):
     reg_match = re.match(r'^[-]+(.*)$', sys.argv[iarg])
     is_option = (reg_match is not None)
     arg_str = sys.argv[iarg]
     if is_option:
-        arg_str = reg_match.group(1).upper()
-        if arg_str == 'MAXSNR':
+        arg_str = '--'+reg_match.group(1).upper()
+        if arg_str == '--MAXSNR':
             iarg += 1
             if iarg <= (len(sys.argv)-1):
                 MaxSNR = float(sys.argv[iarg])
                 print('# Setting max SNR limit to %s'%(MaxSNR))
-        elif arg_str == 'CATID':
+        elif arg_str == '--CATID':
             iarg += 1
             if iarg <= (len(sys.argv)-1):
                 CatID = sys.argv[iarg]
                 print('# Setting catalog ID to %s'%(CatID)) # if set, then we will append "_from_cat_%d" to the output file name.
-        elif arg_str == 'ID':
+        elif arg_str == '--ID':
             iarg += 1
             if iarg <= (len(sys.argv)-1):
                 SourceID_Inputs.append(sys.argv[iarg])
                 print('# Selecting source ID %s'%(sys.argv[iarg])) # if set, then we will only select source ID matching this string.
+        elif arg_str == '--FLUXUNIT':
+            iarg += 1
+            if iarg <= (len(sys.argv)-1):
+                FluxUnit_Input = sys.argv[iarg]
+                print('# Setting FluxUnit to %s'%(FluxUnit_Input)) # if set, then we will set the FluxUnit
+        
     else:
         if DataFile == '':
             DataFile = sys.argv[iarg]
@@ -435,8 +476,8 @@ if DataFile != '':
     
     Col_Source = recognize_Col_Source(DataTable.getColumnNames(), special_file_name=DataFile)
     Col_ID = recognize_Col_ID(DataTable.getColumnNames(), special_file_name=DataFile)
-    Col_FLUX, Flt_FLUX= recognize_Col_FLUX(DataTable.getColumnNames(), special_file_name=DataFile)
     Col_FLUXERR, Flt_FLUXERR = recognize_Col_FLUXERR(DataTable.getColumnNames(), special_file_name=DataFile)
+    Col_FLUX, Flt_FLUX= recognize_Col_FLUX(DataTable.getColumnNames(), special_file_name=DataFile, skip_list=Col_FLUXERR)
     
     # special treatment
     
@@ -564,6 +605,8 @@ if DataFile != '':
             FilterType = 'FLUX'
             FilterFluxUnit = 'mJy'
             FilterWaveUnit = 'um'
+            if FluxUnit_Input is not None:
+                FilterFluxUnit = FluxUnit_Input
             # 
             TempColumn = DataTable.TableColumns[DataTable.getColumnIndex(Col_FLUX[k])]
             if type(TempColumn) is astropy.io.fits.column.Column:
