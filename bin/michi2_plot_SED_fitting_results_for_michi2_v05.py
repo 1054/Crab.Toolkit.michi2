@@ -1698,7 +1698,7 @@ else:
     #       
     #       e.g. Aniano et al. 2012
     # 
-    if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
+    if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict and 'value' in Umin_warm_dust_dict:
         fPDR_total_dust_dict = deepcopy(Umin_warm_dust_dict)
         fPDR_total_dust_dict['value'] = Mass_warm_dust_dict['value'] / (Mass_warm_dust_dict['value'] + Mass_cold_dust_dict['value'])
         fPDR_total_dust_dict['Lib_file'] = [Mass_warm_dust_dict['Lib_file'], Mass_cold_dust_dict['Lib_file']]
@@ -1713,7 +1713,7 @@ else:
         # 
         # Note that this is not exactly 'gamma'
     # 
-    if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict:
+    if 'value' in Mass_warm_dust_dict and 'value' in Mass_cold_dust_dict and 'value' in Umin_warm_dust_dict and 'value' in fPDR_total_dust_dict:
         Umean_total_dust_dict = deepcopy(Umin_warm_dust_dict)
         Umax = 1e6
         if Mass_warm_dust_dict['Lib_file'].find('DL07.2010.03.18') >=0 :

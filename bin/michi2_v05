@@ -12,7 +12,7 @@
 # 
 # Linux
 if [[ $(uname -s) == Linux ]]; then
-    ldd_version_number=$(ldd --version | head -n 1 | tr -s ' ' | cut -d ' ' -f 4 | cut -d '.' -f 2)
+    ldd_version_number=$(ldd --version | head -n 1 | tr -s ' ' | cut -d ' ' -f 4 | cut -d '.' -f 2 | cut -d '-' -f 1)
     if [[ $(bc <<< "$ldd_version_number<=12") -eq 1 ]]; then
         # the supercomputer planer has an old GLIBC version 2.5
         $(dirname $0)/bin_linux_glibc_2_12/$(basename $0)_linux_$(arch) $@
