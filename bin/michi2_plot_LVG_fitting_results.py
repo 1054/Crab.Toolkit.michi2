@@ -834,8 +834,8 @@ else:
             # if plot a range of solutions with chi-square lower than then minimum_chisq + delta_chisq
             if i == 0:
                 # 
-                Plot_engine.xyouts(0.05+0.13+0.13, text_starting_pos, r'$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
-                PlotTextPosY = text_starting_pos
+                #Plot_engine.xyouts(0.05+0.13+0.13, text_starting_pos, r'$z=%s$'%(Redshift), NormalizedCoordinate=True, useTex=True)
+                #PlotTextPosY = text_starting_pos
                 # 
                 if SourceName != '':
                     #Plot_engine.xyouts(0.97, 0.90, SourceName, NormalizedCoordinate=True, fontsize=16, horizontalalignment='right') # 20221103
@@ -1137,9 +1137,9 @@ else:
     # analyze 
     print('Num_params', Num_params)
     print('Lib_params', Lib_params)
-    Plot_engine = CrabPlot(figure_size=(8.0,5.5)) # figure_size=(14.0,10.0) # 20221103
+    Plot_engine = CrabPlot(figure_size=(8.0,2.5+3.0*Lib_number)) # figure_size=(14.0,10.0) # 20221103
     Plot_engine.set_margin(panel=0, top=0.99, bottom=0.11, left=0.10, right=0.99) # top=0.96, bottom=0.08, left=0.06, right=0.96 # 20221103
-    Plot_engine.Plot_device.subplots_adjust(wspace=0.25, hspace=0.3) # 20221103
+    #Plot_engine.Plot_device.subplots_adjust(wspace=0.25, hspace=0.3) # 20221103 # comment out 20230220
     for j in range(Lib_number):
         if 'value' in Tkin_dict_list[j]:
             analyze_chisq_distribution(Tkin_dict_list[j], Plot_engine = Plot_engine, Output_dir = Output_dir)
@@ -1155,6 +1155,7 @@ else:
         analyze_chisq_distribution(Sum_MH2_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     Plot_engine.set_xcharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
     Plot_engine.set_ycharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
+    Plot_engine.Plot_device.tight_layout() # 20230220
     Plot_engine.savepdf(Output_dir+Output_name+'.chisq.pdf')
     Plot_engine.savefig(Output_dir+Output_name+'.chisq.png')
     #Plot_engine.show()
