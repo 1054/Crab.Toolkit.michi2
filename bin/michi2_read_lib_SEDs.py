@@ -27,6 +27,8 @@ import scipy.interpolate
 from copy import copy
 
 
+MAXPAR = 8  # TODO: MAXPAR maximum par number: 8
+
 
 
 ####################################
@@ -55,6 +57,7 @@ def lib_file_get_header(Lib_file):
                                        'NPAR1', 'NPAR2', 'NPAR3', 'NPAR4', 'NPAR5', 'NPAR6', 'NPAR7', 'NPAR8', \
                                        'CPAR1', 'CPAR2', 'CPAR3', 'CPAR4', 'CPAR5', 'CPAR6', 'CPAR7', 'CPAR8', \
                                        'TPAR1', 'TPAR2', 'TPAR3', 'TPAR4', 'TPAR5', 'TPAR6', 'TPAR7', 'TPAR8', ]:
+                        # TODO: MAXPAR maximum par number: 8
                         #if data_line.startswith('# %s'%(header_key)):
                         if re.match(r'^#\s*%s\s*=.*'%(header_key), data_line):
                             data_line_split = data_line.split('=')
@@ -513,6 +516,20 @@ if __name__ == "__main__":
         os.system('sed -i.bak -e "1s/^/#/" "%s"'%(Out_file))
         os.system('sed -i.bak -e "2s/^[ -]*/#/" "%s"'%(Out_file))
         print('Output to "%s"'%(Out_file))
+        # 
+        # 20230306: f_intrinsic
+        Lib_header_TPAR = [Lib_header['TPAR%d'%(t)] for t in range(1, MAXPAR+1) if 'TPAR%d'%(t) in Lib_header]
+        if 'f_intrinsic' in Lib_header_TPAR:
+            Lib_y_intrinsic = Lib_arr[:,2+Lib_header_TPAR.index('f_intrinsic')] * Lib_a[line_number-1]
+            Out_file_intrinsic = output_dir+os.sep+'SED_LIB%d'%(iLib+1)+'_intrinsic'
+            asciitable.write(numpy.column_stack((Lib_x,Lib_y_intrinsic)), 
+                                Out_file_intrinsic, 
+                                Writer=asciitable.FixedWidthTwoLine, 
+                                names=['X', 'Y'], 
+                                overwrite=True)
+            os.system('sed -i.bak -e "1s/^/#/" "%s"'%(Out_file_intrinsic))
+            os.system('sed -i.bak -e "2s/^[ -]*/#/" "%s"'%(Out_file_intrinsic))
+            print('Output to "%s"'%(Out_file_intrinsic))
         # 
         # sum to make total SED (only when a>0.0)
         if Lib_a[line_number-1] > 0.0:

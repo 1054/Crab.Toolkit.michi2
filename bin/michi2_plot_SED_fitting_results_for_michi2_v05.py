@@ -1108,6 +1108,7 @@ else:
     Mass_warm_dust_dict = {}
     Mass_cold_dust_dict = {}
     Lumin_AGN_dict = {}
+    AGN_TYPE_dict = {}
     LTIR_total_dust_dict = {}
     LFIR_total_dust_dict = {}
     LFIR122_total_dust_dict = {}
@@ -1163,6 +1164,7 @@ else:
     for j in range(Lib_number):
         Lib_name = 'LIB%d'%(j+1)
         Lib_dict = CrabTableReadInfo(InfoDict[Lib_name], verbose=0)
+        print("InfoDict[Lib_name]: ", InfoDict[Lib_name])
         #print(Lib_dict)
         # 
         # read the number of parameters from the SED LIB file
@@ -1401,6 +1403,47 @@ else:
                     Lumin_AGN_dict['value'] = DataArray['a%d'%(j+1)] * DataTable.getColumn(Col_number+6) * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     Lumin_AGN_dict['chisq'] = DataArray['chi2']
                     Lumin_AGN_dict['Degree_of_freedom'] = DegreeOfFreedom
+            
+            elif InfoDict[Lib_name].find('quasar.intrinsic.IR.templates') >= 0:
+                # AGN 'quasar.intrinsic.IR.templates'
+                if 'AGN_TYPE' == Lib_dict[Key_TPAR].upper():
+                    AGN_TYPE_dict['Lib_file'] = InfoDict[Lib_name]
+                    AGN_TYPE_dict['Lib_name'] = Lib_name
+                    AGN_TYPE_dict['Lib_numb'] = j+1
+                    AGN_TYPE_dict['Par_name'] = r'AGN_Type' # Lib_dict[Key_TPAR]
+                    AGN_TYPE_dict['Par_file'] = 'AGN_Type'
+                    AGN_TYPE_dict['Col_numb'] = Col_number
+                    AGN_TYPE_dict['Log_calc'] = False
+                    AGN_TYPE_dict['range'] = [1., 3.]
+                    AGN_TYPE_dict['value'] = DataTable.getColumn(Col_number).astype(float) # AGN type integer
+                    AGN_TYPE_dict['chisq'] = DataArray['chi2']
+                    AGN_TYPE_dict['Degree_of_freedom'] = DegreeOfFreedom
+                elif 'lgLAGN'.upper() == Lib_dict[Key_TPAR].upper():
+                    Lumin_AGN_dict['Lib_file'] = InfoDict[Lib_name]
+                    Lumin_AGN_dict['Lib_name'] = Lib_name
+                    Lumin_AGN_dict['Lib_numb'] = j+1
+                    Lumin_AGN_dict['Par_name'] = r'$\log_{10} \ L_{\mathrm{AGN}}$ [$\mathrm{L}_{\odot}$]' # Lib_dict[Key_TPAR]
+                    Lumin_AGN_dict['Par_file'] = 'LAGN'
+                    Lumin_AGN_dict['Col_numb'] = Col_number
+                    Lumin_AGN_dict['Log_calc'] = True
+                    Lumin_AGN_dict['range'] = numpy.power(10,[0.0,14.5])
+                    Lumin_AGN_dict['value'] = DataArray['a%d'%(j+1)] * 10**(DataTable.getColumn(Col_number)) / 40.31970 * 4*pi*dL**2 / (1+Redshift) 
+                                                       # TODO: the template should have LIR in units of [u.mJy*u.GHz]! 
+                                                       # here I convert the units to [u.Lsun*u.Mpc**-2]
+                    Lumin_AGN_dict['chisq'] = DataArray['chi2']
+                    Lumin_AGN_dict['Degree_of_freedom'] = DegreeOfFreedom
+                elif 'EBV' == Lib_dict[Key_TPAR]:
+                    Stellar_EBV_dict['Lib_file'] = InfoDict[Lib_name]
+                    Stellar_EBV_dict['Lib_name'] = Lib_name
+                    Stellar_EBV_dict['Lib_numb'] = j+1
+                    Stellar_EBV_dict['Par_name'] = 'E(B-V)' # Lib_dict[Key_TPAR]
+                    Stellar_EBV_dict['Par_file'] = 'EBV'
+                    Stellar_EBV_dict['Col_numb'] = Col_number
+                    Stellar_EBV_dict['Log_calc'] = False
+                    Stellar_EBV_dict['range'] = [0.0, 2.5]
+                    Stellar_EBV_dict['value'] = DataTable.getColumn(Col_number)
+                    Stellar_EBV_dict['chisq'] = DataArray['chi2']
+                    Stellar_EBV_dict['Degree_of_freedom'] = DegreeOfFreedom
             
             # 
             # check dust modified blackbody properties
@@ -1746,6 +1789,8 @@ else:
         analyze_chisq_distribution(Stellar_EBV_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in Lumin_AGN_dict:
         analyze_chisq_distribution(Lumin_AGN_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in AGN_TYPE_dict:
+        analyze_chisq_distribution(AGN_TYPE_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in Umin_warm_dust_dict:
         analyze_chisq_distribution(Umin_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in Umin_cold_dust_dict:
