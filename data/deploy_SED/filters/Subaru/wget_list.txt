@@ -1,0 +1,14 @@
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA427.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA464.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA484.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA505.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA527.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA574.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA624.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA679.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA709.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA738.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA767.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/IA827.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/NB711.SuprimeCam.pb
+http://www.astro.caltech.edu/~afaisst/files/cosmos_filter/NB816.SuprimeCam.pb

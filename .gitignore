@@ -1,3 +1,4 @@
 *.pyc
 *backup*
 bin/__pycache__
+.smhist
