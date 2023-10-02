@@ -437,6 +437,9 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
                 Filter_Dict['rp'] = 'Subaru SuprimeCam rp' # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['ip'] = 'Subaru SuprimeCam ip' # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['zp'] = 'Subaru SuprimeCam zp' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['j'] = 'CFHT WIRCAM J' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['h'] = 'CFHT WIRCAM H' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['k'] = 'CFHT WIRCAM K' # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['uvista_y'] = 'VISTA VIRCAM Y' # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['uvista_j'] = 'VISTA VIRCAM J' # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['uvista_h'] = 'VISTA VIRCAM H' # Skelton 2014ApJS..214...24S Table 3, 5
@@ -644,6 +647,9 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
                 Filter_Dict['rp'] = 0.6276 # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['ip'] = 0.7671 # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['zp'] = 0.9028 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['j'] = 1.2530 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['h'] = 1.6294 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['k'] = 2.1684 # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['uvista_y'] = 1.0217 # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['uvista_j'] = 1.2527 # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['uvista_h'] = 1.6433 # Skelton 2014ApJS..214...24S Table 3, 5
@@ -1485,7 +1491,8 @@ if DataFile != '':
                     if (FilterFErr>0) and (FilterFlux>MaxSNR*FilterFErr):
                         FilterFErr = FilterFlux/MaxSNR
                 # 3DHST AB MAG ZERO POINT IS 25, WE NEED TO DO FLUX CONVERSION #<TODO><20180128># 
-                if FilterName.endswith('_3DHST'):
+                #if FilterName.endswith('_3DHST'): #<20231002>#
+                if FilterName.upper().find('3DHST')>=0: #<20231002>#
                     FilterFlux = FilterFlux / 2754.228703 #<TODO><20180128># 
                     FilterFErr = FilterFErr / 2754.228703 #<TODO><20180128># 
                 # print
