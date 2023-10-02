@@ -437,10 +437,10 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
                 Filter_Dict['rp'] = 'Subaru SuprimeCam rp' # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['ip'] = 'Subaru SuprimeCam ip' # Skelton 2014ApJS..214...24S Table 3, 5
                 Filter_Dict['zp'] = 'Subaru SuprimeCam zp' # Skelton 2014ApJS..214...24S Table 3, 5
-                Filter_Dict['uvista_y'] = 'Subaru SuprimeCam rp' # Skelton 2014ApJS..214...24S Table 3, 5
-                Filter_Dict['uvista_j'] = 'Subaru SuprimeCam ip' # Skelton 2014ApJS..214...24S Table 3, 5
-                Filter_Dict['uvista_h'] = 'Subaru SuprimeCam zp' # Skelton 2014ApJS..214...24S Table 3, 5
-                Filter_Dict['uvista_ks'] = 'Subaru SuprimeCam zp' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_y'] = 'VISTA VIRCAM Y' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_j'] = 'VISTA VIRCAM J' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_h'] = 'VISTA VIRCAM H' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_ks'] = 'VISTA VIRCAM K' # Skelton 2014ApJS..214...24S Table 3, 5
 	    
         if catalog_name.find('Straatman2016')>=0:
             Filter_Dict['U']  = 'VLT VIMOS U' # Straatman+2016 Sect. 2.4
@@ -632,6 +632,22 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['F606Wcand'] = 0.5921 # Skelton+2014 Table 7
             Filter_Dict['F814Wcand'] = 0.8058 # ??<TODO>??
             Filter_Dict['F850LPcand'] = 0.9033 # Skelton+2014 Table 7
+            
+            if catalog_name.upper().find('COSMOS')>=0:
+                Filter_Dict['u'] = 0.3828 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['g'] = 0.4870 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['r'] = 0.6245 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['i'] = 0.7676 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['z'] = 0.8872 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['b'] = 0.4448 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['v'] = 0.5470 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['rp'] = 0.6276 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['ip'] = 0.7671 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['zp'] = 0.9028 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_y'] = 1.0217 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_j'] = 1.2527 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_h'] = 1.6433 # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_ks'] = 2.1503 # Skelton 2014ApJS..214...24S Table 3, 5
             
         if catalog_name.find('Straatman2016')>=0:
             Filter_Dict['B'] = 0.4318 # Straatman+2016 Table 2
