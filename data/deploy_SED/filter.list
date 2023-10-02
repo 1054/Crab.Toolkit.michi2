@@ -31,3 +31,9 @@
        250             filters/Herschel/SPIRE_250.dat
        350             filters/Herschel/SPIRE_350.dat
        500             filters/Herschel/SPIRE_500.dat
+       4.44            filters/JWST/F444W_FM.xlsx_filteronly_modB_sorted.txt
+       2.77            filters/JWST/F277W_FM.xlsx_filteronly_modB_sorted.txt
+       3.56            filters/JWST/F356W_FM.xlsx_filteronly_modB_sorted.txt
+       1.15            filters/JWST/F115W_FM.xlsx_filteronly_modB_sorted.txt
+       1.50            filters/JWST/F150W_FM.xlsx_filteronly_modB_sorted.txt
+       2.00            filters/JWST/F200W_FM.xlsx_filteronly_modB_sorted.txt

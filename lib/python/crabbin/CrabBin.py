@@ -152,7 +152,8 @@ def interp(input_x, input_y, output_x, xlog=False, ylog=False, outputxlog=False,
 
 
 def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
-        min = None, max = None, nbin = None, nbinmax = 10000, step = None, log = False, delta_chisq = 2.3, verbose = 1):
+        min = None, max = None, nbin = None, nbinmax = 10000, step = None, smooth = None, 
+        log = False, delta_chisq = 2.3, verbose = 1):
     # 
     # compute chisq min
     chisq_array_copy = numpy.array(deepcopy(chisq_array))
@@ -235,24 +236,28 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
         valid_xrange = numpy.array([param_min, param_max])
         valid_yrange = numpy.array([chisq_min, chisq_min+delta_chisq])
     # 
+    # set a flag to redefine bin edges later
+    redefine_bin_edges = True
+    # 
     # prepare to compute bin step and edges
     if step is not None:
         param_bin_step = step
         param_bin_numb = int(numpy.ceil((param_max-param_min)/param_bin_step))
-        param_bin_edge = numpy.linspace(param_min, param_max, num=param_bin_numb, endpoint=True)
+        param_bin_edge = numpy.linspace(param_min, param_max, num=param_bin_numb+1, endpoint=True)
     elif nbin is not None:
         param_bin_numb = nbin
         param_bin_step = (param_max-param_min)/param_bin_numb
-        param_bin_edge = numpy.linspace(param_min, param_max, num=param_bin_numb, endpoint=True)
+        param_bin_edge = numpy.linspace(param_min, param_max, num=param_bin_numb+1, endpoint=True)
+        redefine_bin_edges = False
     else:
         param_bin_numb = 100 #<TODO># 
         param_bin_step = (param_max-param_min)/param_bin_numb
-        param_bin_edge = numpy.linspace(param_min, param_max, num=param_bin_numb, endpoint=True)
+        param_bin_edge = numpy.linspace(param_min, param_max, num=param_bin_numb+1, endpoint=True)
     # 
     # redefine bin step (optimize for valid data within chisq <= chisq_min+delta_chisq range)
     # if user has input a step use it
     # if user has input a delta_chisq, we recompute the bin step within that chisq range.
-    if valid:
+    if valid and redefine_bin_edges:
         xclip_min = numpy.nanmin(param_array_copy[valid_mask])
         xclip_max = numpy.nanmax(param_array_copy[valid_mask])
         if xclip_min == xclip_max:
@@ -302,6 +307,7 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
             param_bin_edge = numpy.array(param_bin_edge)
             param_bin_numb = len(param_bin_edge)-1
             # 
+    #print('param_bin_edge:', param_bin_edge)
     # 
     # apply user input nbinmax
     #if nbinmax is not None:
@@ -351,6 +357,21 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
     param_bin_y = numpy.array(param_bin_y)
     param_bin_dx = numpy.array(param_bin_dx)
     
+    # smooth if needed
+    if smooth is not None:
+        try:
+            smooth = float(smooth)
+        except:
+            smooth = 0
+        if smooth > 1.0:
+            #param_bin_y = numpy.convolve(param_bin_y, numpy.ones(int(smooth))/float(smooth), mode='same')
+            gausshalflen = int(numpy.ceil(5.*smooth)/2)
+            gausslen = gausshalflen*2+1
+            gaussx = numpy.arange(gausslen)-float(gausshalflen)
+            gaussy = numpy.exp(-0.5 * (gaussx/(smooth/2.35482))**2)
+            param_bin_y = numpy.convolve(param_bin_y, gaussy/numpy.sum(gaussy), mode='same')
+            param_bin_y = param_bin_y - numpy.min(param_bin_y) + chisq_min
+    
     # 
     # spline the histogram to a finer grid
     #spline_x = numpy.arange(param_min, param_max+0.5*param_bin_step, param_bin_step)
@@ -377,7 +398,9 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
         #print(list(zip(smooth_x, smooth_y)))
         # 
         smooth_x = param_bin_edge[0:-1]
+        #print('dzliu debugging 20230822 param_bin_x, param_bin_y:', list(zip(numpy.round(param_bin_x, 3), numpy.round(param_bin_y, 3))))
         smooth_y = interp(param_bin_x, param_bin_y, smooth_x, ylog=True) # here we do not need xlog because param_bin_x have already been converted to log, but we need ylog
+        #print('dzliu debugging 20230822 smooth_x, smooth_y:', list(zip(numpy.round(smooth_x, 3), numpy.round(smooth_y, 3))))
         with numpy.errstate(invalid='ignore'):
             valid_indicies = numpy.argwhere(smooth_y <= chisq_min+delta_chisq).flatten()
             left_index = valid_indicies[0]

@@ -397,7 +397,7 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['1200'] = 'IRAM30m MAMBO 1.2mm' # 
             Filter_Dict['2000'] = 'IRAM30m GISMO 2mm' # 
             
-        if catalog_name.find('Skelton2014')>=0 or catalog_name.find('3DHST')>=0:
+        if catalog_name.find('Skelton2014')>=0 or catalog_name.upper().find('3DHST')>=0:
             Filter_Dict['U38'] = 'ESO MPGWFI U' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['u'] = 'KPNO u' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['G'] = 'Keck LRIS G' # Skelton 2014ApJS..214...24S Table 6
@@ -425,6 +425,22 @@ def recognize_Filter_Instrument_by_Short_Name(input_str, catalog_name = ''):
             Filter_Dict['f140w'] = 'HST WFC3 F140W' # Skelton 2014ApJS..214...24S Table 6
             Filter_Dict['f160w'] = 'HST WFC3 F160W' # Skelton 2014ApJS..214...24S Table 6
             # flux column must be: <BAND>_FLUX_<REF>, e.g., u_
+            
+            if catalog_name.upper().find('COSMOS')>=0:
+                Filter_Dict['u'] = 'CFHT MegaCam u' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['g'] = 'CFHT MegaCam g' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['r'] = 'CFHT MegaCam r' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['i'] = 'CFHT MegaCam i' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['z'] = 'CFHT MegaCam z' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['b'] = 'Subaru SuprimeCam B' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['v'] = 'Subaru SuprimeCam V' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['rp'] = 'Subaru SuprimeCam rp' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['ip'] = 'Subaru SuprimeCam ip' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['zp'] = 'Subaru SuprimeCam zp' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_y'] = 'Subaru SuprimeCam rp' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_j'] = 'Subaru SuprimeCam ip' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_h'] = 'Subaru SuprimeCam zp' # Skelton 2014ApJS..214...24S Table 3, 5
+                Filter_Dict['uvista_ks'] = 'Subaru SuprimeCam zp' # Skelton 2014ApJS..214...24S Table 3, 5
 	    
         if catalog_name.find('Straatman2016')>=0:
             Filter_Dict['U']  = 'VLT VIMOS U' # Straatman+2016 Sect. 2.4
@@ -603,7 +619,7 @@ def recognize_Filter_Wavelength_by_Short_Name(input_str, catalog_name = ''):
     Filter_Dict['1.4GHz'] = 2e5
     
     if type(catalog_name) is str:
-        if catalog_name.find('Skelton2014')>=0 or catalog_name.find('3DHST')>=0:
+        if catalog_name.find('Skelton2014')>=0 or catalog_name.upper().find('3DHST')>=0:
             Filter_Dict['U38'] = 0.3637 # Skelton+2014 Table 7
             Filter_Dict['B'] = 0.4563 # Skelton+2014 Table 7
             Filter_Dict['V'] = 0.5396 # Skelton+2014 Table 7
@@ -1022,6 +1038,8 @@ def recognize_Filter(input_str, special_file_name=''):
             Matched_FLUXERR_1 = re.match(r'(FLUXERR)_([^_]+)_*(.*)', input_str, re.IGNORECASE)
             Matched_FLUX_3    = re.match(r'(.*)_(FLUX)_([^_]+.*)', input_str, re.IGNORECASE)
             Matched_FLUXERR_3 = re.match(r'(.*)_(FLUXERR)_([^_]+.*)', input_str, re.IGNORECASE)
+            Matched_FLUX_5    = re.match(r'(f)_(.+)', input_str, re.IGNORECASE)
+            Matched_FLUXERR_5 = re.match(r'(e)_(.+)', input_str, re.IGNORECASE)
             Matched = None
             if Matched is None:
                 if Matched_FLUX_1:
@@ -1063,16 +1081,16 @@ def recognize_Filter(input_str, special_file_name=''):
             #        Matched = Matched_FLUXERR_4
             #        Matched_str_2 = Matched.group(2)
             #        Matched_str_3 = Matched.group(3)
-            #if Matched is None:
-            #    if Matched_FLUX_5:
-            #        Matched = Matched_FLUX_5
-            #        Matched_str_2 = Matched.group(2) # fK_Jin -> K
-            #        Matched_str_3 = Matched.group(3) # fK_Jin -> Jin
-            #if Matched is None:
-            #    if Matched_FLUXERR_5:
-            #        Matched = Matched_FLUXERR_5
-            #        Matched_str_2 = Matched.group(2)
-            #        Matched_str_3 = Matched.group(3)
+            if Matched is None:
+               if Matched_FLUX_5:
+                   Matched = Matched_FLUX_5
+                   Matched_str_2 = Matched.group(2)
+                   Matched_str_3 = special_file_name
+            if Matched is None:
+               if Matched_FLUXERR_5:
+                   Matched = Matched_FLUXERR_5
+                   Matched_str_2 = Matched.group(2)
+                   Matched_str_3 = special_file_name
             #if Matched is None:
             #    if Matched_FLUX_6:
             #        Matched = Matched_FLUX_6

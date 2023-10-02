@@ -16,6 +16,7 @@
 #                2018-10-04 set_xcharsize set_ycharsize
 #                2020-12-15 axislabelpad
 #                2022-11-03 expand_yrange
+#                2023-06-09 int(np.round(...))
 # 
 #   Notes:
 #     -- to use TeX, we need to install 'texlive-latex-extra' and 'texlive-fonts-recommended'
@@ -449,13 +450,13 @@ class CrabPlot(object):
             # but if user provided self.N_panel_per_row, then fix to it
             if self.N_panel_per_row is not None:
                 grid_nx = self.N_panel_per_row
-                grid_ny = numpy.round((float(n_panel)/grid_nx))
+                grid_ny = int(numpy.round((float(n_panel)/grid_nx)))
                 while (n_panel > grid_nx*grid_ny):
                     grid_ny = grid_ny + 1
             # but also if user provided self.N_panel_per_row, then fix to it (in priori)
             if self.N_panel_per_col is not None:
                 grid_ny = self.N_panel_per_col
-                grid_nx = numpy.round((float(n_panel)/grid_ny))
+                grid_nx = int(numpy.round((float(n_panel)/grid_ny)))
                 while (n_panel > grid_nx*grid_ny):
                     grid_nx = grid_nx + 1
             # make gridspec
@@ -515,7 +516,7 @@ class CrabPlot(object):
         return 90
     # 
     def default_fontname_for_axis_title(self):
-        return ['NGC','Helvetica','sans-serif']
+        return mpl.rcParams.get('font.family', ['NGC','Helvetica','sans-serif'])
     # 
     def default_fontsize_for_axis_title(self):
         return 20 - (9.0-numpy.max(self.Figure_size)) / (9.0-5.0) * (18-14)
@@ -523,7 +524,7 @@ class CrabPlot(object):
         # if figure size 5.0inch, then font size 14
     # 
     def default_fontname_for_axis_ticks(self):
-        return ['NGC','Helvetica','sans-serif']
+        return mpl.rcParams.get('font.family', ['NGC','Helvetica','sans-serif'])
     # 
     def default_fontsize_for_axis_ticks(self):
         return 18.5 - (9.0-numpy.max(self.Figure_size)) / (9.0-5.0) * (16.5-12.5)

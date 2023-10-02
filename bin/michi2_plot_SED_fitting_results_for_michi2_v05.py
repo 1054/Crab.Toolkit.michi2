@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # 
 # 20200417: added the output of "chi-square_param_*.txt"
+# 20230609: added options for chisq panels
 # 
 
 import os
@@ -136,6 +137,10 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
         if 'step' in param_dict:
             param_bin_step = param_dict['step']
         # 
+        param_bin_smooth = None
+        if 'smooth' in param_dict:
+            param_bin_smooth = param_dict['smooth']
+        # 
         # crab_bin_compute_param_chisq_histogram for delta_chisq = 2.3 (2p)
         #verbose = 1
         #param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
@@ -143,7 +148,12 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
         # 20210906
         if numpy.all(numpy.isclose(numpy.diff(param_array), 0.0, atol=1e-10*numpy.nanmin(param_array))):
             return
+        if 'nbin' in param_dict:
+            nbin = param_dict['nbin'] # 20230703
+        else:
+            nbin = None
         param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
+                            nbin = nbin, step = param_bin_step, smooth = param_bin_smooth, 
                             delta_chisq = Delta_chisq_of_interest, log = param_log, verbose = verbose)
         # 
         #param_stats = crab_bin_compute_param_chisq_histogram(chisq_array, param_array, min = param_min, max = param_max, \
@@ -300,6 +310,9 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
         plot_yrange = [0.0, 0.0]
         plot_xrange[0] = max(param_stats['min'], param_stats['L68'] - 15.0*param_stats['sigma'])
         plot_xrange[1] = min(param_stats['max'], param_stats['H68'] + 15.0*param_stats['sigma'])
+        #print('param_stats:', param_stats)
+        #plot_xrange[0] = max(param_stats['min'], param_stats['L68'] - 100.0*param_stats['sigma']) # 20230703
+        #plot_xrange[1] = min(param_stats['max'], param_stats['H68'] + 100.0*param_stats['sigma']) # 20230703
         plot_yrange[0] = 0.0
         plot_yrange[1] = 1.0/param_stats['min_chisq'] * 1.1 # y-axis is 1/chisq rather than chisq
         # 
@@ -414,7 +427,7 @@ def constrain_by_upper_limits(chisq_file, chisq_array, lib_dict):
             # loop each input chi2 solution
             chisq_indices_sorted = numpy.argsort(chisq_array)
             i_constrain = 0
-            i_constrain = 1436 #<TODO><DEBUG># 
+            #i_constrain = 1436 #<TODO><DEBUG># 
             while i_constrain < len(chisq_array):
                 print('constrain_by_upper_limits: dump_LIB_SEDs_to_files(%d) (%d)'%(chisq_indices_sorted[i_constrain], i_constrain))
                 #Read_SED_LIB(chisq_file, chisq_array, lib_dict, chisq_indices_sorted[i_constrain])
@@ -625,7 +638,12 @@ if len(sys.argv) <= 1:
     print('    -flux XXX')
     print('    -output XXX')
     print('    -text XXX')
+    print('    -chisq-panels "Mstar,EBV,LIR,Mdust,U"')
+    print('    -chisq-panels-ncol 4 # default is None, auto')
+    print('    -chisq-panels-figsize 14.0 10.0 # default is 14 x 10 inches')
+    print('    -figsize 8.0 5.0 # default is 8 x 5 inches')
     print('    -verbose')
+    print('    -font "Times New Roman"')
     print('Example: ')
     print('    michi2_plot_SED_fitting_results.py fit_5.out -output results_fit_5/fit_5')
     sys.exit()
@@ -634,8 +652,10 @@ else:
     # 
     # Read user input
     SetOnlyPlotBestSED = False
+    SetNoPlotGrid = False
     ConstrainByUpperLimits = False
     SourceName = ''
+    PlotFont = ''
     PlotYRange = []
     PlotMaxSEDNumber = 15 #<TODO># 50
     UserInputFluxFile = ''
@@ -644,6 +664,11 @@ else:
     UserInputColorForAGN = ''
     UserThickColorForAGN = 0.0
     UserInputThickForAGN = 1.5
+    UserInputChisqPanels = []
+    UserInputChisqPanelsNCol = None # N_panel_per_row
+    UserInputChisqPanelsFigSize = [14.0, 10.0]
+    UserInputFigSize = [8.0, 5.0]
+    UserInputRecomputeChisq = False # NotImplemented, 202306
     UserInputVerbose = 0
     iarg = 1
     while iarg < len(sys.argv):
@@ -651,6 +676,16 @@ else:
         if TempCmd=='-only-plot-best-sed' or TempCmd=='-only-best':
             SetOnlyPlotBestSED = True
             print('Setting only plot best-fit!')
+        elif TempCmd=='-plot-no-grid' or TempCmd=='-no-grid':
+            SetNoPlotGrid = True
+            mpl.rcParams['axes.grid'] = False
+            print('Setting no plot grid!')
+        elif TempCmd=='-plot-font':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                PlotFont = sys.argv[iarg]
+                print('Setting PlotFont = %s'%(PlotFont))
+                mpl.rcParams['font.family'].insert(0, PlotFont)
         elif TempCmd=='-constrain-by-upper-limits' or TempCmd=='-constrain':
             ConstrainByUpperLimits = True
             print('Setting constrain by upper limits!')
@@ -696,6 +731,33 @@ else:
                 iarg = iarg + 1
                 UserInputThickForAGN = float(sys.argv[iarg])
                 print('Setting UserInputThickForAGN = %s'%(sys.argv[iarg]))
+        elif TempCmd=='-chisq-panels':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                UserInputChisqPanels = sys.argv[iarg].split(',')
+                print('Setting UserInputChisqPanels = %s'%(UserInputChisqPanels))
+        elif TempCmd=='-chisq-panels-ncol':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                UserInputChisqPanelsNCol = int(sys.argv[iarg])
+                print('Setting UserInputChisqPanelsNCol = %s'%(UserInputChisqPanelsNCol))
+        elif TempCmd=='-chisq-panels-figsize':
+            if iarg+2 < len(sys.argv):
+                iarg = iarg + 1
+                UserInputChisqPanelsFigSize[0] = float(sys.argv[iarg])
+                iarg = iarg + 1
+                UserInputChisqPanelsFigSize[1] = float(sys.argv[iarg])
+                print('Setting UserInputChisqPanelsFigSize = %s'%(UserInputChisqPanelsFigSize))
+        elif TempCmd=='-figsize':
+            if iarg+2 < len(sys.argv):
+                iarg = iarg + 1
+                UserInputFigSize[0] = float(sys.argv[iarg])
+                iarg = iarg + 1
+                UserInputFigSize[1] = float(sys.argv[iarg])
+                print('Setting UserInputFigSize = %s'%(UserInputFigSize))
+        elif TempCmd=='-recompute-chisq':
+            UserInputRecomputeChisq = True
+            print('Setting UserInputRecomputeChisq = %s'%(UserInputRecomputeChisq))
         elif TempCmd=='-verbose':
             UserInputVerbose += 1
             print('Setting UserInputVerbose = %s'%(UserInputVerbose))
@@ -826,6 +888,14 @@ else:
     # 
     # 
     # 
+    # Recomputed chi2
+    #if UserInputRecomputeChisq:
+    #    Read_SED_LIB(DataFile, DataArray, InfoDict, All_chi2_indices_sorted, Cut_chi2_array_size, Plot_chi2_index_dict)
+    #    pass TODO 20230608
+    # 
+    # 
+    # 
+    # 
     # Sort chi2 table
     All_chi2_array = DataArray['chi2']
     All_chi2_indices_sorted = numpy.argsort(All_chi2_array)
@@ -870,6 +940,8 @@ else:
         # also tune plotting linewidth
         Plot_chi2_linewidth = 1.5
         Plot_SED_linewidth = 2.0
+        #Plot_chi2_linewidth = 2.0 # 20230816
+        #Plot_SED_linewidth = 3.0 # 20230816
     #print('Will plot chi2 solution indices %s'%(Plot_chi2_index_dict))
     # 
     # 
@@ -898,7 +970,7 @@ else:
     # set color styles
     Color_list = ['cyan', 'gold', 'red', 'blue', 'purple', 'blue']
     Color_preset = {'DL07.HiExCom': 'red', 'DL07.LoExCom': 'blue', 'Radio': 'purple', 'MullaneyAGN': 'gold'}
-    Plot_engine = CrabPlot(figure_size=(8.0,5.0))
+    Plot_engine = CrabPlot(figure_size=UserInputFigSize)
     Plot_engine.set_margin(top=0.92, bottom=0.16, left=0.12, right=0.96)
     Count_label_chi2 = 0 # to count the chi-square label printed on the figure, make sure there are not too many labels.
     Count_label_rchi2 = 0 # to count the reduced-chi-square label printed on the figure, make sure there are not too many labels.
@@ -1202,6 +1274,8 @@ else:
                     Stellar_mass_dict['range'] = numpy.power(10,[7.0,13.5])
                     Stellar_mass_dict['value'] = DataArray['a%d'%(j+1)] / (3.839e33*1e26/(4*pi*dL**2*9.52140e48)) * DataTable.getColumn(Col_number) / (1+Redshift)
                     Stellar_mass_dict['chisq'] = DataArray['chi2']
+                    #Stellar_mass_dict['step'] = 0.1 # 20230822
+                    #Stellar_mass_dict['smooth'] = 3 # 20230822
                     Stellar_mass_dict['Degree_of_freedom'] = DegreeOfFreedom
                     # 
                 elif 'Age' == Lib_dict[Key_TPAR]:
@@ -1386,6 +1460,19 @@ else:
                     Lumin_AGN_dict['value'] = DataArray['a%d'%(j+1)] * 5133.913101 * 4*pi*dL**2 / (1+Redshift) # Note that we need to carefully convert lgLTIR from log space to LIR in linear space, and apply the normalization.
                     Lumin_AGN_dict['chisq'] = DataArray['chi2']
                     Lumin_AGN_dict['Degree_of_freedom'] = DegreeOfFreedom
+                    
+                    AGN_TYPE_dict['Lib_file'] = InfoDict[Lib_name]
+                    AGN_TYPE_dict['Lib_name'] = Lib_name
+                    AGN_TYPE_dict['Lib_numb'] = j+1
+                    AGN_TYPE_dict['Par_name'] = r'AGN_TYPE' # Lib_dict[Key_TPAR]
+                    AGN_TYPE_dict['Par_file'] = 'AGN_TYPE'
+                    AGN_TYPE_dict['Col_numb'] = Col_number
+                    AGN_TYPE_dict['Log_calc'] = False
+                    AGN_TYPE_dict['range'] = [1., 3.]
+                    AGN_TYPE_dict['value'] = DataTable.getColumn(Col_number).astype(float) # AGN type integer
+                    AGN_TYPE_dict['chisq'] = DataArray['chi2']
+                    AGN_TYPE_dict['nbin'] = 3
+                    AGN_TYPE_dict['Degree_of_freedom'] = DegreeOfFreedom
             
             elif InfoDict[Lib_name].find('SiebenmorgenAGN') >= 0:
                 # Siebenmorgen AGN
@@ -1779,41 +1866,41 @@ else:
     # analyze 
     print('Num_params', Num_params)
     print('Lib_params', Lib_params)
-    Plot_engine = CrabPlot(figure_size=(14.0,10.0))
+    Plot_engine = CrabPlot(figure_size=UserInputChisqPanelsFigSize, N_panel_per_col=UserInputChisqPanelsNCol)
     Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04, left=0.06, right=0.96)
-    if 'value' in Stellar_mass_dict:
+    if 'value' in Stellar_mass_dict and (len(UserInputChisqPanels)==0 or 'Mstar' in UserInputChisqPanels):
         analyze_chisq_distribution(Stellar_mass_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Stellar_age_dict:
+    if 'value' in Stellar_age_dict and (len(UserInputChisqPanels)==0 or 'Age' in UserInputChisqPanels):
         analyze_chisq_distribution(Stellar_age_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Stellar_EBV_dict:
+    if 'value' in Stellar_EBV_dict and (len(UserInputChisqPanels)==0 or 'EBV' in UserInputChisqPanels):
         analyze_chisq_distribution(Stellar_EBV_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Lumin_AGN_dict:
+    if 'value' in Lumin_AGN_dict and (len(UserInputChisqPanels)==0 or 'LAGN' in UserInputChisqPanels):
         analyze_chisq_distribution(Lumin_AGN_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in AGN_TYPE_dict:
+    if 'value' in AGN_TYPE_dict and (len(UserInputChisqPanels)==0 or 'AGN_TYPE' in UserInputChisqPanels):
         analyze_chisq_distribution(AGN_TYPE_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Umin_warm_dust_dict:
+    if 'value' in Umin_warm_dust_dict and (len(UserInputChisqPanels)==0 or 'Umin_warm' in UserInputChisqPanels):
         analyze_chisq_distribution(Umin_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Umin_cold_dust_dict:
+    if 'value' in Umin_cold_dust_dict and (len(UserInputChisqPanels)==0 or 'Umin_cold' in UserInputChisqPanels):
         analyze_chisq_distribution(Umin_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in LTIR_warm_dust_dict:
+    if 'value' in LTIR_warm_dust_dict and (len(UserInputChisqPanels)==0 or 'LIR_warm' in UserInputChisqPanels):
         analyze_chisq_distribution(LTIR_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in LTIR_cold_dust_dict:
+    if 'value' in LTIR_cold_dust_dict and (len(UserInputChisqPanels)==0 or 'LIR_cold' in UserInputChisqPanels):
         analyze_chisq_distribution(LTIR_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Mass_warm_dust_dict:
+    if 'value' in Mass_warm_dust_dict and (len(UserInputChisqPanels)==0 or 'Mdust_warm' in UserInputChisqPanels):
         analyze_chisq_distribution(Mass_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Mass_cold_dust_dict:
+    if 'value' in Mass_cold_dust_dict and (len(UserInputChisqPanels)==0 or 'Mdust_cold' in UserInputChisqPanels):
         analyze_chisq_distribution(Mass_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in LTIR_total_dust_dict:
+    if 'value' in LTIR_total_dust_dict and (len(UserInputChisqPanels)==0 or 'LIR' in UserInputChisqPanels):
         analyze_chisq_distribution(LTIR_total_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in LFIR_total_dust_dict:
+    if 'value' in LFIR_total_dust_dict and (len(UserInputChisqPanels)==0 or 'LFIR' in UserInputChisqPanels):
         analyze_chisq_distribution(LFIR_total_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in LFIR122_total_dust_dict:
         analyze_chisq_distribution(LFIR122_total_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Mass_total_dust_dict:
+    if 'value' in Mass_total_dust_dict and (len(UserInputChisqPanels)==0 or 'Mdust' in UserInputChisqPanels):
         analyze_chisq_distribution(Mass_total_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in fPDR_total_dust_dict:
+    if 'value' in fPDR_total_dust_dict and (len(UserInputChisqPanels)==0 or 'fPDR' in UserInputChisqPanels):
         analyze_chisq_distribution(fPDR_total_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
-    if 'value' in Umean_total_dust_dict:
+    if 'value' in Umean_total_dust_dict and (len(UserInputChisqPanels)==0 or 'U' in UserInputChisqPanels):
         analyze_chisq_distribution(Umean_total_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in dust_emissivity_beta_warm_dust_dict:
         analyze_chisq_distribution(dust_emissivity_beta_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
