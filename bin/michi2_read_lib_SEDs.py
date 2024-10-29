@@ -112,7 +112,7 @@ def lib_file_get_data_block(Lib_file, starting_data_line_index, Lib_header = [],
     if Lib_header == []: Lib_header = lib_file_get_header(Lib_file)
     Lib_begin = Lib_header['NLINE'] + starting_data_line_index                         # the line number index (starting from 0) in the Lib_file, which defines the data block of one SED template.
     Lib_end   = Lib_header['NLINE'] + starting_data_line_index + Lib_header['NVAR1']-1 # the line number index (starting from 0) in the Lib_file, which defines the data block of one SED template.
-    if verbose: print('numpy.genfromtxt(Lib_file, skip_header=%d, max_rows=%d)'%(Lib_begin, Lib_header['NVAR1']))
+    if verbose: print('numpy.genfromtxt("%s", skip_header=%d, max_rows=%d)'%(Lib_file, Lib_begin, Lib_header['NVAR1']))
     Lib_arr = numpy.genfromtxt(Lib_file, skip_header=Lib_begin, max_rows=Lib_header['NVAR1'])
     return Lib_arr
 

@@ -32,7 +32,8 @@ import astropy
 from astropy import units
 from astropy.io import fits
 import astropy.io.ascii as asciitable
-
+if not hasattr(numpy, 'string_'):
+    numpy.string_ = numpy.bytes_
 
 
 
@@ -48,7 +49,7 @@ import astropy.io.ascii as asciitable
 # 
 class CrabTable(object):
     # 
-    def __init__(self, data_table='', fits_extension=0, fix_string_columns=0, verbose=1):
+    def __init__(self, data_table='', data_lines=None, fits_extension=0, fix_string_columns=0, format='', delimiter='', verbose=1):
         self.DataTableFile = ''
         self.DataTableFormat = ''
         self.DataTableStruct = []
@@ -60,7 +61,9 @@ class CrabTable(object):
         self.World = {}
         self.World['verbose'] = verbose
         if data_table != '':
-            self.load(data_table, fits_extension, fix_string_columns)
+            self.load(data_table, fits_extension=fits_extension, fix_string_columns=fix_string_columns)
+        elif data_lines is not None:
+            self.loadDataLines(data_lines, fix_string_columns=fix_string_columns, format=format, delimiter=delimiter)
         # 
         #print a column
         #print(self.TableData.field('FWHM_MAJ_FIT'))
@@ -161,6 +164,27 @@ class CrabTable(object):
         else:
             print('Error! The input data table is an empty string!')
     # 
+    def loadDataLines(self, strlines, fix_string_columns=0, format='', delimiter=''):
+        if format == '':
+            format = 'no_header'
+        if delimiter == '':
+            delimiter = ' '
+        if format != 'no_header':
+            self.DataTableStruct = asciitable.read(strlines, format=format, delimiter=delimiter, guess=False, fast_reader=False)
+        else:
+            self.DataTableStruct = asciitable.read(strlines, format=format, delimiter=delimiter)
+        self.TableIndex = 0
+        self.TableData = self.DataTableStruct
+        self.TableColumns = self.DataTableStruct.columns # dtype TableColumns
+        self.TableHeaders = self.DataTableStruct.colnames
+        # deal with string column dtype
+        if fix_string_columns > 0:
+            for i in range(len(self.TableHeaders)):
+                if self.TableData[self.TableHeaders[i]].dtype.char == 'S' or self.TableData[self.TableHeaders[i]].dtype is numpy.string_:
+                    TempArray = numpy.array(self.TableData[self.TableHeaders[i]], dtype=object)
+                    self.TableData[self.TableHeaders[i]] = TempArray
+                
+    # 
     def getData(self):
         return self.TableData
     # 
@@ -189,7 +213,7 @@ class CrabTable(object):
                 else:
                     return GotDataColumn
             else:
-                print("Error! Column number %d is out of allowed range (1 - %d)!"%(int(ColNameOrNumb),len(self.TableHeaders)))
+                print("Error! Column number %d is out of allowed range (1 - %d) (%s)!"%(int(ColNameOrNumb),len(self.TableHeaders),ColNameOrNumb))
                 return []
     # 
     def getColumnIndex(self, ColNameOrNumb):

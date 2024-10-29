@@ -641,6 +641,7 @@ if len(sys.argv) <= 1:
     print('    -chisq-panels "Mstar,EBV,LIR,Mdust,U"')
     print('    -chisq-panels-ncol 4 # default is None, auto')
     print('    -chisq-panels-figsize 14.0 10.0 # default is 14 x 10 inches')
+    print('    -rescale-flux-errors 1.0 # default is 1.0')
     print('    -figsize 8.0 5.0 # default is 8 x 5 inches')
     print('    -verbose')
     print('    -font "Times New Roman"')
@@ -668,7 +669,9 @@ else:
     UserInputChisqPanelsNCol = None # N_panel_per_row
     UserInputChisqPanelsFigSize = [14.0, 10.0]
     UserInputFigSize = [8.0, 5.0]
+    UserInputRescaleFluxErrors = 1.0
     UserInputRecomputeChisq = False # NotImplemented, 202306
+    UserInputShowUnattenuatedStellarSED = False # 20231024
     UserInputVerbose = 0
     iarg = 1
     while iarg < len(sys.argv):
@@ -755,9 +758,17 @@ else:
                 iarg = iarg + 1
                 UserInputFigSize[1] = float(sys.argv[iarg])
                 print('Setting UserInputFigSize = %s'%(UserInputFigSize))
+        elif TempCmd=='-rescale-flux-errors':
+            if iarg+1 < len(sys.argv):
+                iarg = iarg + 1
+                UserInputRescaleFluxErrors = float(sys.argv[iarg])
+                print('Setting UserInputRescaleFluxErrors = %s'%(UserInputRescaleFluxErrors))
         elif TempCmd=='-recompute-chisq':
             UserInputRecomputeChisq = True
             print('Setting UserInputRecomputeChisq = %s'%(UserInputRecomputeChisq))
+        elif TempCmd=='-show-unattenuated-stellar-sed':
+            UserInputShowUnattenuatedStellarSED = True
+            print('Setting UserInputShowUnattenuatedStellarSED = %s'%(UserInputShowUnattenuatedStellarSED))
         elif TempCmd=='-verbose':
             UserInputVerbose += 1
             print('Setting UserInputVerbose = %s'%(UserInputVerbose))
@@ -836,6 +847,10 @@ else:
         #for kk in range(len(Flux_obs)):
         #    if Wavelength_obs[kk] > 1.0 and Wavelength_obs[kk] < 100.0:
         #        print('DEBUG', Wavelength_obs[kk], Flux_obs[kk], FluxErr_obs[kk])
+        # 
+        if numpy.isfinite(UserInputRescaleFluxErrors):
+            FluxErr_obs *= UserInputRescaleFluxErrors
+        # 
     except Exception as err:
         print(err)
     # 
@@ -870,6 +885,8 @@ else:
                 DataArray['a0'] = DataTable.getColumn(i+1)
             elif DataHeaders[i] == 'chi2':
                 DataArray['chi2'] = DataTable.getColumn(i+1)
+                #<TODO># if numpy.isfinite(UserInputRescaleFluxErrors):
+                #<TODO>#     DataArray['chi2'] /= UserInputRescaleFluxErrors
     # 
     # Determine degree of freedom
     DegreeOfFreedom = numpy.count_nonzero(Detection_mask) - int(InfoDict['NLIB'])

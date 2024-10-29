@@ -1,0 +1,5 @@
+https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-instrumentation/nircam-filters
+  Download all JWST + NIRCam throughput curves (version 6.0: May 2024): (tar.gz) (zip)
+  https://jwst-docs.stsci.edu/files/97978094/281939692/1/1720022158126/nircam_throughputs_16May2024_v6.zip
+
+

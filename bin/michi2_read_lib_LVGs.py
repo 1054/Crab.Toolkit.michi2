@@ -159,7 +159,8 @@ def lib_file_get_data_block_quick(Lib_file, starting_data_line_index, every_data
     if Lib_header == []: Lib_header = lib_file_get_header(Lib_file)
     if max_data_line_count == 0:
         #max_data_line_count = int(Lib_header['NVAR1']) * every_data_line #<BUG><20190920>#
-        max_data_line_count = int(Lib_header['NVAR2'])
+        #max_data_line_count = int(Lib_header['NVAR2'])
+        max_data_line_count = int(Lib_header['NVAR1'])
     Lib_arr = []
     with open(Lib_file,'r') as fp:
         # read lib file by slice
@@ -167,15 +168,22 @@ def lib_file_get_data_block_quick(Lib_file, starting_data_line_index, every_data
                                 Lib_header['NLINE'] + starting_data_line_index, 
                                 Lib_header['NLINE'] + starting_data_line_index + max_data_line_count * every_data_line, 
                                 every_data_line))
-        #print('len(Lib_lines)', len(Lib_lines))
-        #print('Lib_lines[0]', Lib_lines[0])
-        #Lib_arr = numpy.fromstring(' '.join(Lib_lines), dtype=float, sep=' ')
-        Lib_arr = numpy.fromstring(' '.join(Lib_lines), sep=' ') # dtype=float is removed because now we allow string value for some params
+        ##print('len(Lib_lines)', len(Lib_lines))
+        ##print('Lib_lines[0]', Lib_lines[0], type(Lib_lines[0]))
+        ##print('Lib_lines', ' '.join(Lib_lines))
+        ##Lib_arr = numpy.fromstring(' '.join(Lib_lines), dtype=float, sep=' ')
+        ##Lib_arr = numpy.fromstring(' '.join(Lib_lines), sep=' ') # dtype=float is removed because now we allow string value for some params
+        #Lib_multiline_str = ' '.join([t.strip() for t in Lib_lines])
+        #print('Lib_multiline_str', Lib_multiline_str)
+        #Lib_arr = numpy.fromstring(Lib_multiline_str, sep=' ')
         #print('Lib_arr.shape', Lib_arr.shape)
         #print('Lib_arr', Lib_arr)
-        #print('reshape', len(Lib_lines), len(Lib_arr)/len(Lib_lines))
-        #Lib_arr = Lib_arr.reshape((len(Lib_lines), int(len(Lib_arr)/len(Lib_lines))) ) #<BUG><20190920>#
-        Lib_arr = Lib_arr.reshape((len(Lib_lines), int(len(Lib_arr)/len(Lib_lines))) )
+        ##print('reshape', len(Lib_lines), len(Lib_arr)/len(Lib_lines))
+        ##Lib_arr = Lib_arr.reshape((len(Lib_lines), int(len(Lib_arr)/len(Lib_lines))) ) #<BUG><20190920>#
+        #Lib_arr = Lib_arr.reshape((len(Lib_lines), int(len(Lib_arr)/len(Lib_lines))) )
+        Lib_headline = '# X Y ' + ' '.join([Lib_header['TPAR%d'%(t)] for t in range(1,Lib_header['NPAR']+1)]) + '\n'
+        Lib_table = CrabTable(data_lines=[Lib_headline]+Lib_lines, format='commented_header')
+        Lib_arr = Lib_table.TableData
     # 
     #for iLib_line in range(max_data_line_count):
     #    Lib_arr.append( \

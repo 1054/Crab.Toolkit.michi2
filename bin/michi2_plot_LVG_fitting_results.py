@@ -398,7 +398,11 @@ def convert_X_species_to_ID_Name_J_upper_J_lower(input_X_species):
     J_lower = int(temp_value)
     Name_dict = {}
     Name_dict['101'] = 'CO'
-    Name_dict['102'] = 'C_atom' # check '/Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/data/make_lib_LVG/02_Make_Lib_LVG/makeliblvg_z_with_CO_and_C_atom.sm'
+    #Name_dict['102'] = 'C_atom' # check '/Users/dzliu/Cloud/Github/Crab.Toolkit.michi2/data/make_lib_LVG/02_Make_Lib_LVG/makeliblvg_z_with_CO_and_C_atom.sm'
+    Name_dict['102'] = 'HCN'
+    Name_dict['103'] = 'CS'
+    Name_dict['104'] = 'HCOP'
+	
     if '%d'%(ID_species) in Name_dict:
         Name_species = Name_dict['%d'%(ID_species)]
     else:
@@ -935,6 +939,9 @@ else:
     NH2_dict_list = []
     MH2_dict_list = []
     XCICO_dict_list = []
+    XCSCO_dict_list = []
+    XHCNCO_dict_list = []
+    XHCOPCO_dict_list = []
     # 
     # define constants
     pi = numpy.pi
@@ -995,6 +1002,9 @@ else:
         NH2_dict = {}
         MH2_dict = {}
         XCICO_dict = {}
+        XCSCO_dict = {}
+        XHCNCO_dict = {}
+        XHCOPCO_dict = {}
         # 
         Lib_name = 'LIB%d'%(j+1)
         Lib_dict = CrabTableReadInfo(InfoDict[Lib_name], verbose=0)
@@ -1010,7 +1020,7 @@ else:
         # 
         # read the title of each parameter from the LVG LIB file
         Lib_params[Lib_name] = []
-        for k in range(Num_params[Lib_name]):
+        for k in range(min(Num_params[Lib_name], 16)): # <TODO><LIMIT> Support only <= 16 Parameters <20180131> 6 --> 16 # see michi2_DataClass.cpp
             Key_TPAR = '# TPAR%d'%(k+1)
             if Key_TPAR in Lib_dict:
                 Lib_params[Lib_name].append(Lib_dict[Key_TPAR])
@@ -1089,6 +1099,19 @@ else:
                 #     MH2_dict['range'] = numpy.power(10,[6.0, 12.5])
                 #     MH2_dict['value'] = DataArray['a%d'%(j+1)] * DataTable.getColumn(Col_number) * AreaInKpcSquare * NormalizationFactor / (dL/10)**2
                 #     MH2_dict['chisq'] = DataArray['chi2']
+                #     # 
+                elif 'M_{H_2}' == Lib_dict[Key_TPAR]: # 20231012
+                    MH2_dict['Lib_file'] = InfoDict[Lib_name]
+                    MH2_dict['Lib_name'] = Lib_name
+                    MH2_dict['Lib_numb'] = j+1
+                    MH2_dict['Par_name'] = r'$\log \ M_{\mathrm{H_2}}$ [$\mathrm{M_{\odot}}$]' + Par_suffix # Lib_dict[Key_TPAR]
+                    MH2_dict['Par_file'] = 'MH2' + Par_suffix
+                    MH2_dict['Col_numb'] = Col_number
+                    MH2_dict['Log_calc'] = True
+                    MH2_dict['range'] = numpy.power(10,[6.0, 12.5])
+                    MH2_dict['value'] = DataArray['a%d'%(j+1)] * DataTable.getColumn(Col_number)
+                    MH2_dict['chisq'] = DataArray['chi2']
+                    # 
                 elif 'X_{CICO}' == Lib_dict[Key_TPAR]: 
                     XCICO_dict['Lib_file'] = InfoDict[Lib_name]
                     XCICO_dict['Lib_name'] = Lib_name
@@ -1100,6 +1123,45 @@ else:
                     XCICO_dict['range'] = [0.0, 3.0]
                     XCICO_dict['value'] = DataTable.getColumn(Col_number)
                     XCICO_dict['chisq'] = DataArray['chi2']
+                    # 
+                elif 'X_{CSCO}' == Lib_dict[Key_TPAR]: 
+                    XCSCO_dict['Lib_file'] = InfoDict[Lib_name]
+                    XCSCO_dict['Lib_name'] = Lib_name
+                    XCSCO_dict['Lib_numb'] = j+1
+                    XCSCO_dict['Par_name'] = r'[$\mathrm{CS/CO}$]' + Par_suffix # Lib_dict[Key_TPAR]
+                    XCSCO_dict['Par_file'] = 'XCSCO' + Par_suffix
+                    XCSCO_dict['Col_numb'] = Col_number
+                    XCSCO_dict['Log_calc'] = False
+                    XCSCO_dict['range'] = [0.0, 0.01]
+                    XCSCO_dict['value'] = DataTable.getColumn(Col_number)
+                    XCSCO_dict['chisq'] = DataArray['chi2']
+                    # 
+                elif 'X_{HCNCO}' == Lib_dict[Key_TPAR]: 
+                    XHCNCO_dict['Lib_file'] = InfoDict[Lib_name]
+                    XHCNCO_dict['Lib_name'] = Lib_name
+                    XHCNCO_dict['Lib_numb'] = j+1
+                    XHCNCO_dict['Par_name'] = r'[$\mathrm{HCN/CO}$]' + Par_suffix # Lib_dict[Key_TPAR]
+                    XHCNCO_dict['Par_file'] = 'XHCNCO' + Par_suffix
+                    XHCNCO_dict['Col_numb'] = Col_number
+                    XHCNCO_dict['Log_calc'] = False
+                    XHCNCO_dict['range'] = [0.0, 0.01]
+                    XHCNCO_dict['value'] = DataTable.getColumn(Col_number)
+                    XHCNCO_dict['chisq'] = DataArray['chi2']
+                    # 
+                elif 'X_{HCOPCO}' == Lib_dict[Key_TPAR]: 
+                    XHCOPCO_dict['Lib_file'] = InfoDict[Lib_name]
+                    XHCOPCO_dict['Lib_name'] = Lib_name
+                    XHCOPCO_dict['Lib_numb'] = j+1
+                    XHCOPCO_dict['Par_name'] = r'[$\mathrm{HCO^{+}/CO}$]' + Par_suffix # Lib_dict[Key_TPAR]
+                    XHCOPCO_dict['Par_file'] = 'XHCOPCO' + Par_suffix
+                    XHCOPCO_dict['Col_numb'] = Col_number
+                    XHCOPCO_dict['Log_calc'] = False
+                    XHCOPCO_dict['range'] = [0.0, 0.01]
+                    XHCOPCO_dict['value'] = DataTable.getColumn(Col_number)
+                    XHCOPCO_dict['chisq'] = DataArray['chi2']
+                    # 
+            # 
+            print(Col_number, Lib_dict[Key_TPAR]) #<20241029><DEBUG>#
             # 
             # finished checking library properties
             # 
@@ -1111,6 +1173,9 @@ else:
         NH2_dict_list.append(NH2_dict)
         MH2_dict_list.append(MH2_dict)
         XCICO_dict_list.append(XCICO_dict)
+        XCSCO_dict_list.append(XCSCO_dict)
+        XHCNCO_dict_list.append(XHCNCO_dict)
+        XHCOPCO_dict_list.append(XHCOPCO_dict)
     # 
     # Total MH2
     Sum_MH2_dict = {}
@@ -1151,6 +1216,12 @@ else:
             analyze_chisq_distribution(MH2_dict_list[j], Plot_engine = Plot_engine, Output_dir = Output_dir)
         if 'value' in XCICO_dict_list[j]:
             analyze_chisq_distribution(XCICO_dict_list[j], Plot_engine = Plot_engine, Output_dir = Output_dir)
+        if 'value' in XCSCO_dict_list[j]:
+            analyze_chisq_distribution(XCSCO_dict_list[j], Plot_engine = Plot_engine, Output_dir = Output_dir)
+        if 'value' in XHCNCO_dict_list[j]:
+            analyze_chisq_distribution(XHCNCO_dict_list[j], Plot_engine = Plot_engine, Output_dir = Output_dir)
+        if 'value' in XHCOPCO_dict_list[j]:
+            analyze_chisq_distribution(XHCOPCO_dict_list[j], Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in Sum_MH2_dict:
         analyze_chisq_distribution(Sum_MH2_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     Plot_engine.set_xcharsize(panel=0, charsize=11, axislabelcharsize=16) # all panels
