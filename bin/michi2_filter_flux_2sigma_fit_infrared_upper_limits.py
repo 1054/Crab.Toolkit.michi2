@@ -15,6 +15,37 @@ import astropy.io.ascii as asciitable
 from copy import copy
 
 
+# fixing ascii table read write has no Reader Writer in astropy 7.0.0
+def asciitable_write(table, output, **kwargs):
+    #from distutils.version import LooseVersion
+    #if astropy.__version__ > '7.0.0'
+    try:
+        asciitable.write(table, output=output, **kwargs)
+    except TypeError:
+        if 'Writer' in kwargs:
+            if kwargs['Writer'] is asciitable.FixedWidthTwoLine:
+                kwargs['format'] = 'fixed_width_two_line'
+            elif kwargs['Writer'] is asciitable.Ipac:
+                kwargs['format'] = 'ipac'
+            del kwargs['Writer']
+        asciitable.write(table, output=output, **kwargs)
+
+
+# fixing ascii table read write has no Reader Writer in astropy 7.0.0
+def asciitable_read(table, **kwargs):
+    #from distutils.version import LooseVersion
+    #if astropy.__version__ > '7.0.0'
+    try:
+        table = asciitable.read(table, **kwargs)
+    except TypeError:
+        if 'Reader' in kwargs:
+            if kwargs['Reader'] is asciitable.NoHeader:
+                kwargs['format'] = 'no_header'
+            del kwargs['Reader']
+        table = asciitable.read(table, **kwargs)
+    return table
+
+
 
 
 ####################################
@@ -25,7 +56,7 @@ if not len(sys.argv) > 2:
     print('Usage: michi2_filter_flux_2sigma_fit_infrared_upper_limits.py input_flux.txt output_flux.txt')
     sys.exit()
 
-data_table = asciitable.read(sys.argv[1])
+data_table = asciitable_read(sys.argv[1])
 
 if not len(data_table.colnames) >= 3:
     print('Error! The input flux data table does not have at least three columns: wavelength, flux density and error in flux density.')
@@ -144,7 +175,7 @@ data_table.sort(data_table.colnames[0])
 
 # output
 out_file = sys.argv[2]
-asciitable.write(data_table, out_file, Writer=asciitable.Ipac, delimiter='    ', overwrite=True)
+asciitable_write(data_table, out_file, Writer=asciitable.Ipac, delimiter='    ', overwrite=True)
 #asciitable.write(data_table, sys.stdout, Writer=asciitable.Ipac, delimiter='  ')
 with open(out_file, 'r+') as fp:
     out_content = fp.readlines() # read everything in the file

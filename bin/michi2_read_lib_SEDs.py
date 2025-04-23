@@ -30,6 +30,21 @@ from copy import copy
 MAXPAR = 8  # TODO: MAXPAR maximum par number: 8
 
 
+# fixing ascii table read write has no Reader Writer in astropy 7.0.0
+def asciitable_write(table, output, **kwargs):
+    #from distutils.version import LooseVersion
+    #if astropy.__version__ > '7.0.0'
+    try:
+        asciitable.write(table, output=output, **kwargs)
+    except TypeError:
+        if 'Writer' in kwargs:
+            if kwargs['Writer'] is asciitable.FixedWidthTwoLine:
+                kwargs['format'] = 'fixed_width_two_line'
+            del kwargs['Writer']
+        asciitable.write(table, output=output, **kwargs)
+
+
+
 
 ####################################
 #               FUNC               #
@@ -508,7 +523,7 @@ if __name__ == "__main__":
         Lib_x = Lib_arr[:,0]
         Lib_y = Lib_arr[:,1] * Lib_a[line_number-1]
         Out_file = output_dir+os.sep+'SED_LIB%d'%(iLib+1)
-        asciitable.write(numpy.column_stack((Lib_x,Lib_y)), 
+        asciitable_write(numpy.column_stack((Lib_x,Lib_y)), 
                             Out_file, 
                             Writer=asciitable.FixedWidthTwoLine, 
                             names=['X', 'Y'], 
@@ -522,7 +537,7 @@ if __name__ == "__main__":
         if 'f_intrinsic' in Lib_header_TPAR:
             Lib_y_intrinsic = Lib_arr[:,2+Lib_header_TPAR.index('f_intrinsic')] * Lib_a[line_number-1]
             Out_file_intrinsic = output_dir+os.sep+'SED_LIB%d'%(iLib+1)+'_intrinsic'
-            asciitable.write(numpy.column_stack((Lib_x,Lib_y_intrinsic)), 
+            asciitable_write(numpy.column_stack((Lib_x,Lib_y_intrinsic)), 
                                 Out_file_intrinsic, 
                                 Writer=asciitable.FixedWidthTwoLine, 
                                 names=['X', 'Y'], 
@@ -543,7 +558,7 @@ if __name__ == "__main__":
             Lib_array['TOT']['Y'] = Lib_array['TOT']['Y'] + spline(Lib_array['LIB%d'%(iLib+1)]['X'], Lib_array['LIB%d'%(iLib+1)]['Y'], Lib_array['TOT']['X'], xlog=1, ylog=1, fill=0.0)
     
     Out_file = output_dir+os.sep+'SED_SUM'
-    asciitable.write(numpy.column_stack((Lib_array['TOT']['X'],Lib_array['TOT']['Y'])), 
+    asciitable_write(numpy.column_stack((Lib_array['TOT']['X'],Lib_array['TOT']['Y'])), 
                         Out_file, 
                         Writer=asciitable.FixedWidthTwoLine, 
                         names=['X', 'Y'], 

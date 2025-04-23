@@ -46,6 +46,46 @@ mpl.rcParams['grid.linewidth'] = 0.25
 mpl.rcParams['grid.alpha'] = 0.8
 
 
+# fixing ascii table read write has no Reader Writer in astropy 7.0.0
+def asciitable_write(table, output, **kwargs):
+    #from distutils.version import LooseVersion
+    #if astropy.__version__ > '7.0.0'
+    try:
+        asciitable.write(table, output=output, **kwargs)
+    except TypeError:
+        if 'Writer' in kwargs:
+            if kwargs['Writer'] is asciitable.FixedWidthTwoLine:
+                kwargs['format'] = 'fixed_width_two_line'
+            elif kwargs['Writer'] is asciitable.FixedWidth:
+                kwargs['format'] = 'fixed_width'
+            elif kwargs['Writer'] is asciitable.Ipac:
+                kwargs['format'] = 'ipac'
+            del kwargs['Writer']
+        asciitable.write(table, output=output, **kwargs)
+
+
+# fixing ascii table read write has no Reader Writer in astropy 7.0.0
+def asciitable_read(table, **kwargs):
+    #from distutils.version import LooseVersion
+    #if astropy.__version__ > '7.0.0'
+    try:
+        table = asciitable.read(table, **kwargs)
+    except TypeError:
+        if 'Reader' in kwargs:
+            if kwargs['Reader'] is asciitable.NoHeader:
+                kwargs['format'] = 'no_header'
+            del kwargs['Reader']
+        table = asciitable.read(table, **kwargs)
+    return table
+
+# fixing matplotlib.cm.get_cmap deprecated in Matplotlib 3.7 issue
+def custom_get_cmap(name):
+    try:
+        cmap = matplotlib.colormaps.get_cmap(name)
+    except:
+        cmap = matplotlib.cm.get_cmap(name)
+    return cmap
+
 
 
 
@@ -201,17 +241,17 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
                 param_sigma = 0.0
                 param_L68 = 0.0
                 param_H68 = 0.0
-            #asciitable.write(numpy.column_stack((param_median, param_best, param_sigma, param_L68, param_H68)), 
+            #asciitable_write(numpy.column_stack((param_median, param_best, param_sigma, param_L68, param_H68)), 
             #                        Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt', Writer=asciitable.Ipac, 
             #                                names=['param_median', 'param_best', 'param_sigma', 'param_L68', 'param_H68'], 
             #                                formats={'param_median': '%20.10g', 'param_best': '%20.10g', 'param_sigma': '%20.10g', 'param_L68': '%20.10g', 'param_H68': '%20.10g'}, 
             #                                    delimiter='    ', overwrite = True)
-            asciitable.write(numpy.column_stack((param_median, param_best, param_sigma, param_L68, param_H68)), 
+            asciitable_write(numpy.column_stack((param_median, param_best, param_sigma, param_L68, param_H68)), 
                                     Output_dir+'best-fit_param_'+param_dict['Par_file']+'.txt', Writer=asciitable.Ipac, 
                                             names=['param_median', 'param_best', 'param_sigma', 'param_L68', 'param_H68'], 
                                             formats={'param_median': '%20.10g', 'param_best': '%20.10g', 'param_sigma': '%20.10g', 'param_L68': '%20.10g', 'param_H68': '%20.10g'}, 
                                             overwrite = True)
-            asciitable.write(numpy.column_stack((chisq_array, param_array)), 
+            asciitable_write(numpy.column_stack((chisq_array, param_array)), 
                                     Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 
                                             Writer=asciitable.FixedWidth, 
                                             bookend=True, delimiter=' ',
@@ -412,7 +452,7 @@ def constrain_by_upper_limits(chisq_file, chisq_array, lib_dict):
     #os.system('bash -c \"rm -rf obj_* 2>/dev/null\"')
     #os.system('bash -c \"rm -rf dump_* 2>/dev/null\"')
     if os.path.isfile('extracted_flux.txt'):
-        obs_data_table = asciitable.read('extracted_flux.txt')
+        obs_data_table = asciitable_read('extracted_flux.txt')
         obs_wave = numpy.array(obs_data_table.field(obs_data_table.colnames[0]))
         obs_flux = numpy.array(obs_data_table.field(obs_data_table.colnames[1]))
         obs_error = numpy.array(obs_data_table.field(obs_data_table.colnames[2]))
@@ -435,14 +475,14 @@ def constrain_by_upper_limits(chisq_file, chisq_array, lib_dict):
                                         dump_indices = chisq_indices_sorted[i_constrain], 
                                         output_numbers = 1, 
                                         output_prefix = 'dump_')
-                SED_data_table = asciitable.read('dump_1/SED_SUM') # always read the minimum chi2 solution
+                SED_data_table = asciitable_read('dump_1/SED_SUM') # always read the minimum chi2 solution
                 SED_x = numpy.array(SED_data_table.field(SED_data_table.colnames[0]))
                 SED_y = numpy.array(SED_data_table.field(SED_data_table.colnames[1]))
                 #SED_flux_to_constrain = scipy.interpolate.spline(SED_x, SED_y, obs_wave_undetected, order='1') # order=3, kind='smoothest', conds=None
                 SED_flux_to_constrain = scipy.interpolate.interp1d(SED_x, SED_y, kind='nearest')(obs_wave_undetected)
                 # 
                 constrained = (SED_flux_to_constrain > obs_flux_undetected)
-                asciitable.write(numpy.column_stack((obs_wave_undetected, obs_flux_undetected, SED_flux_to_constrain, constrained)), 
+                asciitable_write(numpy.column_stack((obs_wave_undetected, obs_flux_undetected, SED_flux_to_constrain, constrained)), 
                                     sys.stdout, 
                                     Writer=asciitable.FixedWidthTwoLine, 
                                     delimiter='|', delimiter_pad=' ', bookend=True, 
@@ -834,9 +874,9 @@ else:
     # 
     # Read OBS data file
     if UserInputFluxFile == '':
-        DataTable_obs = asciitable.read(InfoDict['OBS'])
+        DataTable_obs = asciitable_read(InfoDict['OBS'])
     else:
-        DataTable_obs = asciitable.read(UserInputFluxFile)
+        DataTable_obs = asciitable_read(UserInputFluxFile)
     try:
         Wavelength_obs = DataTable_obs[DataTable_obs.colnames[0]].data
         Flux_obs = DataTable_obs[DataTable_obs.colnames[1]].data
@@ -853,6 +893,7 @@ else:
         # 
     except Exception as err:
         print(err)
+        raise Exception(err)
     # 
     # Fix data table header problem
     DataHeaders = []
@@ -1009,7 +1050,7 @@ else:
         Plot_chi2_alpha = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
                                                          input_value=Cut_chi2_array[i], 
                                                          log=1, 
-                                                         cmap=matplotlib.cm.get_cmap('gray_r'))[0]
+                                                         cmap=custom_get_cmap('gray_r'))[0]
         #print('Plot_chi2_alpha: ', Plot_chi2_alpha)
         # 
         # 
@@ -1045,7 +1086,7 @@ else:
         Plot_chi2_color = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
                                                     input_value=Cut_chi2_array[i], 
                                                     log=1, 
-                                                    cmap=matplotlib.cm.get_cmap('gray'))
+                                                    cmap=custom_get_cmap('gray'))
         #print('Plot_chi2_color: ', Plot_chi2_color)
         # 
         # 
@@ -1125,7 +1166,7 @@ else:
             
             # when only plotting the best solution, we also read the "dump/1/SED_SUM" (wavelength is restframe) and convert it to obsframe (only wavelength) and save it as an output. 
             if i == 0:
-                best_SED_data_table = asciitable.read(Output_dir+'dump'+os.sep+'%d/SED_SUM'%(i+1))
+                best_SED_data_table = asciitable_read(Output_dir+'dump'+os.sep+'%d/SED_SUM'%(i+1))
                 with open(Output_dir+'dump'+os.sep+'%d/redshift.txt'%(i+1), 'r') as ifp:
                     best_SED_redshift = float(ifp.read())
                 with open(Output_dir+'best-fit_SED_%s.txt'%(SourceName), 'w') as ofp:

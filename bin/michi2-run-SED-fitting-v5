@@ -61,6 +61,7 @@ minEBV="" # Added on 2019-08-27 to put an additional constraint on E(B-V), BC03 
 NoStellar=0
 NoAGN=0
 NoDust=0
+NoWarmDust=0
 NoRadio=0
 FreeRadio=0
 FreezeRadio=0 # Added on 2019-10-24, so that even when not fitting any radio, we can still output a freezed radio component
@@ -207,6 +208,9 @@ if [[ $# -ge 2 ]]; then
         elif [[ "$Strcmd" == "-no-dust" ]]; then
             NoDust=1
             echo NoDust=$NoDust
+        elif [[ "$Strcmd" == "-no-warm-dust" ]]; then
+            NoWarmDust=1
+            echo NoWarmDust=$NoWarmDust
         elif [[ "$Strcmd" == "-no-radio" ]]; then
             NoRadio=1
             echo NoRadio=$NoRadio
@@ -381,7 +385,7 @@ fi
 # 
 constrain_warm_cold_dust=()
 if [[ $FreeDust -eq 0 ]]; then
-    if [[ $NoDust -eq 0 ]]; then
+    if [[ $NoDust -eq 0 ]] && [[ $NoWarmDust -eq 0 ]]; then
         i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN) + 1; }")
         j=$(awk "BEGIN { print ($i+1); }")
         constrain_warm_cold_dust=(-constraint "LIB${i}_INDEX = LIB${j}_INDEX")
@@ -398,9 +402,13 @@ if [[ $FreeRadio -eq 0 ]]; then
     if [[ $NoRadio -eq 0 ]] || [[ $FreezeRadio -eq 1 ]]; then
         i=$(awk "BEGIN { print (1-$NoStellar) + (1-$NoAGN) + 1; }")
         j=$(awk "BEGIN { print ($i+1); }")
-        k=$(awk "BEGIN { print ($j+1); }")
         #qIR=2.4
-        constrain_radio_IR=(-constraint "LIB${k}_NORM = ((LIB${i}_NORM*(10^LIB${i}_PAR3))+(LIB${j}_NORM*(10^LIB${j}_PAR3)))*40.31970/3750/10^${qIR}")
+        if [[ $NoWarmDust -eq 0 ]]; then
+            k=$(awk "BEGIN { print ($j+1); }")
+            constrain_radio_IR=(-constraint "LIB${k}_NORM = ((LIB${i}_NORM*(10^LIB${i}_PAR3))+(LIB${j}_NORM*(10^LIB${j}_PAR3)))*40.31970/3750/10^${qIR}")
+        else
+            constrain_radio_IR=(-constraint "LIB${j}_NORM = ((LIB${i}_NORM*(10^LIB${i}_PAR3)))*40.31970/3750/10^${qIR}")
+        fi
         echo "constrain_radio_IR = \"${constrain_radio_IR[@]}\"  (qIR=${qIR})"
     fi
 fi
@@ -462,8 +470,15 @@ else
     deploy_params+=(no AGN)
 fi
 if [[ $NoDust -eq 0 ]]; then
-    loop_lib_files+=(${CorrespondingLibDust[ChosenLibDust]})
-    deploy_params+=(${AcceptableLibDust[ChosenLibDust]})
+    if [[ $NoWarmDust -eq 0 ]]; then
+        loop_lib_files+=(${CorrespondingLibDust[ChosenLibDust]})
+        deploy_params+=(${AcceptableLibDust[ChosenLibDust]})
+    else
+        # NoWarmDust is not 0, so we do not use warm dust library
+        temp_lib_files=($(echo ${CorrespondingLibDust[ChosenLibDust]}))
+        loop_lib_files+=(${temp_lib_files[1]}) # only take the cold dust
+        deploy_params+=(${AcceptableLibDust[ChosenLibDust]})
+    fi
 else
     deploy_params+=(no dust)
 fi

@@ -132,6 +132,20 @@ mpl.rcParams['font.family'] = ['NGC','Helvetica','sans-serif']
 
 
 
+# fixing ascii table read write has no Reader Writer in astropy 7.0.0
+def asciitable_read(table, **kwargs):
+    #from distutils.version import LooseVersion
+    #if astropy.__version__ > '7.0.0'
+    try:
+        table = asciitable.read(table, **kwargs)
+    except TypeError:
+        if 'Reader' in kwargs:
+            if kwargs['Reader'] is asciitable.NoHeader:
+                kwargs['format'] = 'no_header'
+            del kwargs['Reader']
+        table = asciitable.read(table, **kwargs)
+    return table
+
 
 
 
@@ -1536,7 +1550,7 @@ class CrabPlot(object):
                             xclip = None, yclip = None, **kwargs):
         # we also allow 'xclip', which is a list of tuples, and we clip the data by filtering out where x in each xclip tuple/range.
         #print(input_data_file)
-        input_data_table = asciitable.read(input_data_file, Reader=asciitable.NoHeader, delimiter=' ', guess=False)
+        input_data_table = asciitable_read(input_data_file, Reader=asciitable.NoHeader, delimiter=' ', guess=False)
         if input_data_table:
             if len(input_data_table.colnames) >= numpy.max(numpy.array([xcol,ycol])):
                 input_x = input_data_table.field(input_data_table.colnames[xcol-1])
