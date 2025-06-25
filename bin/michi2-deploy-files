@@ -175,6 +175,14 @@ if echo "$deploy_type" | grep -q -i "SED"; then
                 # 
                 check_and_unzip Stellar "lib.FSPS.SSP.Padova.BaSeL.Z0.0190.EBV.SED.zip"
                 # 
+            elif (check_input_contains "FSPS.CSP.tau.0p1Gyr" "$*"); then
+                # 
+                check_and_unzip Stellar "lib.FSPS.CSP.tau.0p1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip" # FSPS default is composite SFH tau-declining at 1Gyr
+                # 
+            elif (check_input_contains "FSPS.CSP.tau.1Gyr" "$*"); then
+                # 
+                check_and_unzip Stellar "lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip" # FSPS default is composite SFH tau-declining at 1Gyr
+                # 
             else
                 # 
                 check_and_unzip Stellar "lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED.zip" # FSPS default is composite SFH tau-declining at 1Gyr

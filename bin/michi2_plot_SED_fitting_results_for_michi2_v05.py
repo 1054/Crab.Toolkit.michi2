@@ -359,7 +359,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
         # 
         # Initialize a plot
         if Plot_engine is None:
-            Plot_engine = CrabPlot(figure_size=(9.0,5.0))
+            Plot_engine = CrabPlot(figure_size=(10.0,6.0)) # figure_size=(9.0,5.0)
             Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04)
         # 
         # Plot xy (left panel)
@@ -704,7 +704,7 @@ else:
     UserInputText = []
     UserInputColorForAGN = ''
     UserThickColorForAGN = 0.0
-    UserInputThickForAGN = 1.5
+    UserInputThickForAGN = 0.0
     UserInputChisqPanels = []
     UserInputChisqPanelsNCol = None # N_panel_per_row
     UserInputChisqPanelsFigSize = [14.0, 10.0]
@@ -828,11 +828,12 @@ else:
         else:
             Output_name = UserOutputName
         if Output_name.endswith('.pdf') or Output_name.endswith('.PDF') or \
-           Output_name.endswith('.eps') or Output_name.endswith('.EPS'):
+           Output_name.endswith('.eps') or Output_name.endswith('.EPS') or \
+           Output_name.endswith('.png') or Output_name.endswith('.PNG'):
             Output_name, Output_extension = os.path.splitext(Output_name)
         else:
             Output_name = os.path.basename(UserOutputName) # UserOutputName
-            Output_extension = 'pdf'
+            Output_extension = '.pdf'
     # 
     # Read chi2 table
     #DataFile = sys.argv[1]
@@ -969,7 +970,9 @@ else:
     Min_chi2 = numpy.nanmin(Cut_chi2_array)
     Max_chi2 = numpy.nanmax(Cut_chi2_array)
     # 
-    Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_array_size)) #<TODO># tune line width
+    #Plot_chi2_linewidth = numpy.sqrt(1.44/float(Cut_chi2_array_size)) #<TODO># tune line width
+    Plot_chi2_linewidth = 0.5 #<TODO># tune line width
+    Plot_chi2_alpha = 0.5
     Plot_SED_linewidth = 1.0
     #print('')
     print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_array_size, Delta_chisq_of_interest))
@@ -1047,11 +1050,6 @@ else:
         Max_chi2_log = numpy.log10(Max_chi2)
         Min_chi2_for_plot = numpy.power(10, Min_chi2_log-(Max_chi2_log-Min_chi2_log)*0.8)
         Max_chi2_for_plot = numpy.power(10, Max_chi2_log+(Max_chi2_log-Min_chi2_log)*0.3)
-        Plot_chi2_alpha = Plot_engine.get_color_by_value([Min_chi2_for_plot, Max_chi2_for_plot], 
-                                                         input_value=Cut_chi2_array[i], 
-                                                         log=1, 
-                                                         cmap=custom_get_cmap('gray_r'))[0]
-        #print('Plot_chi2_alpha: ', Plot_chi2_alpha)
         # 
         # 
         # plot each single SED component
@@ -1208,6 +1206,8 @@ else:
     Plot_engine.set_xcharsize(charsize=12, axislabelcharsize=16)
     Plot_engine.set_ycharsize(charsize=12, axislabelcharsize=16)
     Plot_engine.savepdf(Output_dir+Output_name+'.pdf')
+    if Output_extension != '.pdf':
+        Plot_engine.savefig(Output_dir+Output_name+Output_extension, dpi=300)
     #Plot_engine.show()
     Plot_engine.close()
     print('Output to "%s"!'%(Output_dir+Output_name+'.pdf'))
@@ -1237,12 +1237,15 @@ else:
     Umin_cold_dust_dict = {}
     Mass_warm_dust_dict = {}
     Mass_cold_dust_dict = {}
+    qPAH_warm_dust_dict = {}
+    qPAH_cold_dust_dict = {}
     Lumin_AGN_dict = {}
     AGN_TYPE_dict = {}
     LTIR_total_dust_dict = {}
     LFIR_total_dust_dict = {}
     LFIR122_total_dust_dict = {}
     Mass_total_dust_dict = {}
+    qPAH_total_dust_dict = {}
     fPDR_total_dust_dict = {}
     Umean_total_dust_dict = {}
     dust_emissivity_beta_warm_dust_dict = {}
@@ -1433,6 +1436,19 @@ else:
                         if InfoDict[Lib_name].find('DL07.2010.03.18') > 0: 
                             Umin_warm_dust_dict['range'][1] = 90.0 #<20180319>#
                     # 
+                elif 'qPAH' == Lib_dict[Key_TPAR]:
+                    qPAH_warm_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                    qPAH_warm_dust_dict['Lib_name'] = Lib_name
+                    qPAH_warm_dust_dict['Lib_numb'] = j+1
+                    qPAH_warm_dust_dict['Par_name'] = r'$q_{\mathrm{PAH}}$ (warm)' # Lib_dict[Key_TPAR]
+                    qPAH_warm_dust_dict['Par_file'] = 'qPAH_warm'
+                    qPAH_warm_dust_dict['Col_numb'] = Col_number
+                    qPAH_warm_dust_dict['Log_plot'] = False # 'Log_plot', plot X axis in log scale
+                    qPAH_warm_dust_dict['range'] = [0.0,0.2]
+                    qPAH_warm_dust_dict['value'] = DataTable.getColumn(Col_number)
+                    qPAH_warm_dust_dict['chisq'] = DataArray['chi2']
+                    qPAH_warm_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
+                    # 
             elif InfoDict[Lib_name].find('DL07.') >= 0 and InfoDict[Lib_name].find('.LoExCom') > 0:
                 if 'lgLTIR' == Lib_dict[Key_TPAR]:
                     LTIR_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
@@ -1501,6 +1517,19 @@ else:
                     if True:
                         if InfoDict[Lib_name].find('DL07.2010.03.18') > 0: 
                             Umin_cold_dust_dict['range'][1] = 90.0 #<20180319>#
+                    # 
+                elif 'qPAH' == Lib_dict[Key_TPAR]:
+                    qPAH_cold_dust_dict['Lib_file'] = InfoDict[Lib_name]
+                    qPAH_cold_dust_dict['Lib_name'] = Lib_name
+                    qPAH_cold_dust_dict['Lib_numb'] = j+1
+                    qPAH_cold_dust_dict['Par_name'] = r'$q_{\mathrm{PAH}}$ (cold)' # Lib_dict[Key_TPAR]
+                    qPAH_cold_dust_dict['Par_file'] = 'qPAH_cold'
+                    qPAH_cold_dust_dict['Col_numb'] = Col_number
+                    qPAH_cold_dust_dict['Log_plot'] = False # 'Log_plot', plot X axis in log scale
+                    qPAH_cold_dust_dict['range'] = [0.0,0.2]
+                    qPAH_cold_dust_dict['value'] = DataTable.getColumn(Col_number)
+                    qPAH_cold_dust_dict['chisq'] = DataArray['chi2']
+                    qPAH_cold_dust_dict['Degree_of_freedom'] = DegreeOfFreedom
             # 
             # check AGN properties
             elif InfoDict[Lib_name].find('MullaneyAGN') >= 0:
@@ -1940,6 +1969,10 @@ else:
         analyze_chisq_distribution(Umin_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in Umin_cold_dust_dict and (len(UserInputChisqPanels)==0 or 'Umin_cold' in UserInputChisqPanels):
         analyze_chisq_distribution(Umin_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in qPAH_warm_dust_dict and (len(UserInputChisqPanels)==0 or 'qPAH_warm' in UserInputChisqPanels):
+        analyze_chisq_distribution(qPAH_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in qPAH_cold_dust_dict and (len(UserInputChisqPanels)==0 or 'qPAH_cold' in UserInputChisqPanels):
+        analyze_chisq_distribution(qPAH_cold_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in LTIR_warm_dust_dict and (len(UserInputChisqPanels)==0 or 'LIR_warm' in UserInputChisqPanels):
         analyze_chisq_distribution(LTIR_warm_dust_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in LTIR_cold_dust_dict and (len(UserInputChisqPanels)==0 or 'LIR_cold' in UserInputChisqPanels):

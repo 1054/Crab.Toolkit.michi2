@@ -1632,8 +1632,8 @@ class CrabPlot(object):
         pyplot.show(block=block)
         #self.Plot_device.waitforbuttonpress()
     # 
-    def savefig(self, filename):
-        self.Plot_device.savefig(filename)
+    def savefig(self, filename, dpi=300):
+        self.Plot_device.savefig(filename, dpi=dpi)
         print('Output to "%s"!'%(filename))
     # 
     def savepdf(self, filename):

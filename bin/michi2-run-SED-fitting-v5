@@ -69,11 +69,12 @@ FreeDust=0
 qIR=2.4
 LibStellar="BC03.200Myr"
 ChosenLibStellar=1 # the index in AcceptableLibStellar
-AcceptableLibStellar=("BC03" "BC03.200Myr" "BC03.400Myr" "BC03.MultiAge" "FSPS.CSP.tau.1Gyr")
+AcceptableLibStellar=("BC03" "BC03.200Myr" "BC03.400Myr" "BC03.MultiAge" "FSPS.CSP.tau.0p1Gyr" "FSPS.CSP.tau.1Gyr")
 CorrespondingLibStellar=("lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED" \
                          "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED" \
                          "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age400Myr.EBV.SED" \
                          "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.MultiAge.EBV.SED" \
+                         "lib.FSPS.CSP.tau.0p1Gyr.Padova.BaSeL.Z0.0190.EBV.SED" \
                          "lib.FSPS.CSP.tau.1Gyr.Padova.BaSeL.Z0.0190.EBV.SED")
 LibDust="DL07UPD2010"
 ChosenLibDust=1 # the index in AcceptableLibDust
@@ -454,7 +455,7 @@ fi
 # 
 # Copy SED LIB
 # 
-check_lib_files=1
+check_lib_files=0
 loop_lib_files=()
 deploy_params=(SED)
 if [[ $NoStellar -eq 0 ]]; then
@@ -493,10 +494,10 @@ echo "Checking libraries:"
 for loop_lib_file in ${loop_lib_files[@]}; do
     if [[ ! -f "$loop_lib_file" ]] && [[ ! -L "$loop_lib_file" ]]; then
         echo "Checked \"$loop_lib_file\" not found."
-        check_lib_files=0
+        check_lib_files=$((check_lib_files+1))
     fi
 done
-if [[ $check_lib_files -eq 0 ]] || [[ $Overwrite -ge 3 ]]; then
+if [[ $check_lib_files -lt ${#loop_lib_files[@]} ]] || [[ $Overwrite -ge 3 ]]; then
     echo "Running michi2-deploy-files ${deploy_params[@]}"
     michi2-deploy-files ${deploy_params[@]}
 else
