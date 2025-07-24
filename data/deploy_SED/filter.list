@@ -37,3 +37,25 @@
        1.15            filters/JWST/F115W_FM.xlsx_filteronly_modB_sorted.txt
        1.50            filters/JWST/F150W_FM.xlsx_filteronly_modB_sorted.txt
        2.00            filters/JWST/F200W_FM.xlsx_filteronly_modB_sorted.txt
+       0.76935         filters/HST/HST_ACS_WFC.F775W.formatted.txt
+       0.80455         filters/HST/HST_ACS_WFC.F814W.formatted.txt
+       0.90215         filters/JWST/NIRCam.F090W.formatted.txt
+       1.15426         filters/JWST/NIRCam.F115W.formatted.txt
+       1.50074         filters/JWST/NIRCam.F150W.formatted.txt
+       1.84517         filters/JWST/NIRCam.F182M.formatted.txt
+       1.98865         filters/JWST/NIRCam.F200W.formatted.txt
+       2.09545         filters/JWST/NIRCam.F210M.formatted.txt
+       2.76174         filters/JWST/NIRCam.F277W.formatted.txt
+       3.56836         filters/JWST/NIRCam.F356W.formatted.txt
+       4.08224         filters/JWST/NIRCam.F410M.formatted.txt
+       4.28126         filters/JWST/NIRCam.F430M.formatted.txt
+       4.40432         filters/JWST/NIRCam.F444W.formatted.txt
+       4.62993         filters/JWST/NIRCam.F460M.formatted.txt
+       4.8182          filters/JWST/NIRCam.F480M.formatted.txt
+       5.6352          filters/JWST/MIRI.F560W.formatted.txt
+       7.6393          filters/JWST/MIRI.F770W.formatted.txt
+       9.9531          filters/JWST/MIRI.F1000W.formatted.txt
+       12.8101         filters/JWST/MIRI.F1280W.formatted.txt
+       15.0635         filters/JWST/MIRI.F1500W.formatted.txt
+       17.984          filters/JWST/MIRI.F1800W.formatted.txt
+       20.795          filters/JWST/MIRI.F2100W.formatted.txt

@@ -3,3 +3,93 @@ https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-instrumentation/nir
   https://jwst-docs.stsci.edu/files/97978094/281939692/1/1720022158126/nircam_throughputs_16May2024_v6.zip
 
 
+https://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?mode=browse&gname=JWST&gname2=NIRCam&asttype=
+filter ID  λref  λmean λeff  λmin  λmax  Weff  ZPν ZPλ Obs. Facility Instrument  Description
+JWST/NIRCam.F070W 7039.12 7088.30 6988.43 6048.20 7927.07 1212.84 2768.40 1.67e-9 JWST  NIRCam  NIRCam F070W filter
+JWST/NIRCam.F090W 9021.53 9083.40 8984.98 7881.88 10243.08  1772.74 2244.95 8.27e-10  JWST  NIRCam  NIRCam F090W filter
+JWST/NIRCam.F115W 11542.61  11623.88  11433.62  9975.60 13058.40  2055.13 1746.12 3.93e-10  JWST  NIRCam  NIRCam F115W filter
+JWST/NIRCam.F140M 14053.23  14074.47  14023.62  13042.25  15058.58  1367.40 1288.65 1.96e-10  JWST  NIRCam  NIRCam F140M filter
+JWST/NIRCam.F150W 15007.44  15104.23  14872.56  13041.19  16948.89  2890.43 1172.06 1.56e-10  JWST  NIRCam  NIRCam F150W filter
+JWST/NIRCam.F162M 16272.47  16296.59  16243.33  15126.16  17439.17  1626.29 1023.04 1.16e-10  JWST  NIRCam  NIRCam F162M filter
+JWST/NIRCam.F164N 16445.36  16445.95  16446.18  16171.41  16717.72  200.10  985.58  1.09e-10  JWST  NIRCam  NIRCam F164N filter
+JWST/NIRCam.F150W2  16592.11  17865.57  14793.71  9774.71 23946.87  9389.16 1149.94 1.25e-10  JWST  NIRCam  NIRCam F150W2 filter
+JWST/NIRCam.F182M 18451.67  18494.30  18388.83  16959.53  20010.97  2250.81 844.94  7.44e-11  JWST  NIRCam  NIRCam F182M filter
+JWST/NIRCam.F187N 18738.99  18739.65  18737.22  18445.28  19029.98  236.69  794.85  6.79e-11  JWST  NIRCam  NIRCam F187N filter
+JWST/NIRCam.F200W 19886.48  20028.15  19680.41  17249.08  22596.64  4190.39 757.65  5.74e-11  JWST  NIRCam  NIRCam F200W filter
+JWST/NIRCam.F210M 20954.51  20982.22  20908.35  19618.54  22337.29  2055.38 688.03  4.7e-11 JWST  NIRCam  NIRCam F210M filter
+JWST/NIRCam.F212N 21213.18  21213.97  21211.93  20900.93  21524.99  274.27  674.83  4.5e-11 JWST  NIRCam  NIRCam F212N filter
+JWST/NIRCam.F250M 25032.33  25049.39  25005.80  23935.49  26177.91  1782.96 504.65  2.41e-11  JWST  NIRCam  NIRCam F250M filter
+JWST/NIRCam.F277W 27617.40  27844.64  27278.58  23673.12  32203.22  6614.61 430.14  1.69e-11  JWST  NIRCam  NIRCam F277W filter
+JWST/NIRCam.F300M 29891.21  29940.44  29818.32  27703.55  32505.92  3255.58 369.65  1.24e-11  JWST  NIRCam  NIRCam F300M filter
+JWST/NIRCam.F323N 32368.53  32369.29  32367.30  32046.29  32761.07  384.89  320.94  9.18e-12  JWST  NIRCam  NIRCam F323N filter
+JWST/NIRCam.F322W2  32319.76  33334.92  30731.38  23851.45  41234.69  11332.55  343.30  9.85e-12  JWST  NIRCam  NIRCam F322W2 filter
+JWST/NIRCam.F335M 33620.67  33675.24  33537.23  31203.36  36442.23  3389.42 298.91  7.93e-12  JWST  NIRCam  NIRCam F335M filter
+JWST/NIRCam.F356W 35683.62  35934.49  35287.04  30732.91  40801.26  7239.30 271.39  6.39e-12  JWST  NIRCam  NIRCam F356W filter
+JWST/NIRCam.F360M 36241.76  36298.10  36148.93  33260.34  39037.39  3584.80 260.31  5.94e-12  JWST  NIRCam  NIRCam F360M filter
+JWST/NIRCam.F405N 40516.53  40517.39  40515.76  40097.87  40966.10  454.87  206.97  3.78e-12  JWST  NIRCam  NIRCam F405N filter
+JWST/NIRCam.F410M 40822.38  40886.54  40723.18  37763.56  44048.41  4262.86 208.75  3.76e-12  JWST  NIRCam  NIRCam F410M filter
+JWST/NIRCam.F430M 42812.58  42829.39  42784.79  41227.68  44448.79  2295.14 190.70  3.12e-12  JWST  NIRCam  NIRCam F430M filter
+JWST/NIRCam.F444W 44043.15  44393.52  43504.26  38039.57  50995.50  10676.00  184.10  2.85e-12  JWST  NIRCam  NIRCam F444W filter
+JWST/NIRCam.F460M 46299.28  46315.57  46269.86  44652.64  48146.41  2309.00 164.11  2.3e-12 JWST  NIRCam  NIRCam F460M filter
+JWST/NIRCam.F466N 46544.30  46545.31  46540.48  46021.35  47042.62  535.41  157.77  2.18e-12  JWST  NIRCam  NIRCam F466N filter
+JWST/NIRCam.F470N 47077.91  47078.82  47077.84  46553.98  47566.82  510.27  159.50  2.16e-12  JWST  NIRCam  NIRCam F470N filter
+JWST/NIRCam.F480M 48181.95  48213.27  48139.11  45820.02  50919.02  3141.37 153.22  1.98e-12  JWST  NIRCam  NIRCam F480M filter
+
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F070W -O NIRCam.F070W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F090W -O NIRCam.F090W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F115W -O NIRCam.F115W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F140M -O NIRCam.F140M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F150W -O NIRCam.F150W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F162M -O NIRCam.F162M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F164N -O NIRCam.F164N.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F150W2 -O NIRCam.F150W2.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F182M -O NIRCam.F182M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F187N -O NIRCam.F187N.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F200W -O NIRCam.F200W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F210M -O NIRCam.F210M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F212N -O NIRCam.F212N.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F250M -O NIRCam.F250M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F277W -O NIRCam.F277W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F300M -O NIRCam.F300M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F323N -O NIRCam.F323N.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F322W2 -O NIRCam.F322W2.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F335M -O NIRCam.F335M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F356W -O NIRCam.F356W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F360M -O NIRCam.F360M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F405N -O NIRCam.F405N.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F410M -O NIRCam.F410M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F430M -O NIRCam.F430M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F444W -O NIRCam.F444W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F460M -O NIRCam.F460M.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F466N -O NIRCam.F466N.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F470N -O NIRCam.F470N.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/NIRCam.F480M -O NIRCam.F480M.dat
+
+
+https://svo2.cab.inta-csic.es/svo/theory/fps3/index.php?mode=browse&gname=JWST&gname2=MIRI&asttype=
+filter ID  λref  λmean λeff  λmin  λmax  Weff  ZPν ZPλ Obs. Facility Instrument  Description
+JWST/MIRI.F560W 56352.56  56651.28  55870.25  48944.36  64279.58  9461.37 115.29  1.09e-12  JWST  MIRI  MIRI F560W filter
+JWST/MIRI.F770W 76393.34  77111.48  75224.94  64802.79  88382.09  18278.14  65.08 3.34e-13  JWST  MIRI  MIRI F770W filter
+JWST/MIRI.F1000W  99531.16  99981.09  98793.45  87645.92  111053.33 17036.67  38.51 1.17e-13  JWST  MIRI  MIRI F1000W filter
+JWST/MIRI.F1065C  105628.39 105681.52 105542.39 100226.73 111577.48 5647.25 33.89 9.11e-14  JWST  MIRI  MIRI F1065C coronographic filter
+JWST/MIRI.F1140C  113103.03 113156.52 113013.47 107357.90 119593.95 6036.53 29.63 6.94e-14  JWST  MIRI  MIRI F1140C coronographic filter
+JWST/MIRI.F1130W  113085.01 113159.44 112960.71 106439.78 119874.08 7229.15 29.66 6.95e-14  JWST  MIRI  MIRI F1130W filter
+JWST/MIRI.F1280W  128101.38 128738.34 127059.68 112674.80 143435.71 24337.73  23.52 4.3e-14 JWST  MIRI  MIRI F1280W filter
+JWST/MIRI.F1500W  150635.06 151469.07 149257.07 131345.04 171580.84 29426.24  17.12 2.26e-14  JWST  MIRI  MIRI F1500W filter
+JWST/MIRI.F1550C  155167.74 155219.65 155079.50 149413.67 161556.33 7038.01 15.93 1.98e-14  JWST  MIRI  MIRI F1550C coronographic filter
+JWST/MIRI.F1800W  179837.22 180508.30 178734.17 160441.28 203000.78 29145.67  11.99 1.11e-14  JWST  MIRI  MIRI F1800W filter
+JWST/MIRI.F2100W  207950.05 209373.19 205601.06 179077.84 244780.51 44045.73  9.06  6.28e-15  JWST  MIRI  MIRI F2100W filter
+JWST/MIRI.F2300C  226446.44 227630.49 224493.76 196484.64 262492.33 43032.65  7.62  4.45e-15  JWST  MIRI  MIRI F2300C coronographic filter
+JWST/MIRI.F2550W  253640.02 254994.20 251515.99 223494.34 299940.00 38760.07  6.07  2.83e-15  JWST  MIRI  MIRI F2550W filter
+
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F560W -O MIRI.F560W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F770W -O MIRI.F770W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F1000W -O MIRI.F1000W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F1130W -O MIRI.F1130W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F1280W -O MIRI.F1280W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F1500W -O MIRI.F1500W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F1800W -O MIRI.F1800W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F2100W -O MIRI.F2100W.dat
+wget https://svo2.cab.inta-csic.es/svo/theory/fps3/getdata.php?format=ascii&id=JWST/MIRI.F2550W -O MIRI.F2550W.dat
+
+

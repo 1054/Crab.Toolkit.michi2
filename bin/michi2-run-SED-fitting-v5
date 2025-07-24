@@ -94,6 +94,7 @@ CorrespondingLibRadio=("lib.RadioPowerlaw.Single.SED")
 Overwrite=0
 FitName="fit_5"
 ObjName="obj"
+FilterFlux=0 # filter low S/N flux data points
 Debug=()
 Trial=0
 if [[ $(hostname) == aida* ]] || [[ $(hostname) == isaac* ]]; then
@@ -228,6 +229,9 @@ if [[ $# -ge 2 ]]; then
         elif [[ "$Strcmd" == "-free-dust" ]]; then
             FreeDust=1
             echo FreeDust=$FreeDust
+        elif [[ "$Strcmd" == "-filter-flux" ]]; then
+            FilterFlux=1
+            echo FilterFlux=$FilterFlux
         elif [[ "$Strcmd" == "-overwrite" ]]; then
             Overwrite=$((Overwrite+1))
             echo Overwrite=$Overwrite
@@ -245,13 +249,13 @@ fi
 # 
 # Check user input 
 # 
-if [[ $NoDust -eq 1 ]] && [[ $NoRadio -eq 0 ]]; then
+if [[ $NoDust -eq 1 ]] && [[ $NoRadio -ne 1 ]]; then
     NoRadio=1
     echo NoRadio=$NoRadio
     echo "Warning! When setting -no-dust, we will automatically set -no-radio"
 fi
 
-if [[ $NoDust -eq 1 ]] && [[ $FreezeRadio -eq 0 ]]; then
+if [[ $NoDust -eq 1 ]] && [[ $FreezeRadio -ne 0 ]]; then
     FreezeRadio=0
     echo FreezeRadio=$FreezeRadio
     echo "Warning! When setting -no-dust, we will automatically turn off -freeze-radio"
@@ -311,54 +315,56 @@ fi
 # 
 if [[ ! -f "$FitName.in" ]] || [[ $Overwrite -ge 2 ]]; then
     if [[ -f "$Flux" ]]; then
-        #echo ""
-        echo ""
-        echo "Warning! \"$FitName.in\" was not found! But found \"$Flux\"! Will run: "
-        if [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 1 ]] && [[ $NoStellar -eq 1 ]]; then
-            # (AGN) + dust
-            echo "michi2_filter_flux_2sigma_no_stellar_no_radio_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
-            echo "to filter flux data points for SED fitting."
+        if [[ $FilterFlux -gt 0 ]]; then
             echo ""
-            michi2_filter_flux_2sigma_no_stellar_no_radio_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
-            # 
-        elif [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 1 ]] && [[ $NoStellar -eq 0 ]]; then
-            # stellar + (AGN) + dust
-            echo "michi2_filter_flux_2sigma_no_radio_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
-            echo "to filter flux data points for SED fitting."
-            echo ""
-            michi2_filter_flux_2sigma_no_radio_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
-            # 
-        elif [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 0 ]] && [[ $NoStellar -eq 1 ]]; then
-            # (AGN) + dust + radio
-            echo "michi2_filter_flux_2sigma_no_stellar_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
-            echo "to filter flux data points for SED fitting."
-            echo ""
-            michi2_filter_flux_2sigma_no_stellar_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
-            # 
-        elif [[ $NoDust -eq 1 ]] && [[ $NoAGN -eq 1 ]]; then
-            # stellar only
-            echo "michi2_filter_flux_2sigma_no_dust_no_radio_no_AGN.py \"$Flux\" \"$FitName.in\""
-            echo "to filter flux data points for SED fitting."
-            echo ""
-            michi2_filter_flux_2sigma_no_dust_no_radio_no_AGN.py "$Flux" "$FitName.in" > "$FitName.in.log"
-            # 
-        elif [[ $NoDust -eq 1 ]] && [[ $NoAGN -eq 0 ]]; then
-            # stellar + AGN
-            echo "michi2_filter_flux_2sigma_no_dust_no_radio.py \"$Flux\" \"$FitName.in\""
-            echo "to filter flux data points for SED fitting."
-            echo ""
-            michi2_filter_flux_2sigma_no_dust_no_radio.py "$Flux" "$FitName.in" > "$FitName.in.log"
-            # 
+            echo "Warning! \"$FitName.in\" was not found! But found \"$Flux\"! Will run: "
+            if [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 1 ]] && [[ $NoStellar -eq 1 ]]; then
+                # (AGN) + dust
+                echo "michi2_filter_flux_2sigma_no_stellar_no_radio_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
+                echo "to filter flux data points for SED fitting."
+                echo ""
+                michi2_filter_flux_2sigma_no_stellar_no_radio_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
+                # 
+            elif [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 1 ]] && [[ $NoStellar -eq 0 ]]; then
+                # stellar + (AGN) + dust
+                echo "michi2_filter_flux_2sigma_no_radio_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
+                echo "to filter flux data points for SED fitting."
+                echo ""
+                michi2_filter_flux_2sigma_no_radio_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
+                # 
+            elif [[ $NoDust -eq 0 ]] && [[ $NoRadio -eq 0 ]] && [[ $NoStellar -eq 1 ]]; then
+                # (AGN) + dust + radio
+                echo "michi2_filter_flux_2sigma_no_stellar_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
+                echo "to filter flux data points for SED fitting."
+                echo ""
+                michi2_filter_flux_2sigma_no_stellar_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
+                # 
+            elif [[ $NoDust -eq 1 ]] && [[ $NoAGN -eq 1 ]]; then
+                # stellar only
+                echo "michi2_filter_flux_2sigma_no_dust_no_radio_no_AGN.py \"$Flux\" \"$FitName.in\""
+                echo "to filter flux data points for SED fitting."
+                echo ""
+                michi2_filter_flux_2sigma_no_dust_no_radio_no_AGN.py "$Flux" "$FitName.in" > "$FitName.in.log"
+                # 
+            elif [[ $NoDust -eq 1 ]] && [[ $NoAGN -eq 0 ]]; then
+                # stellar + AGN
+                echo "michi2_filter_flux_2sigma_no_dust_no_radio.py \"$Flux\" \"$FitName.in\""
+                echo "to filter flux data points for SED fitting."
+                echo ""
+                michi2_filter_flux_2sigma_no_dust_no_radio.py "$Flux" "$FitName.in" > "$FitName.in.log"
+                # 
+            else
+                # stellar + AGN + dust + radio
+                echo "michi2_filter_flux_2sigma_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
+                echo "to filter flux data points for SED fitting."
+                echo ""
+                michi2_filter_flux_2sigma_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
+                # 
+            fi
         else
-            # stellar + AGN + dust + radio
-            echo "michi2_filter_flux_2sigma_fit_infrared_upper_limits.py \"$Flux\" \"$FitName.in\""
-            echo "to filter flux data points for SED fitting."
-            echo ""
-            michi2_filter_flux_2sigma_fit_infrared_upper_limits.py "$Flux" "$FitName.in" > "$FitName.in.log"
-            # 
+            echo "michi2_filter_flux.py \"$Flux\" \"$FitName.in\""
+            michi2_filter_flux.py "$Flux" "$FitName.in"
         fi
-        #echo ""
-        #echo ""
     fi
 fi
 if [[ ! -f "$FitName.in" ]]; then

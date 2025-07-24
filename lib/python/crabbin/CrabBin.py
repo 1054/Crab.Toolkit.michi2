@@ -301,8 +301,10 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
             if xcursor < xclip3_max:
                 param_bin_edge.extend(numpy.arange(xcursor, xclip3_max, param_bin_step*0.8).tolist()) # 
                 xcursor = xclip3_max
-            if xcursor < param_max:
-                param_bin_edge.extend(numpy.arange(xcursor, param_max, param_bin_step).tolist()) # 
+            #if xcursor < param_max:
+            if xcursor <= param_max: # 20250722
+                #param_bin_edge.extend(numpy.arange(xcursor, param_max, param_bin_step).tolist()) # 
+                param_bin_edge.extend(numpy.arange(xcursor, param_max+param_bin_step*0.5, param_bin_step).tolist()) # 20250722
                 xcursor = param_max
             param_bin_edge = numpy.array(param_bin_edge)
             param_bin_numb = len(param_bin_edge)-1
@@ -328,6 +330,7 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
     # 
     param_bin_lower = numpy.nan
     param_bin_upper = numpy.nan
+    #print('Binning param edge values:', param_bin_edge)
     for i in range(len(param_bin_edge)-1):
         param_bin_lower = param_bin_edge[i] # param_min+float(i)*param_bin_step
         param_bin_upper = param_bin_edge[i+1] # param_min+float(i+1)*param_bin_step

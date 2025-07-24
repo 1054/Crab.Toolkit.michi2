@@ -2,3 +2,4 @@
 *backup*
 bin/__pycache__
 .smhist
+.DS_Store

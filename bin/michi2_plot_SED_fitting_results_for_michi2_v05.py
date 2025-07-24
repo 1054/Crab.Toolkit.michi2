@@ -350,11 +350,13 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
         plot_yrange = [0.0, 0.0]
         plot_xrange[0] = max(param_stats['min'], param_stats['L68'] - 15.0*param_stats['sigma'])
         plot_xrange[1] = min(param_stats['max'], param_stats['H68'] + 15.0*param_stats['sigma'])
+        #print('plot_xrange:', plot_xrange)
         #print('param_stats:', param_stats)
         #plot_xrange[0] = max(param_stats['min'], param_stats['L68'] - 100.0*param_stats['sigma']) # 20230703
         #plot_xrange[1] = min(param_stats['max'], param_stats['H68'] + 100.0*param_stats['sigma']) # 20230703
         plot_yrange[0] = 0.0
         plot_yrange[1] = 1.0/param_stats['min_chisq'] * 1.1 # y-axis is 1/chisq rather than chisq
+        #print('plot_yrange:', plot_yrange)
         # 
         # 
         # Initialize a plot
