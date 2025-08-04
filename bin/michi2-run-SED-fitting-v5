@@ -58,6 +58,7 @@ Sampling=10000
 Flux=""
 Umin="" # Added on 2018-03-23 to put an additional constraint on Umin
 minEBV="" # Added on 2019-08-27 to put an additional constraint on E(B-V), BC03 PAR6
+qPAH="" # Added on 2025-08-04 to put an additional constraint on qPAH
 NoStellar=0
 NoAGN=0
 NoDust=0
@@ -126,7 +127,13 @@ if [[ $# -ge 2 ]]; then
             if [[ $i -lt $# ]]; then
                 i=$((i+1))
                 Umin="${!i}"
-                echo Umin="${!i}"
+                echo Umin="${!i}" "(lower boundary)"
+            fi
+        elif [[ "$Strcmd" == "-qpah" ]]; then
+            if [[ $i -lt $# ]]; then
+                i=$((i+1))
+                qPAH="${!i}"
+                echo qPAH="${!i}" "(upper boundary)"
             fi
         elif [[ "$Strcmd" == "-minebv" ]]; then
             if [[ $i -lt $# ]]; then
@@ -428,18 +435,31 @@ fi
 # 
 # Determine whether this is a starburst galaxy so that we constrain the Umin
 # 
-constrain_dust_Umin=()
+constrain_dust_props=()
 if [[ x"$Umin" != x ]]; then
     if [[ $NoDust -eq 0 ]]; then
         i=$(awk "BEGIN { print (1-$NoStellar)+(1-$NoAGN)+1; }")
         j=$(awk "BEGIN { print ($i+1); }")
-        constrain_dust_Umin=(-constraint "LIB${i}_PAR1 >= $Umin")
+        constrain_dust_props+=(-constraint "LIB${i}_PAR1 >= $Umin")
         # 
         # if warm and cold dust components are not coupled, then we need to set the Umin constraint for both.
         if [[ $FreeDust -eq 1 ]]; then
-            constrain_dust_Umin+=(-constraint "LIB${j}_PAR1 >= $Umin")
+            constrain_dust_props+=(-constraint "LIB${j}_PAR1 >= $Umin")
         fi
-        echo "constrain_dust_Umin = ${constrain_dust_Umin[@]}"
+        echo "constrain_dust_props = ${constrain_dust_props[@]}"
+    fi
+fi
+if [[ x"$qPAH" != x ]]; then
+    if [[ $NoDust -eq 0 ]]; then
+        i=$(awk "BEGIN { print (1-$NoStellar)+(1-$NoAGN)+1; }")
+        j=$(awk "BEGIN { print ($i+1); }")
+        constrain_dust_props+=(-constraint "LIB${i}_PAR2 <= $qPAH")
+        # 
+        # if warm and cold dust components are not coupled, then we need to set the Umin constraint for both.
+        if [[ $FreeDust -eq 1 ]]; then
+            constrain_dust_props+=(-constraint "LIB${j}_PAR2 <= $qPAH")
+        fi
+        echo "constrain_dust_props = ${constrain_dust_props[@]}"
     fi
 fi
 
@@ -542,8 +562,8 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
     if [[ ${#constrain_stellar_EBV[@]} -gt 0 ]]; then
     echo "           ${constrain_stellar_EBV[@]} \\"
     fi
-    if [[ ${#constrain_dust_Umin[@]} -gt 0 ]]; then
-    echo "           ${constrain_dust_Umin[@]} \\"
+    if [[ ${#constrain_dust_props[@]} -gt 0 ]]; then
+    echo "           ${constrain_dust_props[@]} \\"
     fi
     if [[ ${#constrain_warm_cold_dust[@]} -gt 0 ]]; then
     echo "           ${constrain_warm_cold_dust[@]} \\"
@@ -576,7 +596,7 @@ if [[ ! -f "$FitName.out" ]] || [[ $Overwrite -ge 1 ]]; then
                -sampling $Sampling \
                ${constrain_stellar_index[@]} \
                ${constrain_stellar_EBV[@]} \
-               ${constrain_dust_Umin[@]} \
+               ${constrain_dust_props[@]} \
                ${constrain_warm_cold_dust[@]} \
                ${constrain_radio_IR[@]} \
                -filter filter.list \
