@@ -1227,6 +1227,7 @@ else:
     # Now we analyze the following quantities in the big chi-square data table 'DataTable'
     # -- stellar mass
     Stellar_mass_dict = {}
+    Stellar_tau_dict = {}
     Stellar_age_dict = {}
     Stellar_EBV_dict = {}
     LTIR_warm_dust_dict = {}
@@ -1340,6 +1341,19 @@ else:
                     #Stellar_mass_dict['step'] = 0.1 # 20230822
                     #Stellar_mass_dict['smooth'] = 3 # 20230822
                     Stellar_mass_dict['Degree_of_freedom'] = DegreeOfFreedom
+                    # 
+                elif 'Tau' == Lib_dict[Key_TPAR]:
+                    Stellar_age_dict['Lib_file'] = InfoDict[Lib_name]
+                    Stellar_age_dict['Lib_name'] = Lib_name
+                    Stellar_age_dict['Lib_numb'] = j+1
+                    Stellar_age_dict['Par_name'] = r'$\log_{10} \ \mathrm{Tau} \ \mathrm{[Gyr]}$' # Lib_dict[Key_TPAR]
+                    Stellar_age_dict['Par_file'] = 'Tau'
+                    Stellar_age_dict['Col_numb'] = Col_number
+                    Stellar_age_dict['Log_calc'] = True
+                    Stellar_age_dict['range'] = [0.05, 15.0]
+                    Stellar_age_dict['value'] = DataTable.getColumn(Col_number)
+                    Stellar_age_dict['chisq'] = DataArray['chi2']
+                    Stellar_age_dict['Degree_of_freedom'] = DegreeOfFreedom
                     # 
                 elif 'Age' == Lib_dict[Key_TPAR]:
                     Stellar_age_dict['Lib_file'] = InfoDict[Lib_name]
@@ -1959,6 +1973,8 @@ else:
     Plot_engine.set_margin(panel=0, top=0.96, bottom=0.04, left=0.06, right=0.96)
     if 'value' in Stellar_mass_dict and (len(UserInputChisqPanels)==0 or 'Mstar' in UserInputChisqPanels):
         analyze_chisq_distribution(Stellar_mass_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
+    if 'value' in Stellar_tau_dict and (len(UserInputChisqPanels)==0 or 'Tau' in UserInputChisqPanels):
+        analyze_chisq_distribution(Stellar_tau_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in Stellar_age_dict and (len(UserInputChisqPanels)==0 or 'Age' in UserInputChisqPanels):
         analyze_chisq_distribution(Stellar_age_dict, Plot_engine = Plot_engine, Output_dir = Output_dir)
     if 'value' in Stellar_EBV_dict and (len(UserInputChisqPanels)==0 or 'EBV' in UserInputChisqPanels):

@@ -15,13 +15,13 @@
 # 
 ################################
 
-try:
-    import pkg_resources
-except ImportError:
-    raise SystemExit("Error! Failed to import pkg_resources!")
+# try:
+#     import pkg_resources
+# except ImportError:
+#     raise SystemExit("Error! Failed to import pkg_resources!")
 
-pkg_resources.require("numpy")
-pkg_resources.require("astropy>=1.3")
+# pkg_resources.require("numpy")
+# pkg_resources.require("astropy>=1.3")
 
 import os
 import sys

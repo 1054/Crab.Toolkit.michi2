@@ -23,14 +23,14 @@
 # 
 ################################
 
-try:
-    import pkg_resources
-except ImportError:
-    raise SystemExit("Error! Failed to import pkg_resources!")
+#try:
+#    import pkg_resources
+#except ImportError:
+#    raise SystemExit("Error! Failed to import pkg_resources!")
 
-pkg_resources.require("numpy")
-pkg_resources.require("astropy>=1.3")
-pkg_resources.require("matplotlib")
+#pkg_resources.require("numpy")
+#pkg_resources.require("astropy>=1.3")
+#pkg_resources.require("matplotlib")
 #pkg_resources.require("wcsaxes") # http://wcsaxes.readthedocs.io/en/latest/getting_started.html #20180611 commented out because it is merged into astropy
 
 # 

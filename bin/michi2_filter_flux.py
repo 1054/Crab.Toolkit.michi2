@@ -182,6 +182,8 @@ def process_flux_data(w, f, ferr, mask, method):
 
 # 
 # filter data at optical
+print('f', f)
+print('ferr', ferr)
 mask = (w<8.0) & (f<thresh_optical*ferr)
 w, f, ferr = process_flux_data(w, f, ferr, mask, method_optical)
 

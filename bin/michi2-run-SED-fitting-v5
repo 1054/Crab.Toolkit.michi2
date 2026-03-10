@@ -440,11 +440,11 @@ if [[ x"$Umin" != x ]]; then
     if [[ $NoDust -eq 0 ]]; then
         i=$(awk "BEGIN { print (1-$NoStellar)+(1-$NoAGN)+1; }")
         j=$(awk "BEGIN { print ($i+1); }")
-        constrain_dust_props+=(-constraint "LIB${i}_PAR1 >= $Umin")
+        constrain_dust_props+=(-constraint "LIB${i}_PAR1 GE $Umin")
         # 
         # if warm and cold dust components are not coupled, then we need to set the Umin constraint for both.
         if [[ $FreeDust -eq 1 ]]; then
-            constrain_dust_props+=(-constraint "LIB${j}_PAR1 >= $Umin")
+            constrain_dust_props+=(-constraint "LIB${j}_PAR1 GE $Umin")
         fi
         echo "constrain_dust_props = ${constrain_dust_props[@]}"
     fi
@@ -453,11 +453,11 @@ if [[ x"$qPAH" != x ]]; then
     if [[ $NoDust -eq 0 ]]; then
         i=$(awk "BEGIN { print (1-$NoStellar)+(1-$NoAGN)+1; }")
         j=$(awk "BEGIN { print ($i+1); }")
-        constrain_dust_props+=(-constraint "LIB${i}_PAR2 <= $qPAH")
+        constrain_dust_props+=(-constraint "LIB${i}_PAR2 LE $qPAH")
         # 
         # if warm and cold dust components are not coupled, then we need to set the Umin constraint for both.
         if [[ $FreeDust -eq 1 ]]; then
-            constrain_dust_props+=(-constraint "LIB${j}_PAR2 <= $qPAH")
+            constrain_dust_props+=(-constraint "LIB${j}_PAR2 LE $qPAH")
         fi
         echo "constrain_dust_props = ${constrain_dust_props[@]}"
     fi
@@ -472,7 +472,7 @@ if [[ x"$minEBV" != x ]]; then
     if [[ $NoStellar -eq 0 ]]; then
         # 
         if [[ "${CorrespondingLibStellar[ChosenLibStellar]}" == *"BC03"* ]]; then
-            constrain_stellar_EBV+=(-constraint "LIB1_PAR6 >= $minEBV")
+            constrain_stellar_EBV+=(-constraint "LIB1_PAR6 GE $minEBV")
         else
             echo "Error! minEBV not implemented for \"${CorrespondingLibStellar[ChosenLibStellar]}\"!"
             exit 255
