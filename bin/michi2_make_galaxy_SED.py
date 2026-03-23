@@ -18,6 +18,7 @@ import tempfile
 import shutil
 from contextlib import contextmanager
 import astropy.io.ascii as asciitable
+from astropy.table import Table
 from copy import copy
 
 Script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -264,6 +265,7 @@ def michi2_make_galaxy_SED(\
     Wave_step:float = 0.01, # dex
     Output_file:str = '', 
     Silent = False, 
+    Overwrite = False,
     ):
     
     # 
@@ -346,6 +348,7 @@ def michi2_make_galaxy_SED(\
         print('qPAH = %s'%(qPAH))
         print('qIR = %s'%(qIR))
         print('Output_file = "%s"'%(Output_file))
+        print('Overwrite = %s'%(Overwrite))
         print('##########################')
     
     if Output_file != '':
@@ -564,13 +567,19 @@ def michi2_make_galaxy_SED(\
     # 
     if Output_file != '':
         print('')
-        asciitable.write(numpy.column_stack((w_SED,f_SED)), 
-                            Output_file, 
-                            Writer=asciitable.FixedWidth, 
-                            names=['Wavelength_um', 'Flux_density_mJy'], 
-                            overwrite=True, delimiter='  ', bookend=True)
-        os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_file))
-        os.system('rm "%s.bak"'%(Output_file))
+        # asciitable.write(numpy.column_stack((w_SED,f_SED)), 
+        #                     Output_file, 
+        #                     Writer=asciitable.FixedWidth, 
+        #                     names=['Wavelength_um', 'Flux_density_mJy'], 
+        #                     overwrite=True, delimiter='  ', bookend=True)
+        # os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_file))
+        # os.system('rm "%s.bak"'%(Output_file))
+        Table({'Wavelength_um': w_SED, 'Flux_density_mJy': f_SED}).write(
+            Output_file, format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=Overwrite
+        )
+        with open(Output_file, 'r+') as fp:
+            fp.seek(0)
+            fp.write('#')
         print('Output to "%s"'%(Output_file))
         # 
         # Output each SED component
@@ -579,67 +588,100 @@ def michi2_make_galaxy_SED(\
         
         if a_stellar > 0:
             if 'flux_unattenu' in p_stellar:
-                asciitable.write(numpy.column_stack((w_stellar,f_stellar,p_stellar['flux_unattenu']*a_stellar)), 
-                                Output_name+'_stellar'+'.txt', 
-                                Writer=asciitable.FixedWidth, 
-                                names=['Wavelength_um', 'Flux_density_mJy', 'Flux_density_unattenuated_mJy'], 
-                                overwrite=True, delimiter='  ', bookend=True)
+                # asciitable.write(numpy.column_stack((w_stellar,f_stellar,p_stellar['flux_unattenu']*a_stellar)), 
+                #                 Output_name+'_stellar'+'.txt', 
+                #                 Writer=asciitable.FixedWidth, 
+                #                 names=['Wavelength_um', 'Flux_density_mJy', 'Flux_density_unattenuated_mJy'], 
+                #                 overwrite=True, delimiter='  ', bookend=True)
+                Table({'Wavelength_um': w_stellar, 'Flux_density_mJy': f_stellar, 'Flux_density_unattenuated_mJy': p_stellar['flux_unattenu']*a_stellar}).write(
+                    Output_name+'_stellar'+'.txt', format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=Overwrite
+                )
                 print('integrate_vLv stellar SED attenuated = %0.6e [Lsolar]'%(integrate_vLv(w_stellar, f_stellar, z)))
                 print('integrate_vLv stellar SED unattenuated = %0.6e [Lsolar]'%(integrate_vLv(w_stellar, p_stellar['flux_unattenu']*a_stellar, z)))
             else:
-                asciitable.write(numpy.column_stack((w_stellar,f_stellar)), 
-                                Output_name+'_stellar'+'.txt', 
-                                Writer=asciitable.FixedWidth, 
-                                names=['Wavelength_um', 'Flux_density_mJy'], 
-                                overwrite=True, delimiter='  ', bookend=True)
-            
-            os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_stellar'+'.txt'))
-            os.system('rm "%s.bak"'%(Output_name+'_stellar'+'.txt'))
+                # asciitable.write(numpy.column_stack((w_stellar,f_stellar)), 
+                #                 Output_name+'_stellar'+'.txt', 
+                #                 Writer=asciitable.FixedWidth, 
+                #                 names=['Wavelength_um', 'Flux_density_mJy'], 
+                #                 overwrite=True, delimiter='  ', bookend=True)
+                Table({'Wavelength_um': w_stellar, 'Flux_density_mJy': f_stellar}).write(
+                    Output_name+'_stellar'+'.txt', format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=Overwrite
+                )
+
+            with open(Output_name+'_stellar'+'.txt', 'r+') as fp:
+                fp.seek(0)
+                fp.write('#')
+            # os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_stellar'+'.txt'))
+            # os.system('rm "%s.bak"'%(Output_name+'_stellar'+'.txt'))
             print('Output to "%s"'%(Output_name+'_stellar'+'.txt'))
         
         
         if a_warm_dust > 0:
-            asciitable.write(numpy.column_stack((w_warm_dust,f_warm_dust)), 
-                                Output_name+'_warm_dust'+'.txt', 
-                                Writer=asciitable.FixedWidth, 
-                                names=['Wavelength_um', 'Flux_density_mJy'], 
-                                overwrite=True, delimiter='  ', bookend=True)
-            os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_warm_dust'+'.txt'))
-            os.system('rm "%s.bak"'%(Output_name+'_warm_dust'+'.txt'))
+            # asciitable.write(numpy.column_stack((w_warm_dust,f_warm_dust)), 
+            #                     Output_name+'_warm_dust'+'.txt', 
+            #                     Writer=asciitable.FixedWidth, 
+            #                     names=['Wavelength_um', 'Flux_density_mJy'], 
+            #                     overwrite=True, delimiter='  ', bookend=True)
+            Table({'Wavelength_um': w_warm_dust, 'Flux_density_mJy': f_warm_dust}).write(
+                Output_name+'_warm_dust'+'.txt', format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=Overwrite
+            )
+            with open(Output_name+'_warm_dust'+'.txt', 'r+') as fp:
+                fp.seek(0)
+                fp.write('#')
+            # os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_warm_dust'+'.txt'))
+            # os.system('rm "%s.bak"'%(Output_name+'_warm_dust'+'.txt'))
             print('Output to "%s"'%(Output_name+'_warm_dust'+'.txt'))
         
         
         if a_cold_dust > 0:
-            asciitable.write(numpy.column_stack((w_cold_dust,f_cold_dust)), 
-                                Output_name+'_cold_dust'+'.txt', 
-                                Writer=asciitable.FixedWidth, 
-                                names=['Wavelength_um', 'Flux_density_mJy'], 
-                                overwrite=True, delimiter='  ', bookend=True)
-            os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_cold_dust'+'.txt'))
-            os.system('rm "%s.bak"'%(Output_name+'_cold_dust'+'.txt'))
+            # asciitable.write(numpy.column_stack((w_cold_dust,f_cold_dust)), 
+            #                     Output_name+'_cold_dust'+'.txt', 
+            #                     Writer=asciitable.FixedWidth, 
+            #                     names=['Wavelength_um', 'Flux_density_mJy'], 
+            #                     overwrite=True, delimiter='  ', bookend=True)
+            Table({'Wavelength_um': w_cold_dust, 'Flux_density_mJy': f_cold_dust}).write(
+                Output_name+'_cold_dust'+'.txt', format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=Overwrite
+            )
+            with open(Output_name+'_cold_dust'+'.txt', 'r+') as fp:
+                fp.seek(0)
+                fp.write('#')
+            # os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_cold_dust'+'.txt'))
+            # os.system('rm "%s.bak"'%(Output_name+'_cold_dust'+'.txt'))
             print('Output to "%s"'%(Output_name+'_cold_dust'+'.txt'))
         
         
         if a_AGN > 0:
-            asciitable.write(numpy.column_stack((w_AGN,f_AGN)), 
-                                Output_name+'_AGN'+'.txt', 
-                                Writer=asciitable.FixedWidth, 
-                                names=['Wavelength_um', 'Flux_density_mJy'], 
-                                overwrite=True, delimiter='  ', bookend=True)
-            os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_AGN'+'.txt'))
-            os.system('rm "%s.bak"'%(Output_name+'_AGN'+'.txt'))
+            # asciitable.write(numpy.column_stack((w_AGN,f_AGN)), 
+            #                     Output_name+'_AGN'+'.txt', 
+            #                     Writer=asciitable.FixedWidth, 
+            #                     names=['Wavelength_um', 'Flux_density_mJy'], 
+            #                     overwrite=True, delimiter='  ', bookend=True)
+            Table({'Wavelength_um': w_AGN, 'Flux_density_mJy': f_AGN}).write(
+                Output_name+'_AGN'+'.txt', format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=Overwrite
+            )
+            with open(Output_name+'_AGN'+'.txt', 'r+') as fp:
+                fp.seek(0)
+                fp.write('#')
+            # os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_AGN'+'.txt'))
+            # os.system('rm "%s.bak"'%(Output_name+'_AGN'+'.txt'))
             print('Output to "%s"'%(Output_name+'_AGN'+'.txt'))
         
         
-        if a_stellar > 0:
-            asciitable.write(numpy.column_stack((w_stellar,f_stellar)), 
-                                Output_name+'_stellar'+'.txt', 
-                                Writer=asciitable.FixedWidth, 
-                                names=['Wavelength_um', 'Flux_density_mJy'], 
-                                overwrite=True, delimiter='  ', bookend=True)
-            os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_stellar'+'.txt'))
-            os.system('rm "%s.bak"'%(Output_name+'_stellar'+'.txt'))
-            print('Output to "%s"'%(Output_name+'_stellar'+'.txt'))
+        # if a_stellar > 0:
+        #     # asciitable.write(numpy.column_stack((w_stellar,f_stellar)), 
+        #     #                     Output_name+'_stellar'+'.txt', 
+        #     #                     Writer=asciitable.FixedWidth, 
+        #     #                     names=['Wavelength_um', 'Flux_density_mJy'], 
+        #     #                     overwrite=True, delimiter='  ', bookend=True)
+        #     Table({'Wavelength_um': w_stellar, 'Flux_density_mJy': f_stellar}).write(
+        #         Output_name+'_stellar'+'.txt', format='ascii.fixed_width', delimiter='  ', bookend=True, overwrite=Overwrite
+        #     )
+        #     with open(Output_name+'_stellar'+'.txt', 'r+') as fp:
+        #         fp.seek(0)
+        #         fp.write('#')
+        #     # os.system('sed -i.bak -e "1s/^ /#/" "%s"'%(Output_name+'_stellar'+'.txt'))
+        #     # os.system('rm "%s.bak"'%(Output_name+'_stellar'+'.txt'))
+        #     print('Output to "%s"'%(Output_name+'_stellar'+'.txt'))
     # 
     # Done
     # 
@@ -681,7 +723,8 @@ if __name__ == '__main__':
         print('                              -qPAH     NN.N \\')
         print('                              -qIR      NN.N \\')
         print('                              -wavestep NN.N \\')
-        print('                              -Out      SSSS.txt')
+        print('                              -out      SSSS.txt')
+        print('                              [-overwrite]')
         print('')
         sys.exit()
     
@@ -701,6 +744,7 @@ if __name__ == '__main__':
     qIR = numpy.nan
     Wave_step = 0.01 # dex
     Output_file = ''
+    Overwrite = False
     
     iarg = 1
     while iarg < len(sys.argv):
@@ -803,6 +847,8 @@ if __name__ == '__main__':
                 Output_file = str(sys.argv[iarg])
                 if not Output_file.endswith('.txt'):
                     Output_file = Output_file+'.txt'
+        elif sys.argv[iarg].lower() == '-overwrite':
+            Overwrite = True
         elif sys.argv[iarg].lower() == '-test':
             z = 1.5
             Mstar = numpy.power(10,10.8)
@@ -834,6 +880,7 @@ if __name__ == '__main__':
         qIR = qIR, 
         Wave_step = Wave_step, 
         Output_file = Output_file, 
+        Overwrite = Overwrite, 
     )
         
 

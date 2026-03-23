@@ -482,7 +482,8 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
     #    param_stats['L68'] = xrange[0]
     #    param_stats['H68'] = xrange[1]
     # 
-    if valid is True:
+    #if valid is True: # 20260312 valid can be True or np.True_
+    if valid: # 20260312 valid can be True or np.True_
         if not numpy.isnan(smooth_xrange[0]) and not numpy.isnan(smooth_xrange[1]):
             param_stats['median'] = (smooth_xrange[0]+smooth_xrange[1])/2.0
             param_stats['sigma'] = (smooth_xrange[1]-smooth_xrange[0])/2.0
@@ -497,6 +498,8 @@ def crab_bin_compute_param_chisq_histogram(chisq_array, param_array, \
             param_stats['H68'] = valid_xrange[1]
             param_stats['xrange'][0] = valid_xrange[0]
             param_stats['xrange'][1] = valid_xrange[1]
+    #if numpy.isnan(param_stats['sigma']):
+    #    raise Exception("param_stats['sigma'] is NaN! param_stats: " + str(param_stats) + ". valid is True? " + str(valid is True))
     # 
     # return
     return param_stats

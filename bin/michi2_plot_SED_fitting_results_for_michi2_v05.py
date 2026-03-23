@@ -39,7 +39,7 @@ cosmo = FlatLambdaCDM(H0=70, Om0=0.27, Tcmb0=2.725)
 import matplotlib as mpl # https://matplotlib.org/users/customizing.html
 mpl.rcParams['xtick.top'] = True
 mpl.rcParams['ytick.right'] = True
-mpl.rcParams['axes.grid'] = True
+mpl.rcParams['axes.grid'] = False # True
 #mpl.rcParams['grid.color'] = 'b0b0b0'
 mpl.rcParams['grid.linestyle'] = '--'
 mpl.rcParams['grid.linewidth'] = 0.25
@@ -407,6 +407,8 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
         # 
         # Plot Cut_chi2 horizontal line (2p = 2.3)
         if param_stats['valid']:
+            if param_dict['Par_name'].find('M_{*}')>=0:
+                print("param_stats", param_stats)
             Plot_engine.fill_between(param_stats['xrange'], 
                                      #numpy.array([0.0,0.0])+1./(param_stats['yrange'][1]), 
                                      numpy.array([0.0,0.0]), 
@@ -929,8 +931,8 @@ else:
                 DataArray['a0'] = DataTable.getColumn(i+1)
             elif DataHeaders[i] == 'chi2':
                 DataArray['chi2'] = DataTable.getColumn(i+1)
-                #<TODO># if numpy.isfinite(UserInputRescaleFluxErrors):
-                #<TODO>#     DataArray['chi2'] /= UserInputRescaleFluxErrors
+                if numpy.isfinite(UserInputRescaleFluxErrors):
+                    DataArray['chi2'] /= UserInputRescaleFluxErrors
     # 
     # Determine degree of freedom
     DegreeOfFreedom = numpy.count_nonzero(Detection_mask) - int(InfoDict['NLIB'])
@@ -976,7 +978,7 @@ else:
     Plot_chi2_linewidth = 0.5 #<TODO># tune line width
     Plot_chi2_alpha = 0.5
     Plot_SED_linewidth = 1.0
-    #print('')
+    #print('min(chi2) %s max(chi2) %s'%(Min_chi2, Max_chi2))
     print('Selecting %d chi2 solutions with chi2 <= min(chi2)+%s'%(Cut_chi2_array_size, Delta_chisq_of_interest))
     # 
     if not SetOnlyPlotBestSED:
