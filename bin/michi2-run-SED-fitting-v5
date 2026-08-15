@@ -247,7 +247,7 @@ if [[ $# -ge 2 ]]; then
             echo "Debug=${Debug[@]} (debug level ${#Debug[@]})"
         elif [[ "$Strcmd" == "-trial" ]]; then
             Trial=1
-            echo Trial=Trial
+            echo Trial=$Trial
         fi
         i=$((i+1))
     done
