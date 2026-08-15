@@ -535,7 +535,7 @@ for loop_lib_file in ${loop_lib_files[@]}; do
         check_lib_files=$((check_lib_files+1))
     fi
 done
-if [[ $check_lib_files -lt ${#loop_lib_files[@]} ]] || [[ $Overwrite -ge 3 ]]; then
+if [[ $check_lib_files -gt 0 ]] || [[ $Overwrite -ge 3 ]]; then
     echo "Running michi2-deploy-files ${deploy_params[@]}"
     michi2-deploy-files ${deploy_params[@]}
 else
