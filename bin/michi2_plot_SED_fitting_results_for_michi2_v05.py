@@ -229,7 +229,7 @@ def analyze_chisq_distribution(param_dict, verbose = 1, Plot_engine = None, Outp
             if os.path.isfile(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt'):
                 os.system('mv %s %s.backup'%(Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt', 
                                              Output_dir+'chi-square_table_'+param_dict['Par_file']+'.txt'))
-            if param_stats['valid'] is True:
+            if bool(param_stats['valid']):
                 param_median = param_stats['median']
                 param_best = param_stats['best']
                 param_sigma = param_stats['sigma']
