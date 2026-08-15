@@ -17,7 +17,7 @@ ISRF (Umin) and dust mass.
 **Requirements:** bash (macOS or Linux) · a Python 3 with
 `numpy`/`matplotlib`/`astropy` on the `PATH` (for post-processing and
 plotting) · pre-compiled `michi2_v05` binaries ship in `bin/` (macOS x86_64,
-Linux glibc 2.14 / 2.22). The C source lives in a separate repository:
+Linux glibc 2.22). The C source lives in a separate repository:
 <https://gitlab.com/1054/michi2>.
 
 ---
@@ -66,9 +66,9 @@ is speed: a full-sampling 5-component fit takes minutes to hours (see
 
 Scroll up, there is a green button **"Clone or download"**. Click it and
 select **"Download ZIP"**, then uncompress it somewhere, e.g. your working
-directory. Currently the ZIP file size is about 52 MB. If you are familiar
-with git you can also clone it, but note the repository size is a bit large
-(hundreds of MB).
+directory. The download is about 200 MB (mostly the zipped model libraries
+and the multi-platform binaries). If you are familiar with git you can also
+clone it, but note a full clone with history is larger still (~500 MB).
 
 ## 2. Installation
 
@@ -78,8 +78,8 @@ the repo:
 | Platform | Binary | Note |
 |----------|--------|------|
 | macOS | `bin/bin_mac/michi2_v05_mac` | x86_64; runs on Apple Silicon via Rosetta 2 (verified) |
-| Linux (glibc ≥ 2.14) | `bin/bin_linux_glibc_2_14/michi2_v05_linux_glibc_2_14` | x86_64 |
-| Linux (glibc ≥ 2.22) | `bin/bin_linux_glibc_2_22/…` | x86_64 |
+| Linux (glibc ≥ 2.22) | `bin/bin_linux_glibc_2_22/michi2_v05_linux_x86_64` | the only Linux build of v05 |
+| Linux (older glibc) | `bin/bin_linux_glibc_2_14/michi2_v04_linux_x86_64` | only the older **v04** is provided for glibc 2.14 — rebuild v05 from source (<https://gitlab.com/1054/michi2>) if you need it on old systems |
 
 `bin/michi2_v05` is a small dispatch script that picks the right binary per
 OS. The **C source code lives in a separate repository**:
@@ -115,23 +115,25 @@ michi2-deploy-files SED            # deploy the defaults:
 michi2-deploy-files SED BC03.400Myr   # ...or a specific stellar library
 ```
 
-`michi2-run-SED-fitting-v5` nominally deploys missing libraries itself, but
-its auto-deploy check currently has an inverted condition: in a **completely
-empty** directory it prints "All libraries found." and the fit then fails
-with `The input library data "lib.*.SED" does not exist!`. **Always run
-`michi2-deploy-files` yourself in a fresh directory** (the wrapper's
-auto-deploy only helps when at least one library file is already present).
+`michi2-run-SED-fitting-v5` also deploys missing libraries itself. On older
+checkouts its auto-deploy check had an **inverted condition**: in a
+**completely empty** directory it printed "All libraries found." and the fit
+then failed with `The input library data "lib.*.SED" does not exist!`
+(**fixed on the `fix-bugs` branch** — deploy now triggers whenever any
+library is missing). On unpatched checkouts, **always run
+`michi2-deploy-files` yourself in a fresh directory**.
 
-⚠️ **Library-selection caveat:** `michi2-deploy-files SED` (no extra args)
-deploys the **BC03.MultiAge** stellar library, but the wrapper's default
-`-lib-stellar` is **BC03.200Myr**. Either pass the same explicit
-`-lib-stellar` to the wrapper as what you deployed, or deploy matching
-libraries, e.g.:
+⚠️ **Library-selection caveat (older checkouts):** `michi2-deploy-files SED`
+(no extra args) deploys the **BC03.MultiAge** stellar library, while older
+wrappers defaulted `-lib-stellar` to **BC03.200Myr**, so running the wrapper
+without arguments right after a default deploy failed on the missing
+`lib...Age200Myr.EBV.SED`. **Fixed on the `fix-bugs` branch** — the wrapper
+default is now `BC03.MultiAge`, matching the deploy default. On unpatched
+checkouts, pass an explicit `-lib-stellar` matching what you deployed, e.g.:
 
 ```bash
-michi2-deploy-files SED BC03.200Myr    # then run WITHOUT -lib-stellar
-# or
-michi2-deploy-files SED                # then run with -lib-stellar BC03.MultiAge
+michi2-deploy-files SED                # deploys BC03.MultiAge
+michi2-run-SED-fitting-v5 ... -lib-stellar BC03.MultiAge
 ```
 
 Re-running `michi2-deploy-files` re-extracts the libraries (it moves the
@@ -185,7 +187,6 @@ michi2-run-SED-fitting-v5 -redshift 1.5 -flux "extracted_flux.txt" -parallel 2
 michi2-run-SED-fitting-v5 -redshift 1.5 -flux "extracted_flux.txt" \
     -parallel 2 -sampling 150000 \
     -lib-stellar BC03.MultiAge -lib-dust DL07UPD2010 \
-    -lib-AGN MullaneyAGN -lib-radio Radio \
     -freeze-radio -qIR 2.4 -Umin 1 -minEBV 0.2 \
     -obj-name "My Galaxy" -overwrite
 ```
@@ -209,7 +210,7 @@ or `-sampling 3000`.
 | Flag | Default | Meaning |
 |------|---------|---------|
 | `-parallel N` | 2 | number of CPU cores |
-| `-sampling N` | 10000 | parameter-space sampling density. 30 ≈ instant smoke test (`-trial` sets this), 3000 ≈ science-grade for a ~20-band SED, 150000 ≈ the value used in Liu et al. (2021) |
+| `-sampling N` | 10000 | parameter-space sampling density. 30 ≈ instant smoke test (`-trial` sets this), 3000 ≈ quick look, 15000 ≈ science-grade for a ~20-band SED. The sampling is STOCHASTIC — identical runs can land on different minima (two 3000-runs on one test galaxy differed by 0.34 dex in M*), so use ≥15000 for reported values. 150000 ≈ the value used in Liu et al. (2021) |
 | `-trial` | — | fast trial run (forces sampling 30, parallel 2) |
 | `-overwrite` | off | re-fit even if `fit_5.out` exists. It is a **counter**: pass once to re-fit; twice to also rebuild `fit_5.in` from `-flux` |
 | `-fit-name NAME` | `fit_5` | output prefix (`NAME.out`, `results_NAME/`) |
@@ -220,10 +221,14 @@ or `-sampling 3000`.
 
 | Flag | Accepted values |
 |------|-----------------|
-| `-lib-stellar` | `BC03`, `BC03.200Myr` (wrapper default), `BC03.400Myr`, `BC03.MultiAge`, `FSPS.CSP.tau.0p1Gyr`, `FSPS.CSP.tau.1Gyr` |
+| `-lib-stellar` | `BC03`, `BC03.200Myr`, `BC03.400Myr`, `BC03.MultiAge` (default), `FSPS.CSP.tau.0p1Gyr`, `FSPS.CSP.tau.1Gyr` |
 | `-lib-dust` | `DL07`, `DL07UPD2010` (default), `DL07UPD2010FIR40122` |
-| `-lib-AGN` | `MullaneyAGN` |
-| `-lib-radio` | `Radio` |
+
+Note there are **no `-lib-AGN` / `-lib-radio` flags** — the AGN library
+(`MullaneyAGN`) and radio library (`RadioPowerlaw.Single`) are hardcoded in
+the wrapper (each has a single option anyway); use `-no-AGN` / `-no-radio`
+to drop them. (Older documentation showed `-lib-AGN` / `-lib-radio` in
+example commands — those arguments were silently ignored.)
 
 **Component toggles** (default: all five components on):
 
@@ -319,18 +324,20 @@ michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source YOUR_SOUR
   not sample it.
 - **Upper limits are not fitted** by the default path — provide S/N > 3
   detections only.
-- **Known issue (numpy ≥ 2):** with recent numpy versions,
-  `best-fit_param_*.txt` files may be written as all zeros. The chi-square
-  analysis returns `valid` as `numpy.bool_`, and
-  `michi2_plot_SED_fitting_results_for_michi2_v05.py` tests it with an
-  identity check (`is True`), which fails → the zero branch is taken. The
-  `chi-square_table_*.txt` files remain valid. A one-line fix is to use
-  `if bool(param_stats['valid']):`.
-- **Known issue (numpy ≥ 2):** `michi2_filter_flux.py` can crash with an
-  `IndexError` on tables with duplicated wavelengths (`remove_rows` followed
-  by stale-index slicing). Deduplicate wavelengths in the input, or build
-  `fit_5.in` yourself (the wrapper skips that step when `fit_5.in` already
-  exists and `-overwrite` was passed fewer than two times).
+- **Known issue (numpy ≥ 2; FIXED on the `fix-bugs` branch):** with recent
+  numpy versions, `best-fit_param_*.txt` files were written as all zeros.
+  The chi-square analysis returns `valid` as `numpy.bool_` (numpy 2's
+  `count_nonzero` → `np.intp`, so `> 0` → `np.bool_`), and
+  `michi2_plot_SED_fitting_results_for_michi2_v05.py` tested it with an
+  identity check (`is True`), which failed → the zero branch was taken. The
+  `chi-square_table_*.txt` files were never affected. Fix: `bool(...)`
+  (applied to the SED and LVG plotters on `fix-bugs`).
+- **Known issue (numpy ≥ 2; FIXED on the `fix-bugs` branch):**
+  `michi2_filter_flux.py` crashed with an `IndexError` on tables with
+  duplicated wavelengths (`remove_rows` left the loop's column references
+  stale). Fix: re-fetch the columns after `remove_rows`. Alternatively,
+  build `fit_5.in` yourself (the wrapper skips that step when `fit_5.in`
+  already exists and `-overwrite` was passed fewer than two times).
 
 ---
 
@@ -401,8 +408,6 @@ file in the working directory:
 ```bash
 ls "flux_co_ci.txt"                                          # line flux file
 ls "lib_z_4.055_with_CO_and_C_atom_dV_50.lvg"                # LVG model file
-
-michi2-run-fitting-5-components-applying-evolving-qIR        # usage
 
 # one-component fit with 2 CPU cores, sampling 15000 chi-squares
 michi2_v05 -obs "flux_co_ci.txt" \

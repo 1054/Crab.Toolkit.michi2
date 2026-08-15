@@ -18,9 +18,12 @@ bash run_demo.bash
 ```
 
 The script (1) deploys the zipped model libraries into this directory,
-(2) runs a seconds-scale `-trial` smoke test, and (3) runs the science-grade
-`-sampling 3000` fit (a few minutes with 4 cores; the trial run's parameter
-files are not meaningful — sampling 30 is only a pipeline test).
+(2) runs a seconds-scale `-trial` smoke test, and (3) runs a
+`-sampling 3000` fit (a few minutes with 4 cores). Note the trial run's
+parameter files are not meaningful (sampling 30 only tests the pipeline),
+and 3000 is a quick-look density — the library-combination sampling is
+stochastic, so use `-sampling 15000+` for reported values (150000 for
+publication-level runs).
 
 ## Expected outputs
 
@@ -34,7 +37,8 @@ results_fit_5/fit_5.pdf                # best-fit SED + component decomposition
 
 Reference values from a verified run (`-sampling 3000`, 4 cores; because
 the library-combination sampling is stochastic, expect some run-to-run
-scatter, and use `-sampling 150000` for publication-level results):
+scatter — the values below are indicative, and use `-sampling 150000` for
+publication-level results):
 
 | Parameter | Value | Unit |
 |-----------|-------|------|
@@ -48,7 +52,8 @@ scatter, and use `-sampling 150000` for publication-level results):
 Compare with `results_fit_5/fit_5.pdf`: the model passes through the
 SPIRE points and shows the warm/cold dust + stellar decomposition.
 
-> **numpy ≥ 2 note:** on current numpy the `best-fit_param_*.txt` files are
-> written as all zeros (a known issue — see NOTES.md #3 / the README's
-> "Known issues"); the numbers above were computed from the
-> `chi-square_table_*.txt` files, which remain valid.
+> **numpy ≥ 2 note:** on unpatched checkouts the `best-fit_param_*.txt`
+> files are written as all zeros (a known issue — see NOTES.md #3 / the
+> README's "Known issues"; fixed on the `fix-bugs` branch). The numbers
+> above were computed from the `chi-square_table_*.txt` files, which stay
+> valid either way.
