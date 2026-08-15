@@ -69,8 +69,8 @@ FreeRadio=0
 FreezeRadio=0 # Added on 2019-10-24, so that even when not fitting any radio, we can still output a freezed radio component
 FreeDust=0
 qIR=2.4
-LibStellar="BC03.200Myr"
-ChosenLibStellar=1 # the index in AcceptableLibStellar
+LibStellar="BC03.MultiAge"
+ChosenLibStellar=3 # the index in AcceptableLibStellar
 AcceptableLibStellar=("BC03" "BC03.200Myr" "BC03.400Myr" "BC03.MultiAge" "FSPS.CSP.tau.0p1Gyr" "FSPS.CSP.tau.1Gyr")
 CorrespondingLibStellar=("lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED" \
                          "lib.BC03.Padova1994.BaSeL.Z0.0190.ConstSFH.Age200Myr.EBV.SED" \
