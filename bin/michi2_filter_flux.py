@@ -230,6 +230,12 @@ while i < len(data_table):
         for iseli in isel3:
             print('data_table.remove_rows(%d)'%(iseli))
         data_table.remove_rows(isel3)
+        # re-fetch the column references: remove_rows replaces the table
+        # columns with new shorter arrays, so the old w/f/ferr references
+        # would index out of bounds on the next loop iteration.
+        w = data_table.field(data_table.colnames[0])
+        f = data_table.field(data_table.colnames[1])
+        ferr = data_table.field(data_table.colnames[2])
     i = i+1
 
 
