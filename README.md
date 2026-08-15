@@ -119,7 +119,7 @@ michi2-deploy-files SED BC03.400Myr   # ...or a specific stellar library
 checkouts its auto-deploy check had an **inverted condition**: in a
 **completely empty** directory it printed "All libraries found." and the fit
 then failed with `The input library data "lib.*.SED" does not exist!`
-(**fixed on the `fix-bugs` branch** — deploy now triggers whenever any
+(**fixed as of 2026-08** — deploy now triggers whenever any
 library is missing). On unpatched checkouts, **always run
 `michi2-deploy-files` yourself in a fresh directory**.
 
@@ -127,7 +127,7 @@ library is missing). On unpatched checkouts, **always run
 (no extra args) deploys the **BC03.MultiAge** stellar library, while older
 wrappers defaulted `-lib-stellar` to **BC03.200Myr**, so running the wrapper
 without arguments right after a default deploy failed on the missing
-`lib...Age200Myr.EBV.SED`. **Fixed on the `fix-bugs` branch** — the wrapper
+`lib...Age200Myr.EBV.SED`. **Fixed as of 2026-08** — the wrapper
 default is now `BC03.MultiAge`, matching the deploy default. On unpatched
 checkouts, pass an explicit `-lib-stellar` matching what you deployed, e.g.:
 
@@ -324,15 +324,15 @@ michi2-plot-fitting-results fit_5.out -flux extracted_flux.txt -source YOUR_SOUR
   not sample it.
 - **Upper limits are not fitted** by the default path — provide S/N > 3
   detections only.
-- **Known issue (numpy ≥ 2; FIXED on the `fix-bugs` branch):** with recent
+- **Known issue (numpy ≥ 2; fixed as of 2026-08):** with recent
   numpy versions, `best-fit_param_*.txt` files were written as all zeros.
   The chi-square analysis returns `valid` as `numpy.bool_` (numpy 2's
   `count_nonzero` → `np.intp`, so `> 0` → `np.bool_`), and
   `michi2_plot_SED_fitting_results_for_michi2_v05.py` tested it with an
   identity check (`is True`), which failed → the zero branch was taken. The
   `chi-square_table_*.txt` files were never affected. Fix: `bool(...)`
-  (applied to the SED and LVG plotters on `fix-bugs`).
-- **Known issue (numpy ≥ 2; FIXED on the `fix-bugs` branch):**
+  (applied to the SED and LVG plotters).
+- **Known issue (numpy ≥ 2; fixed as of 2026-08):**
   `michi2_filter_flux.py` crashed with an `IndexError` on tables with
   duplicated wavelengths (`remove_rows` left the loop's column references
   stale). Fix: re-fetch the columns after `remove_rows`. Alternatively,

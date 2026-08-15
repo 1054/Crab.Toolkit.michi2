@@ -68,8 +68,8 @@ Cosmetic: `echo Trial=Trial` should be `echo Trial=$Trial`.
 
 ---
 
-**Update (2026-08-15):** all five issues above are now fixed on the local
-`fix-bugs` branch (one commit per bug, each verified against the demos —
+**Update (2026-08-15):** all five issues above are fixed and merged into
+`master` (one commit per bug, each verified against the demos —
 empty-directory auto-deploy, default-lib alignment, real values in
 `best-fit_param_*.txt` under numpy 2.4, duplicate-wavelength tables
-completing). See `git log master..fix-bugs --oneline`.
+completing).

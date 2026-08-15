@@ -54,6 +54,6 @@ SPIRE points and shows the warm/cold dust + stellar decomposition.
 
 > **numpy ≥ 2 note:** on unpatched checkouts the `best-fit_param_*.txt`
 > files are written as all zeros (a known issue — see NOTES.md #3 / the
-> README's "Known issues"; fixed on the `fix-bugs` branch). The numbers
+> README's "Known issues"; fixed as of 2026-08). The numbers
 > above were computed from the `chi-square_table_*.txt` files, which stay
 > valid either way.
